@@ -1,0 +1,106 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="no" ?>
+<modDesc descVersion="21">
+    <author>mor2000</author>
+    <version>0.1.0</version>
+    <title>
+        <en>AAA UniversalProcessKit</en>
+        <de>AAA UniversalProcessKit</de>
+    </title>
+    <description>
+        <en>
+<![CDATA[UniversalProcessKit]]>
+		</en>
+        <de>
+<![CDATA[UniversalProcessKit]]>
+		</de>
+	</description>
+	<iconFilename>UniversalProcessKit.dds</iconFilename>
+    <multiplayer supported="true"/>
+	<extraSourceFiles>
+		<sourceFile filename="c.lua"/>
+		<sourceFile filename="UniversalProcessKitEnvironment.lua"/>
+		<sourceFile filename="UniversalProcessKitListener.lua"/>
+		<sourceFile filename="UniversalProcessKitStorageBit.lua"/>
+		<sourceFile filename="UniversalProcessKitStorageController.lua"/>
+		<sourceFile filename="UniversalProcessKit.lua"/>
+		<sourceFile filename="UniversalProcessKitTrigger.lua"/>
+		<sourceFile filename="UniversalProcessKitSyncEvent.lua"/>
+		<sourceFile filename="UniversalProcessKitModules.lua"/>
+		<sourceFile filename="UniversalProcessKitFillTypes.lua"/>
+		<sourceFile filename="UniversalProcessKitVehicleTypes.lua"/>
+		<sourceFile filename="UPK_Base.lua"/>
+		<sourceFile filename="UPK_DisplayTrigger.lua"/>
+		<sourceFile filename="UPK_Processor.lua"/>
+		<sourceFile filename="PlaceableUPK.lua" />
+    </extraSourceFiles>
+	<storeItems/>
+		
+    <l10n>
+		<text name="wheat"> <en>wheat</en> <de>Weizen</de> </text>
+		<text name="barley"> <en>barley</en> <de>Gerste</de> </text>
+		<text name="rape"> <en>rape</en> <de>Raps</de> </text>
+		<text name="maize"> <en>maize</en> <de>Körnermais</de> </text>
+		<text name="potato"> <en>potatoes</en> <de>Kartoffeln</de> </text>
+		<text name="sugarBeet"> <en>sugar beets</en> <de><![CDATA[Zuckerrüben]]></de> </text>
+		<text name="silage"> <en>silage</en> <de>Silage</de> </text>
+		<text name="liquidManure"> <en>liquid manure</en> <de><![CDATA[Gülle]]></de> </text>
+		<text name="forage"> <en>compound feed</en> <de>Futter</de> </text>
+		<text name="forageMixing"> <en>forage</en> <de>Mischfutter</de> </text>
+		<text name="water"> <en>water</en> <de>Wasser</de> </text>
+		<text name="fuel"> <en>fuel</en> <de>Treibstoff</de> </text>
+		<text name="milk"> <en>milk</en> <de>Milch</de> </text>
+		<text name="grass_windrow"> <en>grass</en> <de>Gras</de> </text>
+		<text name="dryGrass_windrow"> <en>hay</en> <de>Heu</de> </text>
+		<text name="wheat_windrow"> <en>wheat straw</en> <de>Weizenstroh</de> </text>
+		<text name="barley_windrow"> <en>barley straw</en> <de>Gerstenstroh</de> </text>
+		<text name="oat_windrow"> <en>oat straw</en> <de>Haferstroh</de> </text>
+		<text name="rye_windrow"> <en>rye straw</en> <de>Roggenstroh</de> </text>
+		<text name="manure"> <en>manure</en> <de>Mist</de> </text>
+		<text name="dinkel"> <en>spelt</en> <de>Dinkel</de> </text>
+		<text name="oat"> <en>oat</en> <de>Hafer</de> </text>
+		<text name="millet"> <en>millet</en> <de>Hirse</de> </text>
+		<text name="greenwheat"> <en>greenwheat</en> <de>Grünweizen</de> </text>
+		<text name="triticale"> <en>triticale</en> <de>Triticale</de> </text>
+		<text name="rye"> <en>rye</en> <de>Roggen</de> </text>
+		<text name="soybean"> <en>soybean</en> <de>Sojabohnen</de> </text>
+		<text name="sunflower"> <en>sunflower</en> <de>Sonnenblumen</de> </text>
+		<text name="onion"> <en>onion</en> <de>Zwiebeln</de> </text>
+		<text name="carrot"> <en>carrot</en> <de>Karotten</de> </text>
+		<text name="cucumber"> <en>cucumber</en> <de>Gurken</de> </text>
+		<text name="tomato"> <en>tomato</en> <de>Tomaten</de> </text>
+		<text name="pea"> <en>pea</en> <de>Erbsen</de> </text>
+		<text name="erbse"> <en>pea</en> <de>Erbsen</de> </text>
+		<text name="mohn"> <en>poppy</en> <de>Mohn</de> </text>
+		<text name="fertilizer"> <en>fertilizer</en> <de><![CDATA[Dünger]]></de> </text>
+		<text name="kalk"> <en>chalk</en> <de>Kalk</de> </text>
+		
+		<text name="apfel"> <en>apples</en> <de><![CDATA[Äpfel]]></de> </text>
+		<text name="apple"> <en>apples</en> <de><![CDATA[Äpfel]]></de> </text>
+		<text name="kirsche"> <en>cherries</en> <de>Kirschen</de> </text>
+		<text name="cherry"> <en>cherries</en> <de>Kirschen</de> </text>
+		<text name="pflaume"> <en>plums</en> <de>Pflaumen</de> </text>
+		<text name="plum"> <en>plums</en> <de>Pflaumen</de> </text>
+		<text name="orange"> <en>oranges</en> <de>Orangen</de> </text>
+		<text name="birne"> <en>pears</en> <de>Birnen</de> </text>
+		<text name="pear"> <en>pears</en> <de>Birnen</de> </text>
+		<text name="erdbeere"> <en>strawberries</en> <de>Erdbeeren</de> </text>
+		<text name="strawberry"> <en>strawberries</en> <de>Erdbeeren</de> </text>
+		
+		<text name="kies"> <en>gravel</en> <de>Kies</de> </text>
+		<text name="sand"> <en>sand</en> <de>Sand</de> </text>
+		
+		<text name="woodChip"> <en>woodchips</en> <de>Hackschnitzel</de> </text>
+		<text name="woodChips"> <en>woodchips</en> <de>Hackschnitzel</de> </text>
+		
+		<text name="forage_wagon_cant_collect"> <en>this forage wagon cannot collect %s</en> <de>Dieser Ladewagen kann kein %s aufsammeln</de> </text>
+		<text name="baler_cant_collect"> <en>this baler cannot collect %s</en> <de>Diese Ballenpresse kann kein %s aufsammeln</de> </text>
+		<text name="shovel_cant_load"> <en>this shovel cannot load %s</en> <de>Diese Schaufel kann kein %s laden</de> </text>
+		<text name="trailer_cant_load"> <en>this trailer cannot load %s</en> <de>Dieser Anhänger kann kein %s laden</de> </text>
+		
+		<text name="buytrigger_buy_OBJECT"> <en>buy %s</en> <de>%s kaufen</de> </text>
+		<text name="buytrigger_sell_OBJECT"> <en>sell %s</en> <de>%s verkaufen</de> </text>
+		<text name="buytrigger_start_rent_OBJECT"> <en>rent %</en> <de>%s mieten</de> </text>
+		<text name="buytrigger_stop_rent_OBJECT"> <en>stop to rent %s</en> <de>Mieten von %s stoppen</de> </text>
+		<text name="buytrigger_remaining_time"> <en>%s hours of rent left</en> <de>%s Stunden Miete verbleibend</de> </text>
+	</l10n>
+</modDesc>
