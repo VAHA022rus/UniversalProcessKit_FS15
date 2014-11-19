@@ -23,9 +23,13 @@ UniversalProcessKit.VEHICLE_MILKTRAILER=getNextBit() -- 256
 
 UniversalProcessKit.VEHICLE_SOWINGMACHINE=getNextBit() -- 512
 UniversalProcessKit.VEHICLE_SPRAYER=getNextBit() -- 1024
+UniversalProcessKit.VEHICLE_MANURESPREADER=getNextBit() -- 2048
 
-UniversalProcessKit.VEHICLE_FORAGEWAGON=getNextBit() -- 2048
-UniversalProcessKit.VEHICLE_BALER=getNextBit() -- 4096
+UniversalProcessKit.VEHICLE_FORAGEWAGON=getNextBit() -- 4096
+UniversalProcessKit.VEHICLE_BALER=getNextBit() -- 8192
+
+UniversalProcessKit.VEHICLE_TRAFFICVEHICLE=getNextBit() -- 16384
+UniversalProcessKit.VEHICLE_MILKTRUCK=getNextBit() -- 32768
 
 
 function UniversalProcessKit.getVehicleType(vehicle)
@@ -35,46 +39,54 @@ function UniversalProcessKit.getVehicleType(vehicle)
 	if vehicle.upk_vehicleType==nil then
 		local vehicleType=0
 		
-		-- redo with hasSpec()
-		
-		if vehicle.addSowingMachineFillTrigger ~= nil and vehicle.removeSowingMachineFillTrigger ~= nil then
+		if SpecializationUtil.hasSpecialization(SowingMachine, vehicle.specializations) then
 			vehicleType=vehicleType+UniversalProcessKit.VEHICLE_SOWINGMACHINE
 		end
-		if vehicle.addWaterTrailerFillTrigger ~= nil and vehicle.removeWaterTrailerFillTrigger ~= nil then
+		if SpecializationUtil.hasSpecialization(WaterTrailer, vehicle.specializations) then
 			vehicleType=vehicleType+UniversalProcessKit.VEHICLE_WATERTRAILER
 		end
-		if vehicle.addSprayerFillTrigger ~= nil and vehicle.removeSprayerFillTrigger ~= nil then
+		if SpecializationUtil.hasSpecialization(Sprayer, vehicle.specializations) and not SpecializationUtil.hasSpecialization(ManureSpreader, vehicle.specializations) then
 			vehicleType=vehicleType+UniversalProcessKit.VEHICLE_SPRAYER
 		end
-		if vehicle.addFuelFillTrigger ~= nil and vehicle.removeFuelFillTrigger ~= nil and vehicle.startMotor==nil then
+		if SpecializationUtil.hasSpecialization(ManureSpreader, vehicle.specializations) then
+			vehicleType=vehicleType+UniversalProcessKit.VEHICLE_MANURESPREADER
+		end
+		if SpecializationUtil.hasSpecialization(FuelTrailer, vehicle.specializations) then
 			vehicleType=vehicleType+UniversalProcessKit.VEHICLE_FUELTRAILER
 		end
-		if vehicle.allowFillType~=nil and vehicle:allowFillType(Fillable.FILLTYPE_MILK) then
+		if SpecializationUtil.hasSpecialization(Fillable, vehicle.specializations) and vehicle:allowFillType(Fillable.FILLTYPE_MILK) then
 			vehicleType=vehicleType+UniversalProcessKit.VEHICLE_MILKTRAILER
 		end
-		if vehicle.allowFillType~=nil and vehicle:allowFillType(Fillable.FILLTYPE_LIQUIDMANURE) then
+		if SpecializationUtil.hasSpecialization(Fillable, vehicle.specializations) and vehicle:allowFillType(Fillable.FILLTYPE_LIQUIDMANURE) then
 			vehicleType=vehicleType+UniversalProcessKit.VEHICLE_LIQUIDMANURETRAILER
 		end
-		if vehicle.getAllowFillShovel ~= nil then
+		if SpecializationUtil.hasSpecialization(Shovel, vehicle.specializations) then
 			vehicleType=vehicleType+UniversalProcessKit.VEHICLE_SHOVEL
 		end
-		if vehicle.allowTipDischarge ~= nil then
+		if SpecializationUtil.hasSpecialization(Trailer, vehicle.specializations) then
 			vehicleType=vehicleType+UniversalProcessKit.VEHICLE_TIPPER
 		end
-		if vehicle.forageWgnSoundEnabled ~= nil then
+		if SpecializationUtil.hasSpecialization(ForageWagon, vehicle.specializations) then
 			vehicleType=vehicleType+UniversalProcessKit.VEHICLE_FORAGEWAGON
 		end
-		if vehicle.hasBaler ~= nil then
+		if SpecializationUtil.hasSpecialization(Baler, vehicle.specializations) then
 			vehicleType=vehicleType+UniversalProcessKit.VEHICLE_BALER
 		end
-		if vehicle.addFuelFillTrigger ~= nil and vehicle.removeFuelFillTrigger ~= nil and vehicle.startMotor~=nil then
+		if SpecializationUtil.hasSpecialization(Motorized, vehicle.specializations) then
 			vehicleType=vehicleType+UniversalProcessKit.VEHICLE_MOTORIZED
 		end
-		if vehicle.setFillLevel ~= nil and vehicle.getFillLevel ~= nil then
+		if SpecializationUtil.hasSpecialization(Combine, vehicle.specializations) then -- doenst seem to recognize combines
+			vehicleType=vehicleType+UniversalProcessKit.VEHICLE_COMBINE
+		end
+		if SpecializationUtil.hasSpecialization(Fillable, vehicle.specializations) then
 			vehicleType=vehicleType+UniversalProcessKit.VEHICLE_FILLABLE
 		end
-		
-		-- Combines?
+		if SpecializationUtil.hasSpecialization(TrafficVehicle, vehicle.specializations) and not SpecializationUtil.hasSpecialization(Milktruck, vehicle.specializations) then
+			vehicleType=vehicleType+UniversalProcessKit.VEHICLE_TRAFFICVEHICLE
+		end
+		if SpecializationUtil.hasSpecialization(Milktruck, vehicle.specializations) then
+			vehicleType=vehicleType+UniversalProcessKit.VEHICLE_MILKTRUCK
+		end
 		
 		vehicle.upk_vehicleType=vehicleType
 		return vehicleType

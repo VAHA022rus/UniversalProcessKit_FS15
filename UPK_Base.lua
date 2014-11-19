@@ -9,8 +9,9 @@ InitObjectClass(UPK_Base, "UPK_Base")
 UniversalProcessKit.addModule("base",UPK_Base)
 
 function UPK_Base:new(id, placeable, builtIn)
-	self:print('UPK_Base:new')
-	local self = UniversalProcessKit:new(id, self, UPK_Base_mt)
+	print('UPK_Base:new')
+	
+	local self = UniversalProcessKit:new(id, nil, UPK_Base_mt)
 	registerObjectClassName(self, "UPK_Base")
 	
 	self.placeable = placeable or false
@@ -48,7 +49,7 @@ function UPK_Base:new(id, placeable, builtIn)
 	
 	-- i18nNameSpace
 	
-	self.i18nNameSpace = getStringFromUserAttribute(nodeId, "modname")
+	self.i18nNameSpace = getStringFromUserAttribute(id, "modname")
 	
 	self:print('loaded Base successfully')
 	

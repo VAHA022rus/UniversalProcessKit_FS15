@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="no" ?>
 <modDesc descVersion="21">
     <author>mor2000</author>
-    <version>0.1.1</version>
+    <version>0.1.2</version>
     <title>
         <en>AAA UniversalProcessKit</en>
         <de>AAA UniversalProcessKit</de>
@@ -17,6 +17,7 @@
 	<iconFilename>UniversalProcessKit.dds</iconFilename>
     <multiplayer supported="true"/>
 	<extraSourceFiles>
+		<sourceFile filename="DEBUG.lua"/>
 		<sourceFile filename="c.lua"/>
 		<sourceFile filename="UniversalProcessKitEnvironment.lua"/>
 		<sourceFile filename="UniversalProcessKitListener.lua"/>
@@ -30,6 +31,7 @@
 		<sourceFile filename="UniversalProcessKitVehicleTypes.lua"/>
 		<sourceFile filename="UPK_Base.lua"/>
 		<sourceFile filename="UPK_DisplayTrigger.lua"/>
+		<sourceFile filename="UPK_EntityTrigger.lua"/>
 		<sourceFile filename="UPK_Processor.lua"/>
 		<sourceFile filename="PlaceableUPK.lua" />
     </extraSourceFiles>

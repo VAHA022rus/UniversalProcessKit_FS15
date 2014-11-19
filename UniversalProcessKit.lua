@@ -15,7 +15,7 @@ end;
 
 function UniversalProcessKit:print(string, debug)
 	if debug==nil then
-		debug=self.debugMode
+		debug=debugMode
 	end
 	if debug then
 		if type(string)=="string" then
@@ -43,41 +43,14 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 	--setmetatable(self, customMt or UniversalProcessKit_mt)
 	registerObjectClassName(self, "UniversalProcessKit")
 
-	self.rootNode = 0
+	self.rootNode = nodeId
+	self.nodeId = nodeId
 	self.triggerId = 0
-	self.nodeId = 0
-
-	self.parent=nil
+	
+	self.parent= parent
 	self.kids={}
 	self.type=nil
 
-	self.i18nNameSpace=nil
-
-	--[[
-	self.syncDirtyFlag = self:getNextDirtyFlag()
-	self.fillLevelDirtyFlag = self:getNextDirtyFlag()
-	self.enabledDirtyFlag = self:getNextDirtyFlag()
-	self.maphotspotDirtyFlag = self:getNextDirtyFlag()
-	--]]
-
-	self.pos=__c({0,0,0})
-	self.wpos=__c({0,0,0})
-	self.rot=__c({0,0,0})
-	self.scale=__c({1,1,1})
-
-	self.kids={}
-
-	self.name=""
-	self.type=""
-
-	self.isEnabled=true
-
-	self.rootNode = nodeId
-	self.nodeId = nodeId
-	
-	self.sumdt=0
-	
-	self.parent = parent
 	self.onCreates = {}
 	
 	self.x,self.y,self.z = getTranslation(nodeId)
@@ -86,7 +59,13 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 	self.rot = __c({getRotation(nodeId)})
 	self.wrot = __c({getWorldRotation(nodeId)})
 	self.scale = __c({getScale(nodeId)})
-		
+	
+	-- enable processing of stuff
+	
+	self.name = getName(self.nodeId)
+	self.type = getStringFromUserAttribute(nodeId, "type")
+	self.isEnabled = getBoolFromUserAttribute(nodeId, "isEnabled", true)
+
 	-- storage and capacity/ capacities
 	
 	self.capacity = getNumberFromUserAttribute(nodeId, "capacity", math.huge)
@@ -153,12 +132,6 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 	end
 	--]]
 	
-	-- enable processing of stuff
-	
-	self.name = getName(self.nodeId)
-	self.type = getStringFromUserAttribute(nodeId, "type")
-	self.isEnabled = getBoolFromUserAttribute(nodeId, "isEnabled", true)
-
 	-- MapHotspot
 	
 	self.appearsOnPDA = getBoolFromUserAttribute(nodeId, "appearsOnPDA", false)
@@ -216,7 +189,8 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 end;
 
 function UniversalProcessKit:findChildrenLoopFunc(childId)
-	local type = getUserAttribute(childId, "type")
+	local type = getStringFromUserAttribute(childId, "type")
+	self:print('UserAttribute type is '..tostring(type))
 	if type~=nil and UniversalProcessKit.ModuleTypes[type]~=nil then
 		childName=Utils.getNoNil(getName(childId),"")
 		self:print('found module '..childName..' of type '..tostring(type)..' and id '..tostring(childId))
@@ -226,6 +200,8 @@ function UniversalProcessKit:findChildrenLoopFunc(childId)
 				module=debugObject(module)
 			end
 			table.insert(self.kids,module)
+		else
+			self:print('couldnt load module of type '..tostring(type)..' and id '..tostring(childId))
 		end
 	else
 		if getBoolFromUserAttribute(childId, "adjustToTerrainHeight", false) then
@@ -335,7 +311,7 @@ function UniversalProcessKit:showMapHotspot(on,alreadySent)
 		self.mapHotspot=nil
 	end
 	if not alreadySent then
-		self:raiseDirtyFlags(self.maphotspotDirtyFlag)
+		--self:raiseDirtyFlags(self.maphotspotDirtyFlag)
 	end
 end;
 
@@ -343,7 +319,7 @@ function UniversalProcessKit:setEnable(isEnabled,alreadySent)
 	if self.isEnabled~=isEnabled then
 		self.isEnabled=isEnabled
 		if alreadySent==nil or not alreadySent then
-			self:raiseDirtyFlags(self.enabledDirtyFlag)
+			--self:raiseDirtyFlags(self.enabledDirtyFlag)
 		end
 	end
 	self:setEnableChildren(isEnabled,alreadySent)
@@ -367,6 +343,8 @@ function UniversalProcessKit:loadFromAttributesAndNodes(xmlFile, key)
 	--if fillType~=nil then
 	--	self:setFillType(unpack(UniversalProcessKit.fillTypeNameToInt(fillType)))
 	--end
+	
+	--[[
 	if getXMLFloat(xmlFile, key .. "#isEnabled")=="false" then
 		self:setEnable(false)
 	end
@@ -380,17 +358,22 @@ function UniversalProcessKit:loadFromAttributesAndNodes(xmlFile, key)
 			self:setFillLevel(fillLevel,k,true)
 		end
 	end
-	
+
 	for k,v in pairs(self.kids) do
 		v:loadFromAttributesAndNodes(xmlFile, key)
 	end
 
+	--]]
+	
 	return self:loadExtraNodes(xmlFile, key)
 end;
 
 function UniversalProcessKit:getSaveAttributesAndNodes(nodeIdent)
 	self:print('calling UniversalProcessKit:getSaveAttributesAndNodes for id '..tostring(self.nodeId))
 	local attributes=""
+	local nodes=""
+	
+	--[[
 	
 	local nodes = "\t<"..tostring(self.name)
 
@@ -430,6 +413,8 @@ function UniversalProcessKit:getSaveAttributesAndNodes(nodeIdent)
 	else
 		nodes = nodes .. extraNodes ..">\n" .. string.gsub(nodesKids,"\n","\n\t") .. "\n\t</"..tostring(self.name)..">"
 	end
+	
+	--]]
 	
 	return attributes, nodes
 end;

@@ -33,7 +33,11 @@ end
 function UniversalProcessKit:getAllowedVehicles()
 	if self.allowedVehicles==nil then
 		self.allowedVehicles={}
+		self.allowedVehicles[UniversalProcessKit.VEHICLE_MOTORIZED]=true
+		self.allowedVehicles[UniversalProcessKit.VEHICLE_FILLABLE]=true
+		self.allowedVehicles[UniversalProcessKit.VEHICLE_COMBINE]=true
 	end
+	
 	self.allowedVehicles[UniversalProcessKit.VEHICLE_MOTORIZED] = getBoolFromUserAttribute(self.nodeId, "allowMotorized", self.allowedVehicles[UniversalProcessKit.VEHICLE_MOTORIZED])
 	self.allowedVehicles[UniversalProcessKit.VEHICLE_COMBINE] = getBoolFromUserAttribute(self.nodeId, "allowCombine", self.allowedVehicles[UniversalProcessKit.VEHICLE_COMBINE])
 	self.allowedVehicles[UniversalProcessKit.VEHICLE_FILLABLE] = getBoolFromUserAttribute(self.nodeId, "allowFillable", self.allowedVehicles[UniversalProcessKit.VEHICLE_FILLABLE])
@@ -48,11 +52,15 @@ function UniversalProcessKit:getAllowedVehicles()
 	
 	self.allowedVehicles[UniversalProcessKit.VEHICLE_SOWINGMACHINE] = getBoolFromUserAttribute(self.nodeId, "allowSowingMachine", self.allowedVehicles[UniversalProcessKit.VEHICLE_SOWINGMACHINE])
 	self.allowedVehicles[UniversalProcessKit.VEHICLE_SPRAYER] = getBoolFromUserAttribute(self.nodeId, "allowSprayer", self.allowedVehicles[UniversalProcessKit.VEHICLE_SPRAYER])
+	self.allowedVehicles[UniversalProcessKit.VEHICLE_MANURESPREADER] = getBoolFromUserAttribute(self.nodeId, "allowManureSpreader", self.allowedVehicles[UniversalProcessKit.VEHICLE_MANURESPREADER])
 	
 	self.allowedVehicles[UniversalProcessKit.VEHICLE_FORAGEWAGON] = getBoolFromUserAttribute(self.nodeId, "allowForageWagon", self.allowedVehicles[UniversalProcessKit.VEHICLE_FORAGEWAGON])
 	self.allowedVehicles[UniversalProcessKit.VEHICLE_BALER] = getBoolFromUserAttribute(self.nodeId, "allowBaler", self.allowedVehicles[UniversalProcessKit.VEHICLE_BALER])
 	
-	self.allowWalker = getBoolFromUserAttribute(self.nodeId, "allowWalker", self.allowWalker)
+	self.allowedVehicles[UniversalProcessKit.VEHICLE_TRAFFICVEHICLE] = getBoolFromUserAttribute(self.nodeId, "allowTrafficVehicle", self.allowedVehicles[UniversalProcessKit.VEHICLE_TRAFFICVEHICLE])
+	self.allowedVehicles[UniversalProcessKit.VEHICLE_MILKTRUCK] = getBoolFromUserAttribute(self.nodeId, "allowMilktruck", self.allowedVehicles[UniversalProcessKit.VEHICLE_MILKTRUCK])
+	
+	self.allowWalker = getBoolFromUserAttribute(self.nodeId, "allowWalker", true)
 end
 
 function UniversalProcessKit:fitCollisionMaskToAllowedVehicles()
@@ -62,12 +70,20 @@ function UniversalProcessKit:fitCollisionMaskToAllowedVehicles()
 	-- tractors = 2^21 = 2097152
 	-- combines = 2^22 = 4194304
 	-- fillables = 2^23 = 8388608
-	-- all = 15728640
+	-- sum is 15728640
+
+	-- dynamic_objects = 2^24 = 16777216  whats that?
+	-- trafficVehicles = 2^25 = 33554432 
+	-- cutters = 2^26 = 67108864 whats that?
+	
+	
 
 	local trigger_player = 1048576
 	local trigger_tractor = 2097152
 	local trigger_combine = 4194304
 	local trigger_fillable = 8388608
+	local trigger_trafficVehicle = 33554432 -- doesnt seem to work right
+	
 
 	local collisionMask_old = getCollisionMask(self.triggerId)
 	local collisionMask_new = collisionMask_old
@@ -97,6 +113,11 @@ function UniversalProcessKit:fitCollisionMaskToAllowedVehicles()
 		self:print('Warning: some kind of allowFillable is set to true but collisionMask was not fitting (fixed)')
 		collisionMask_new = collisionMask_new + trigger_fillable
 	end
+	if (self.allowedVehicles[UniversalProcessKit.VEHICLE_TRAFFICVEHICLE] or
+		self.allowedVehicles[UniversalProcessKit.VEHICLE_MILKTRUCK]) and bitAND(collisionMask_new,trigger_trafficVehicle)==0 then
+		self:print('Warning: allowTrafficVehicle is set to true but collisionMask was not fitting (fixed)')
+		collisionMask_new = collisionMask_new + trigger_trafficVehicle
+	end
 	if collisionMask_new ~= collisionMask_old then
 		self:print('Notice: set collisionMask according to allowed vehicles to '..tostring(collisionMask_new)..' (you may want to fix that)')
 		setCollisionMask(self.triggerId,collisionMask_new)
@@ -105,7 +126,10 @@ end
 
 function UniversalProcessKit:triggerCallback(triggerId, otherActorId, onEnter, onLeave, onStay, otherShapeId)
 	if self.isEnabled then
+		--self:print('otherShapeId: '..tostring(otherShapeId)..', otherActorId: '..tostring(otherActorId))
 		local vehicle=g_currentMission.objectToTrailer[otherShapeId] or g_currentMission.nodeToVehicle[otherShapeId]
+		--self:print('test '..tostring(g_currentMission.nodeToVehicle[otherActorId]))
+		--self:print('vehicle is '..tostring(vehicle))
 		if vehicle~=nil then
 			for k,v in pairs(UniversalProcessKit.getVehicleTypes(vehicle)) do
 				if v and self.allowedVehicles[k] then

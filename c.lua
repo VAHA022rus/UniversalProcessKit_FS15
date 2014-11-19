@@ -44,8 +44,6 @@ _g.UniversalProcessKit = {};
 _g.UniversalProcessKitStorageBit={};
 _g.UniversalProcessKitStorageController={};
 
-debugMode=false
-
 function _m.print(string, debug)
 	if debug==nil then
 		debug=debugMode
@@ -192,6 +190,7 @@ function getBoolFromUserAttribute(nodeId, attribute, default)
 	return bool
 end;
 
+--[[
 function _m.getUserAttribute(nodeId, attribute)
 	if nodeId==0 or nodeId==nil or attribute=="" or attribute==nil then
 		print('Warning: wanted to get UserAttribute "'..tostring(attribute)..'" from node '..tostring(nodeId)..' but failed')
@@ -199,6 +198,7 @@ function _m.getUserAttribute(nodeId, attribute)
 	end
 	return _g.getUserAttribute(nodeId, attribute)
 end
+--]]
 
 function getStringFromUserAttribute(nodeId, attribute, default)
 	local str=Utils.getNoNil(getUserAttribute(nodeId, attribute), default)
@@ -238,15 +238,18 @@ function removeValueFromTable(tbl, value, all)
 end;
 
 function loopThruChildren(id,loopFunction,obj)
+	print('loopThruChildren nodeId '..tostring(id))
 	if id==nil or id==0 or type(obj)~="table" or type(loopFunction)~="string" then
 		return false
 	end
 	local numChildren = getNumOfChildren(id)
+	print('number of children of nodeId is '..tostring(numChildren))
 	if type(numChildren)=="number" and numChildren>0 then
 		for i=1,numChildren do
 			local childId = getChildAt(id, i-1)
 			if childId~=nil or childId~=0 then
 				if not obj[loopFunction](obj,childId) then
+					print('abort loopThruChildren')
 					return true
 				end
 			end
@@ -331,7 +334,6 @@ function getNormalDistributedRandomNumber() -- see http://de.wikipedia.org/wiki/
 	return u*p
 end;
 
-_g.UPK_StorageController={}
 _g.UPK_ActivatorTrigger={}
 _g.UPK_Animator={}
 _g.UPK_BaleSpawner={}

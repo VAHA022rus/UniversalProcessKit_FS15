@@ -11,12 +11,6 @@ function UPK_DisplayTrigger:new(nodeId, parent)
 	local self = UniversalProcessKit:new(nodeId, parent, UPK_DisplayTrigger_mt)
 	registerObjectClassName(self, "UPK_DisplayTrigger")
 	
-	self.allowedVehicles={}
-	self.allowWalker=true
-	self.allowedVehicles[UniversalProcessKit.VEHICLE_MOTORIZED]=true
-	self.allowedVehicles[UniversalProcessKit.VEHICLE_FILLABLE]=true
-	self.allowedVehicles[UniversalProcessKit.VEHICLE_COMBINE]=true
-	
 	self.onlyFilled = getBoolFromUserAttribute(self.nodeId, "onlyFilled", true)
 	self.showFillLevel = getBoolFromUserAttribute(self.nodeId, "showFillLevel", true)
 	self.showPercentage = getBoolFromUserAttribute(self.nodeId, "showPercentage", true)
@@ -79,7 +73,12 @@ function UPK_DisplayTrigger:update(dt)
 						text=text..mathceil(fillLevel) .. "[" .. self.fluid_unit_short .. "]"
 					end
 					if self.showPercentage then
-						text=text.." "..mathceil(fillLevel/self.storageController:getStorageBitCapacity(fillType)*100) .. "%"
+						local capacity = self.storageController:getStorageBitCapacity(fillType)
+						local ratio = mathceil(fillLevel/capacity*100)
+						if ratio==100 and fillLevel<capacity then
+							ratio = 99
+						end
+						text=text.." "..tostring(ratio) .. "%"
 					end
 	    			g_currentMission:addExtraPrintText(text)
 				end
