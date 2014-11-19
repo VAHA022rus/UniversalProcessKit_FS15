@@ -192,6 +192,14 @@ function getBoolFromUserAttribute(nodeId, attribute, default)
 	return bool
 end;
 
+function _m.getUserAttribute(nodeId, attribute)
+	if nodeId==0 or nodeId==nil or attribute=="" or attribute==nil then
+		print('Warning: wanted to get UserAttribute "'..tostring(attribute)..'" from node '..tostring(nodeId)..' but failed')
+		return nil
+	end
+	return _g.getUserAttribute(nodeId, attribute)
+end
+
 function getStringFromUserAttribute(nodeId, attribute, default)
 	local str=Utils.getNoNil(getUserAttribute(nodeId, attribute), default)
 	if str~=nil then

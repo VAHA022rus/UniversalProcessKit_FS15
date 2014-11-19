@@ -46,6 +46,10 @@ function UPK_Base:new(id, placeable, builtIn)
 		end
 	end
 	
+	-- i18nNameSpace
+	
+	self.i18nNameSpace = getStringFromUserAttribute(nodeId, "modname")
+	
 	self:print('loaded Base successfully')
 	
 	return self

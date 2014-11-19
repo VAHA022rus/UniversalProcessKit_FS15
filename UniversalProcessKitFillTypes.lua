@@ -64,13 +64,15 @@ function UniversalProcessKit.addFillType(name,index)
 			UniversalProcessKit.addFillType(v)
 		end
 	elseif type(name)=="string" then
-		if UniversalProcessKit.fillTypeNameToInt[name]==nil then
+		if name=="single" or name=="fifo" or name=="filo" then
+			print('Warning: filltypes cannot be named single, fifo or filo')
+		elseif UniversalProcessKit.fillTypeNameToInt[name]==nil then
 			local index=index or UniversalProcessKit.NUM_FILLTYPES
 			if UniversalProcessKit.fillTypeIntToName[index]~=nil then
 				UniversalProcessKit.addFillType(name,index+1)
 			else
 				if name~="money" and name~="void" then
-					print("Notice: Filltype labeled \""..tostring(name).."\" is not part of the game economy")
+					print("Notice: filltype labeled \""..tostring(name).."\" is not part of the game economy")
 				else
 					UniversalProcessKit['FILLTYPE_'..string.upper(name)]=index
 				end

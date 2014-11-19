@@ -30,7 +30,7 @@ function UniversalProcessKit:print(string, debug)
 			_g.print(' ['..tostring(signature)..'] '..msg)
 		end
 	end
-end	
+end;
 
 function UniversalProcessKit:new(nodeId, parent, customMt)
 	if nodeId==nil then
@@ -38,7 +38,9 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 		return false
 	end
 
-	local self = Object:new(g_server ~= nil, g_client ~= nil, customMt or UniversalProcessKit_mt)
+	local self = Object:new(g_server ~= nil, g_client ~= nil, customMt or UniversalProcessKit_mt) -- base needs to be object
+	--local self={}
+	--setmetatable(self, customMt or UniversalProcessKit_mt)
 	registerObjectClassName(self, "UniversalProcessKit")
 
 	self.rootNode = 0
@@ -89,34 +91,28 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 	
 	self.capacity = getNumberFromUserAttribute(nodeId, "capacity", math.huge)
 	
-	local storageTypeStr = getStringFromUserAttribute(nodeId, "storageType")
-	if storageTypeStr~=nil then
-		if storageTypeStr=="separate" then
-			self.storageType=UPK_Storage.SEPARATE
-		elseif storageTypeStr=="single" then
-			self.storageType=UPK_Storage.SINGLE
-		elseif storageTypeStr=="fifo" then
-			self.storageType=UPK_Storage.FIFO
-		elseif storageTypeStr=="filo" then
-			self.storageType=UPK_Storage.FILO
+	self.storageType = UPK_Storage.SEPARATE
+	
+	local storeArr = getArrayFromUserAttribute(self.nodeId, "store")
+	if #storeArr==1 then
+		if storeArr[1]=="single" then
+			self.storageType = UPK_Storage.SINGLE
+		elseif storeArr[1]=="fifo" then
+			self.storageType = UPK_Storage.FIFO
+		elseif storeArr[1]=="filo" then
+			self.storageType = UPK_Storage.FILO
 		end
 	end
 	
-	local storeFillTypesArr = getArrayFromUserAttribute(self.nodeId, "fillTypes")
-	if #storeFillTypesArr>0 and self.storageType==nil then
-		self.storageType = UPK_Storage.SEPARATE
-	end
-	
-	if self.storageType==nil and self.parent~=nil then
+	if self.storageType==UPK_Storage.SEPARATE and #storeArr==0 and self.parent~=nil then
 		self.storageController = self.parent.storageController
 	else
-		self.storageController = UniversalProcessKitStorageController:new(self.storageType or UPK_Storage.SEPARATE, self.capacity, self)
-	end
-
-	if self.storageType==UPK_Storage.SEPARATE or self.storageType==UPK_Storage.SINGLE then
-		for i=1,#storeFillTypesArr do
-			local fillType = UniversalProcessKit.fillTypeNameToInt[storeFillTypesArr[i]]
-			self.storageController:createStorageBit(fillType)
+		self.storageController = UniversalProcessKitStorageController:new(self.storageType, self.capacity, self)
+		if self.storageType==UPK_Storage.SEPARATE then
+			for i=1,#storeArr do
+				local fillType = UniversalProcessKit.fillTypeNameToInt[storeArr[i]]
+				self.storageController:createStorageBit(fillType)
+			end
 		end
 	end
 
@@ -156,10 +152,6 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 		g_currentMission:addNodeObject(nodeId, self)
 	end
 	--]]
-	
-	-- i18nNameSpace
-	
-	self.i18nNameSpace = getStringFromUserAttribute(nodeId, "modname")
 	
 	-- enable processing of stuff
 	
