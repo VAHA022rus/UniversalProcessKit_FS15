@@ -71,7 +71,7 @@ function UniversalProcessKit.addFillType(name,index)
 			if UniversalProcessKit.fillTypeIntToName[index]~=nil then
 				UniversalProcessKit.addFillType(name,index+1)
 			else
-				if name~="money" and name~="void" then
+				if name~="money" and name~="void" and name~="sun" and name~="rain" and name~="temperature" then
 					print("Notice: filltype labeled \""..tostring(name).."\" is not part of the game economy")
 				else
 					UniversalProcessKit['FILLTYPE_'..string.upper(name)]=index
@@ -91,8 +91,11 @@ function UniversalProcessKit.registerFillType(name, hudFilename)
 	UniversalProcessKit.addFillType(name)
 end;
 
--- special fillType "money" and "void"
+-- special fillType "money", "void" et al
 UniversalProcessKit.addFillType("money")
 UniversalProcessKit.addFillType("void")
+UniversalProcessKit.addFillType("sun")
+UniversalProcessKit.addFillType("rain")
+UniversalProcessKit.addFillType("temperature")
 
 

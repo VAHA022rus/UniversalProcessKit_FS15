@@ -18,6 +18,7 @@ function PlaceableUPK:load(xmlFilename, x, y, z, rx, ry, rz, moveMode, initRando
 
 	if not moveMode and self.nodeId~=nil then
 		self.base=UPK_Base:new(self.nodeId,true)
+		self.base:findChildren(self.nodeId)
 	end -- not moveMode
 
 	return true

@@ -60,28 +60,14 @@ function UPK_Processor:new(id, parent)
 	for i=1,#prerequisiteArr,2 do
 		local amount=tonumber(prerequisiteArr[i])
 		local type=unpack(UniversalProcessKit.fillTypeNameToInt(prerequisiteArr[i+1]))
+		self:print('productionPrerequisite: '..tostring(amount)..' of '..tostring(prerequisiteArr[i+1])..' ('..tostring(type)..')')
 		if amount~=nil and type~=nil then
 			self.productionPrerequisite[type]=amount
 			self.hasProductionPrerequisite=true
 		end
 	end
 	
-	local productionProbability=getNumberFromUserAttribute(id, "productionProbability")
-	if productionProbability~=nil then
-		if productionProbability <= 0 then
-			self:print('Error: productionProbability cannot be lower than or equal to 0',true)
-			return false
-		elseif productionProbability>1 and productionProbability<=100 then
-			self:print('Warning: productionProbability is not between 0 and 1')
-			productionProbability=productionProbability/100
-		elseif productionProbability>100 then
-			self:print('Warning: productionProbability is not between 0 and 1')
-			productionProbability=1
-		end
-	else
-		productionProbability=1
-	end
-	self.productionProbability = productionProbability
+	self.productionProbability = getNumberFromUserAttribute(id, "productionProbability", 1, 0, 1)
 	
 	local outcomeVariation=getNumberFromUserAttribute(id, "outcomeVariation")
 	if outcomeVariation~=nil then
@@ -101,13 +87,12 @@ function UPK_Processor:new(id, parent)
 	self.outcomeVariation = outcomeVariation
 	
 	if self.outcomeVariation>0 then
-		self.outcomeVariationType = getStringFromUserAttribute(id, "outcomeVariationType", "equal")
+		self.outcomeVariationType = getStringFromUserAttribute(id, "outcomeVariationType", "uniform")
 		if self.outcomeVariationType=="normal" and (self.productsPerSecond>0 or self.productsPerMinute>0) then
 			self:print('Notice: Its not recommended to use normal distributed outcome variation for productsPerSecond and productsPerMinute')
 		end
 	end
 	
-	self.useRessources = getBoolFromUserAttribute(id, "useRessources", true) == true
 	self.bufferedProducts = 0
 	
 	self.hasRecipe=false
@@ -134,17 +119,50 @@ function UPK_Processor:new(id, parent)
 		end
 	end
 	
+	self.enableChildrenIfProcessing = getBoolFromUserAttribute(id, "enableChildrenIfProcessing", false)
+	self:print('enableChildrenIfProcessing = '..tostring(self.enableChildrenIfProcessing))
+	self.enableChildrenIfNotProcessing = getBoolFromUserAttribute(id, "enableChildrenIfNotProcessing", false)
+	self:print('enableChildrenIfNotProcessing = '..tostring(self.enableChildrenIfNotProcessing))
+	self.disableChildrenIfProcessing = getBoolFromUserAttribute(id, "disableChildrenIfProcessing", false)
+	self:print('disableChildrenIfProcessing = '..tostring(self.disableChildrenIfProcessing))
 	self.disableChildrenIfNotProcessing = getBoolFromUserAttribute(id, "disableChildrenIfNotProcessing", false)
+	self:print('disableChildrenIfNotProcessing = '..tostring(self.disableChildrenIfNotProcessing))
+	
+	if self.enableChildrenIfProcessing then
+		self.disableChildrenIfProcessing = false
+	end
+	if self.enableChildrenIfNotProcessing then
+		self.disableChildrenIfNotProcessing = false
+	end
 	
 	self.emptyFillTypesIfProcessing={}
 	local emptyFillTypesIfProcessingArr = getArrayFromUserAttribute(self.nodeId, "emptyFillTypesIfProcessing")
 	for i=1,#emptyFillTypesIfProcessingArr do
-		local fillType=unpack(UniversalProcessKit.fillTypeNameToInt(emptyFillTypesIfProcessingArr))
+		local fillType=unpack(UniversalProcessKit.fillTypeNameToInt(emptyFillTypesIfProcessingArr[i]))
 		table.insert(self.emptyFillTypesIfProcessing,fillType)
 	end
 	
+	self.emptyFillTypesIfNotProcessing={}
+	local emptyFillTypesIfNotProcessingArr = getArrayFromUserAttribute(self.nodeId, "emptyFillTypesIfNotProcessing")
+	for i=1,#emptyFillTypesIfNotProcessingArr do
+		local fillType=unpack(UniversalProcessKit.fillTypeNameToInt(emptyFillTypesIfNotProcessingArr[i]))
+		table.insert(self.emptyFillTypesIfNotProcessing,fillType)
+	end
+	
+	self.hasAddIfProcessing=false
+	self.addIfProcessing={}
+	local addIfProcessingArr=getArrayFromUserAttribute(id, "addIfProcessing")
+	for i=1,#addIfProcessingArr,2 do
+		local amount=tonumber(addIfProcessingArr[i])
+		local type=unpack(UniversalProcessKit.fillTypeNameToInt(addIfProcessingArr[i+1]))
+		if amount~=nil and type~=nil then
+			self.addIfProcessing[type]=amount
+			self.hasAddIfProcessing=true
+		end
+	end
+	
 	self.hasAddIfNotProcessing=false
-	self.addIfNotProcessing=__c()
+	self.addIfNotProcessing={}
 	local addIfNotProcessingArr=getArrayFromUserAttribute(id, "addIfNotProcessing")
 	for i=1,#addIfNotProcessingArr,2 do
 		local amount=tonumber(addIfNotProcessingArr[i])
@@ -263,7 +281,9 @@ function UPK_Processor:produce(processed)
 	if self.isServer and self.isEnabled then
 		local produce=self.productionProbability==1
 		if not produce then
-			produce = mathrandom()<=self.productionProbability
+			local rnr = mathrandom()
+			produce = rnr<=self.productionProbability
+			self:print('random number: '..tostring(rnr)..' is smaller than pprb '..round(tostring(self.productionProbability),8)..'? '..tostring(produce))
 		end
 		if self.productionInterval>1 then
 			self.currentInterval = self.currentInterval % self.productionInterval + 1
@@ -274,7 +294,7 @@ function UPK_Processor:produce(processed)
 				if self.outcomeVariationType=="normal" then -- normal distribution
 					local r=mathmin(mathmax(getNormalDistributedRandomNumber(),-3),3)/3
 					processed=processed+processed*self.outcomeVariation*r
-				elseif self.outcomeVariationType=="equal" then -- equal distribution
+				elseif self.outcomeVariationType=="uniform" then -- equal distribution
 					local r=2*mathrandom()-1
 					processed=processed+processed*self.outcomeVariation*r
 				end
@@ -293,19 +313,17 @@ function UPK_Processor:produce(processed)
 			if self.product~=UniversalProcessKit.FILLTYPE_MONEY then
 				processed=mathmin(processed,self:getStorageBitCapacity(self.product)-self:getFillLevel(self.product))
 			end
-			if mathfloor(processed*1000)>0 then
+			if round(processed,8)>0 then
 				if self.hasRecipe then
 					for k,v in pairs(self.recipe) do
 						if type(v)=="number" and v>0 then
 							processed=mathmin(processed,self:getFillLevel(k)/v or 0)
 						end
 					end
-					if self.useRessources then
-						local ressourcesUsed=self.recipe*processed
-						for k,v in pairs(ressourcesUsed) do
-							if type(v)=="number" then
-								self:addFillLevel(-v,k)
-							end
+					local ressourcesUsed=self.recipe*processed
+					for k,v in pairs(ressourcesUsed) do
+						if type(v)=="number" then
+							self:addFillLevel(-v,k)
 						end
 					end
 				end
@@ -322,10 +340,8 @@ function UPK_Processor:produce(processed)
 					finalProducts=self.bufferedProducts
 					self.bufferedProducts=0
 				end
+				finalProducts=round(finalProducts,8)
 				if finalProducts>0 then
-					for _,v in pairs(self.emptyFillTypesIfProcessing) do
-						self:setFillLevel(0,v)
-					end
 					self:addFillLevel(finalProducts,self.product)
 					if self.hasByproducts then
 						for k,v in pairs(self.byproducts) do
@@ -334,10 +350,38 @@ function UPK_Processor:produce(processed)
 							end
 						end
 					end
-					if self.disableChildrenIfNotProcessing then
+					
+					-- emptyFillTypesIfProcessing
+					for _,v in pairs(self.emptyFillTypesIfProcessing) do
+						self:setFillLevel(0,v)
+					end
+					
+					-- addIfProcessing
+					if self.hasAddIfProcessing then
+						for k,v in pairs(self.addIfProcessing) do
+							if type(v)=="number" and v>0 then
+								self:addFillLevel(v,k)
+							end
+						end
+					end
+					
+					-- en/disableChildrenIfProcessing
+					if self.enableChildrenIfProcessing then
+						self:print('enable children')
 						self:setEnableChildren(true)
 					end
+					if self.disableChildrenIfProcessing then
+						self:print('disable children')
+						self:setEnableChildren(false)
+					end
 				else
+					
+					-- emptyFillTypesIfNotProcessing
+					for _,v in pairs(self.emptyFillTypesIfNotProcessing) do
+						self:setFillLevel(0,v)
+					end
+					
+					-- addIfNotProcessing
 					if self.hasAddIfNotProcessing then
 						for k,v in pairs(self.addIfNotProcessing) do
 							if type(v)=="number" and v>0 then
@@ -345,7 +389,14 @@ function UPK_Processor:produce(processed)
 							end
 						end
 					end
+					
+					-- en/disableChildrenIfNotProcessing
+					if self.enableChildrenIfNotProcessing then
+						self:print('enable children')
+						self:setEnableChildren(true)
+					end
 					if self.disableChildrenIfNotProcessing then
+						self:print('disable children')
 						self:setEnableChildren(false)
 					end
 				end

@@ -16,17 +16,6 @@ function UniversalProcessKitStorageController:new(storageType, capacity, upkmodu
 	
 	setmetatable(self.storageBits, {
 		__index = function(t,k)
-			--[[
-			if k==UniversalProcessKit.FILLTYPE_MONEY then
-				return g_currentMission:getTotalMoney()
-			elseif k==UniversalProcessKit.FILLTYPE_SUN then
-				return UniversalProcessKitEnvironment.sun
-			elseif k==UniversalProcessKit.FILLTYPE_RAIN then
-				return UniversalProcessKitEnvironment.rain
-			elseif k==UniversalProcessKit.FILLTYPE_TEMPERATURE then
-				return UniversalProcessKitEnvironment.temperature
-			end
-			--]]
 			print('self.storageBits: asked for '..tostring(k))
 			local storageBit=nil
 			print('storageBit for '..tostring(k)..' doesnt exist')
@@ -44,7 +33,14 @@ function UniversalProcessKitStorageController:new(storageType, capacity, upkmodu
 	})
 	--]]
 	
-	if self.storageType == UPK_Storage.SINGLE then
+	if self.storageType == UPK_Storage.SEPARATE then
+		-- set links to special fill types
+		rawset(self.storageBits, UniversalProcessKit.FILLTYPE_MONEY, UniversalProcessKitStorageBit.emptyStorageBit) -- g_currentMission:getTotalMoney()
+		rawset(self.storageBits, UniversalProcessKit.FILLTYPE_VOID, UniversalProcessKitStorageBit.emptyStorageBit)
+		rawset(self.storageBits, UniversalProcessKit.FILLTYPE_SUN, UniversalProcessKitStorageBit.emptyStorageBit) -- UniversalProcessKitEnvironment.sun
+		rawset(self.storageBits, UniversalProcessKit.FILLTYPE_RAIN, UniversalProcessKitStorageBit.emptyStorageBit) -- UniversalProcessKitEnvironment.rain
+		rawset(self.storageBits, UniversalProcessKit.FILLTYPE_TEMPERATURE, UniversalProcessKitStorageBit.emptyStorageBit) -- UniversalProcessKitEnvironment.temperature
+	elseif self.storageType == UPK_Storage.SINGLE then
 		self.singleStorageBitFillType = nil
 	elseif self.storageType == UPK_Storage.FIFO or self.storageType == UPK_Storage.FILO then
 		rawset(self.storageBits, 1, UniversalProcessKitStorageBit:new(fillType, capacity or self.capacity))

@@ -9,7 +9,7 @@ function UniversalProcessKit:onCreate(id)
 	if object==false or object~=nil then
 		object.builtIn=true
 		g_currentMission:addOnCreateLoadedObject(object)
-		object:register(true)
+		object:findChildren(id)
 	end
 end;
 
@@ -26,7 +26,7 @@ function UniversalProcessKit:print(string, debug)
 			if debug then
 				msg='DEBUG '..msg
 			end
-			local signature=self.className or "unknown"
+			local signature=tostring(self.i18nNameSpace or '(unnamed)')..': '..tostring(self.name)
 			_g.print(' ['..tostring(signature)..'] '..msg)
 		end
 	end
@@ -66,6 +66,12 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 	self.type = getStringFromUserAttribute(nodeId, "type")
 	self.isEnabled = getBoolFromUserAttribute(nodeId, "isEnabled", true)
 
+	-- i18nNameSpace
+	
+	if self.parent~=nil then
+		self.i18nNameSpace = self.parent.i18nNameSpace
+	end
+	
 	-- storage and capacity/ capacities
 	
 	self.capacity = getNumberFromUserAttribute(nodeId, "capacity", math.huge)
@@ -89,7 +95,7 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 		self.storageController = UniversalProcessKitStorageController:new(self.storageType, self.capacity, self)
 		if self.storageType==UPK_Storage.SEPARATE then
 			for i=1,#storeArr do
-				local fillType = UniversalProcessKit.fillTypeNameToInt[storeArr[i]]
+				local fillType = unpack(UniversalProcessKit.fillTypeNameToInt(storeArr[i]))
 				self.storageController:createStorageBit(fillType)
 			end
 		end
@@ -114,7 +120,7 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 	local initialFillLevelsArr = getArrayFromUserAttribute(nodeId, "initialFillLevels")
 	for i=1,#initialFillLevelsArr,2 do
 		local fillLevel=tonumber(initialFillLevelsArr[i])
-		local fillType=UniversalProcessKit.fillTypeNameToInt[initialFillLevelsArr[i+1]]
+		local fillType=unpack(UniversalProcessKit.fillTypeNameToInt(initialFillLevelsArr[i+1]))
 		self:print('want to initially add '..tostring(fillLevel)..' to '..tostring(fillType))
 		if fillLevel~=nil and fillType~=nil then
 			self.initialFillLevels[fillType] = self:addFillLevel(fillLevel, fillType) -- gets removed when save is loaded
@@ -181,8 +187,6 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 		UniversalProcessKit.adjustToTerrainHeight(nodeId)
 	end
 	
-	self:findChildren(nodeId)
-	
 	self.displayTrigger=nil
 	
 	return self
@@ -200,8 +204,10 @@ function UniversalProcessKit:findChildrenLoopFunc(childId)
 				module=debugObject(module)
 			end
 			table.insert(self.kids,module)
+			module:findChildren(childId)
 		else
 			self:print('couldnt load module of type '..tostring(type)..' and id '..tostring(childId))
+			self:findChildren(childId)
 		end
 	else
 		if getBoolFromUserAttribute(childId, "adjustToTerrainHeight", false) then
@@ -316,6 +322,7 @@ function UniversalProcessKit:showMapHotspot(on,alreadySent)
 end;
 
 function UniversalProcessKit:setEnable(isEnabled,alreadySent)
+	self:print('setEnable('..tostring(isEnabled)..')')
 	if self.isEnabled~=isEnabled then
 		self.isEnabled=isEnabled
 		if alreadySent==nil or not alreadySent then
@@ -326,8 +333,9 @@ function UniversalProcessKit:setEnable(isEnabled,alreadySent)
 end;
 
 function UniversalProcessKit:setEnableChildren(isEnabled,alreadySent)
-	for _,v in pairs(self.kids) do
-		v:setEnable(isEnabled,alreadySent)
+	self:print('setEnableChildren('..tostring(isEnabled)..')')
+	for _,kid in pairs(self.kids) do
+		kid:setEnable(isEnabled,alreadySent)
 	end
 end;
 

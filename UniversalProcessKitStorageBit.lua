@@ -52,7 +52,7 @@ function UniversalProcessKitStorageBit:setFillLevel(fillLevel, fillType)
 	local currentFillType=self.fillType
 	fillType=fillType or currentFillType -- fillType may be nil
 	if fillType==currentFillType and currentFillType~=Fillable.FILLTYPE_UNKNOWN then
-		if fillLevel~=nil and fillLevel>0 then
+		if fillLevel~=nil and fillLevel>=0 then
 			local newFillLevel=mathmin(fillLevel,self.capacity)
 			self.fillLevel=newFillLevel
 			return newFillLevel-fillLevel -- returns sth (negative) when new fillLevel exceeds capacity
@@ -67,7 +67,7 @@ function UniversalProcessKitStorageBit:addFillLevel(deltaFillLevel, fillType) --
 	if fillType==currentFillType and currentFillType~=Fillable.FILLTYPE_UNKNOWN then
 		if deltaFillLevel~=nil and deltaFillLevel~=0 then
 			local added =self:setFillLevel(self.fillLevel+deltaFillLevel, fillType)
-			return added+deltaFillLevel, self.fillLevel -- how much of deltaFillLevel was added to the fillLevel?
+			return added, self.fillLevel -- how much of deltaFillLevel was added to the fillLevel?
 		end
 	end
 	return 0, self.fillLevel

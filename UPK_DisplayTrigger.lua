@@ -25,11 +25,15 @@ function UPK_DisplayTrigger:new(nodeId, parent)
 	self.displayTexts={}
 	for fillType,_ in pairs(self.displayFillTypes) do
 		local i18n_key=UniversalProcessKit.fillTypeIntToName[fillType]
+		self:print('i18n_key: '..tostring(i18n_key))
 		local text=""
+		self:print('self.i18nNameSpace: '..tostring(self.i18nNameSpace))
 		if self.i18nNameSpace~=nil and (_g or {})[self.i18nNameSpace]~=nil and _g[self.i18nNameSpace].g_i18n~=nil and _g[self.i18nNameSpace].g_i18n:hasText(i18n_key) then
 			text=_g[self.i18nNameSpace].g_i18n:getText(i18n_key)
+			self:print('text1: '..tostring(text))
 		elseif g_i18n:hasText(i18n_key) then
 			text=g_i18n:getText(i18n_key)
+			self:print('text2: '..tostring(text))
 		end
 		self.displayTexts[fillType]=text
 	end

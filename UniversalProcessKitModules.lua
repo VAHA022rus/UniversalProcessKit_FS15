@@ -14,3 +14,5 @@ function UniversalProcessKit.addModule(name,class)
 		print('Error: can\'t add module without name',true)
 	end
 end
+
+UniversalProcessKit.addModule("unspecified",UniversalProcessKit)

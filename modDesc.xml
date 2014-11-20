@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="no" ?>
 <modDesc descVersion="21">
     <author>mor2000</author>
-    <version>0.1.2</version>
+    <version>0.1.3</version>
     <title>
         <en>AAA UniversalProcessKit</en>
         <de>AAA UniversalProcessKit</de>
@@ -32,6 +32,7 @@
 		<sourceFile filename="UPK_Base.lua"/>
 		<sourceFile filename="UPK_DisplayTrigger.lua"/>
 		<sourceFile filename="UPK_EntityTrigger.lua"/>
+		<sourceFile filename="UPK_FillTrigger.lua"/>
 		<sourceFile filename="UPK_Processor.lua"/>
 		<sourceFile filename="PlaceableUPK.lua" />
     </extraSourceFiles>
@@ -93,6 +94,15 @@
 		
 		<text name="woodChip"> <en>woodchips</en> <de>Hackschnitzel</de> </text>
 		<text name="woodChips"> <en>woodchips</en> <de>Hackschnitzel</de> </text>
+		
+		<text name="pig"> <en>pigs</en> <de>Schweine</de> </text>
+		<text name="cow"> <en>cows</en> <de>Rinder</de> </text>
+		<text name="chicken"> <en>chicken</en> <de><![CDATA[Hühner]]></de> </text>
+		<text name="sheep"> <en>sheep</en> <de>Schafe</de> </text>
+		
+		<text name="beef"> <en>beef</en> <de>Fleisch</de> </text>
+		<text name="wool"> <en>wool</en> <de>Wolle</de> </text>
+		<text name="egg"> <en>eggs</en> <de>Eier</de> </text>
 		
 		<text name="forage_wagon_cant_collect"> <en>this forage wagon cannot collect %s</en> <de>Dieser Ladewagen kann kein %s aufsammeln</de> </text>
 		<text name="baler_cant_collect"> <en>this baler cannot collect %s</en> <de>Diese Ballenpresse kann kein %s aufsammeln</de> </text>
