@@ -38,10 +38,13 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 		return false
 	end
 
-	local self = Object:new(g_server ~= nil, g_client ~= nil, customMt or UniversalProcessKit_mt) -- base needs to be object
-	--local self={}
-	--setmetatable(self, customMt or UniversalProcessKit_mt)
-	registerObjectClassName(self, "UniversalProcessKit")
+	--local self = Object:new(g_server ~= nil, g_client ~= nil, customMt or UniversalProcessKit_mt) -- base needs to be object
+	--registerObjectClassName(self, "UniversalProcessKit")
+	
+	local self={}
+	
+	self.isServer = g_server ~= nil
+	self.isClient = g_client ~= nil
 
 	self.rootNode = nodeId
 	self.nodeId = nodeId
@@ -60,7 +63,7 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 	self.wrot = __c({getWorldRotation(nodeId)})
 	self.scale = __c({getScale(nodeId)})
 	
-	-- enable processing of stuff
+	-- misc
 	
 	self.name = getName(self.nodeId)
 	self.type = getStringFromUserAttribute(nodeId, "type")
@@ -72,9 +75,11 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 		self.i18nNameSpace = self.parent.i18nNameSpace
 	end
 	
-	-- storage and capacity/ capacities
+	-- fill types conversion matrix
 	
-	self.capacity = getNumberFromUserAttribute(nodeId, "capacity", math.huge)
+	self.fillTypesConversionMatrix = FillTypesConversionMatrix:new()
+	
+	-- storageType
 	
 	self.storageType = UPK_Storage.SEPARATE
 	
@@ -89,34 +94,67 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 		end
 	end
 	
-	if self.storageType==UPK_Storage.SEPARATE and #storeArr==0 and self.parent~=nil then
-		self.storageController = self.parent.storageController
-	else
-		self.storageController = UniversalProcessKitStorageController:new(self.storageType, self.capacity, self)
-		if self.storageType==UPK_Storage.SEPARATE then
-			for i=1,#storeArr do
-				local fillType = unpack(UniversalProcessKit.fillTypeNameToInt(storeArr[i]))
-				self.storageController:createStorageBit(fillType)
-			end
-		end
-	end
-
+	-- capacity/ capacities
+	
+	self.p_capacity = getNumberFromUserAttribute(nodeId, "capacity", math.huge)
+	
+	local capacities = {}
 	if self.storageType==UPK_Storage.SEPARATE or self.storageType==UPK_Storage.SINGLE then
-		local capacities = {}
 		local capacitiesArr = getArrayFromUserAttribute(nodeId, "capacities")
 		for i=1,#capacitiesArr,2 do
 			local capacity=tonumber(capacitiesArr[i])
 			local fillType=unpack(UniversalProcessKit.fillTypeNameToInt(capacitiesArr[i+1]))
 			if capacity~=nil and fillType~=nil then
+				print('adding capacity of '..tostring(capacity)..' to '..tostring(fillType))
 				capacities[fillType]=capacity
 			end
 		end
-		for fillType, capacity in pairs(capacities) do
-			self.storageController:setStorageBitCapacity(fillType, capacity)
-		end
 	end
 	
-	self.initialFillLevels = {}
+	self.capacities = FillLevelBubbleCapacities:new(self.p_capacity, capacities)
+	
+	for k,v in pairs(self.capacities) do
+		print('capacity of '..tostring(k)..': '..tostring(v))
+	end
+	
+	-- set metatable
+	
+	setmetatable(self, customMt or UniversalProcessKit_mt)
+	
+	-- fill level bubbles
+	
+	self.p_flbs = {}
+	if self.storageType == UPK_Storage.SEPARATE then
+		for _,v in pairs(UniversalProcessKit.fillTypeNameToInt(storeArr)) do
+			self.p_flbs[v] = FillLevelBubble:new()
+			self.fillTypesConversionMatrix = self.fillTypesConversionMatrix + FillTypesConversionMatrix:new(v)
+		end
+	elseif self.storageType==UPK_Storage.SINGLE then
+		local flb = FillLevelBubble:new()
+		self.p_flbs = {flb}
+	elseif self.storageType==UPK_Storage.FIFO then
+		local flb = FillLevelBubble:new()
+		self.p_flbs = {flb}
+		self.p_flbs_fifo_lastkey = 1
+		self.p_totalFillLevel = 0
+	elseif self.storageType==UPK_Storage.FILO then
+		local flb = FillLevelBubble:new()
+		self.p_flbs = {flb}
+		self.p_totalFillLevel = 0
+	end
+	
+	for _,flb in pairs(self.p_flbs) do
+		flb.capacities = self.capacities
+		for k,v in pairs(flb.capacities) do
+			print('capacity of '..tostring(k)..': '..tostring(v))
+		end
+		flb.fillTypesConversionMatrix = self.fillTypesConversionMatrix
+		flb:registerOnFillLevelChangeFunc(self,"onFillLevelChange")
+	end
+	
+	-- initial fill levels
+	
+	self.initialFillLevels = {} -- redo for fifo and filo
 	local initialFillLevelsArr = getArrayFromUserAttribute(nodeId, "initialFillLevels")
 	for i=1,#initialFillLevelsArr,2 do
 		local fillLevel=tonumber(initialFillLevelsArr[i])
@@ -126,10 +164,6 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 			self.initialFillLevels[fillType] = self:addFillLevel(fillLevel, fillType) -- gets removed when save is loaded
 		end
 	end
-		
-	if debugMode then
-		self.storageController=debugObject(self.storageController)
-	end
 	
 	-- addNodeObject
 	--[[
@@ -138,7 +172,7 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 	end
 	--]]
 	
-	-- MapHotspot
+	-- MapHotspot -- nothing done yet
 	
 	self.appearsOnPDA = getBoolFromUserAttribute(nodeId, "appearsOnPDA", false)
 	self.MapHotspotName = getStringFromUserAttribute(nodeId, "MapHotspot")
@@ -181,13 +215,11 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 	-- loading kids (according to known types of modules)
 	-- kids are loading their kids and so on..
 	
-	print('loading module '..tostring(self.name)..' with id '..tostring(nodeId))
+	print('loaded module '..tostring(self.name)..' with id '..tostring(nodeId))
 	
 	if getBoolFromUserAttribute(nodeId, "adjustToTerrainHeight", false) then
 		UniversalProcessKit.adjustToTerrainHeight(nodeId)
 	end
-	
-	self.displayTrigger=nil
 	
 	return self
 end;
@@ -256,31 +288,79 @@ function UniversalProcessKit:update(dt)
 	-- and UniversalProcessKitListener.removeUpdateable(self)
 end;
 
-
-
-function UniversalProcessKit:getFillType()
-	return self.storageController:getFillType()
-end;
+function UniversalProcessKit:onFillLevelChange(deltaFillLevel, newFillLevel, fillType)
+	self:print('UniversalProcessKit:onFillLevelChange('..tostring(deltaFillLevel)..', '..tostring(newFillLevel)..', '..tostring(fillType)..')')
+end
 
 function UniversalProcessKit:getFillLevel(fillType)
-	return self.storageController:getFillLevel(fillType)
-end;
+	--self:print('UniversalProcessKit:getFillLevel('..tostring(fillType)..')')
+	if self.storageType==UPK_Storage.SEPARATE and fillType~=nil then
+		local newFillType=self.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN][fillType]
+		local flb=self.p_flbs[newFillType]
+		if flb~=nil then
+			local fillLevel = flb.fillLevel
+			return fillLevel
+		else
+			if self.parent~=nil then
+				local fillLevel = self.parent:getFillLevel(fillType)
+				return fillLevel
+			end
+		end
+	end
+	return self.fillLevel
+end
 
-function UniversalProcessKit:setFillLevel(newFillLevel, fillType)
-	self:print('UniversalProcessKit:setFillLevel('..tostring(fillLevel)..', '..tostring(fillType)..')')
-	local oldFillLevel = self.storageController:getFillLevel(fillType)
-	self.storageController:addFillLevel(newFillLevel - oldFillLevel, fillType)
-	return 0
-end;
+function UniversalProcessKit:getCapacity(fillType)
+	--self:print('UniversalProcessKit:getCapacity('..tostring(fillType)..')')
+	if self.storageType==UPK_Storage.SEPARATE and fillType~=nil then
+		local newFillType=self.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN][fillType]
+		local flb=self.p_flbs[newFillType]
+		if flb~=nil then
+			return self.capacities[newFillType]
+		else
+			if self.parent~=nil then
+				return self.parent:getCapacity(fillType)
+			end
+		end
+	end
+	return self.capacity
+end
+
+function UniversalProcessKit:getFillType()
+	return self.fillType
+end
+
+function UniversalProcessKit:resetFillLevelIfNeeded()
+end
+
+function UniversalProcessKit:allowFillType(fillType, allowEmptying) -- also check for capcity
+	local flb = self.p_flbs[self.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN][fillType]]
+	if self.storageType==UPK_Storage.SEPARATE and fillType~=nil then
+		local newFillType=self.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN][fillType]
+		local flb=self.p_flbs[newFillType]
+		if flb~=nil then
+			return flb.fillLevel < flb.capacity
+		else
+			if self.parent~=nil then
+				return self.parent:allowFillType(fillType, allowEmptying)
+			end
+		end
+	elseif self.storageType==UPK_Storage.SINGLE or self.storageType==UPK_Storage.FIFO or self.storageType==UPK_Storage.FILO then
+		return self.fillLevel < self.capacity
+	end
+	return false
+end
+
+function UniversalProcessKit:setFillLevel(newFillLevel, fillType, force)
+	local oldFillLevel = self:getFillLevel(fillType)
+	self:addFillLevel(newFillLevel-oldFillLevel, fillType)
+end
 
 function UniversalProcessKit:addFillLevel(deltaFillLevel, fillType)
 	self:print('UniversalProcessKit:addFillLevel('..tostring(deltaFillLevel)..', '..tostring(fillType)..')')
-	return self.storageController:addFillLevel(deltaFillLevel, fillType)
+	return self + {deltaFillLevel, fillType}
 end;
 
-function UniversalProcessKit:getStorageBitCapacity(fillType)
-	return self.storageController:getStorageBitCapacity(fillType)
-end
 
 
 function UniversalProcessKit:getUniqueFillType()
@@ -343,9 +423,11 @@ function UniversalProcessKit:loadFromAttributesAndNodes(xmlFile, key)
 	self:print('calling UniversalProcessKit:loadFromAttributesAndNodes for id '..tostring(self.nodeId))
 	key=key.."."..self.name
 	
+	--[[
 	for fillType, fillLevel in pairs(self.initialFillLevels) do
 		self:addFillLevel(-fillLevel, fillType)
 	end
+	--]]
 	
 	--local fillType=getXMLFloat(xmlFile, key .. "#fillType")
 	--if fillType~=nil then

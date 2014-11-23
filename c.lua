@@ -1,29 +1,5 @@
 -- by mor2000
 
--- adds arithmetic operations to tables
-
--- functionality for c() like in R, and a little more
-
--- examples:
-
--- same length
--- c(1) = {1}
--- c({1,2,3}) + c({4,5,6}) = {5,7,9}
--- c({1,2,3}) - c({4,5,6}) = {-3,-3,-3}
--- c({1,2,3}) * c({4,5,6}) = {4,10,18}
--- c({1,2,3}) / c({4,5,6}) = {0.25,0.4,0.5}
--- c({1,2,3}):min() = 1
--- c({1,2,3}):max() = 3
-
--- different length + - * /
--- c({1,2,3}) + c({2,3}) = {3,5,5}
-
--- with keys left (same like above with keys) + - * /
--- c({a=1,b=2,c=3}) + c({2,3}) = {a=3,b=5,c=5}
-
--- keys left and right (same, only take matching keys into account) + - * /
--- c({a=1,b=2,c=3}) + c({b=2,d=4}) = {b=4}
-
 upkModDirectory = g_currentModDirectory
 
 _m=_G;_G=nil;_g=_G;_G=_m;
@@ -43,6 +19,10 @@ _m.mathcos = math.cos
 _g.UniversalProcessKit = {};
 _g.UniversalProcessKitStorageBit={};
 _g.UniversalProcessKitStorageController={};
+
+----------------------------------
+-- basic functions ---------------
+----------------------------------
 
 function _m.print(string, debug)
 	if debug==nil then
@@ -334,6 +314,10 @@ function getNormalDistributedRandomNumber() -- see http://de.wikipedia.org/wiki/
 	return u*p
 end;
 
+----------------------------------
+-- classes and variables ---------
+----------------------------------
+
 _g.UPK_ActivatorTrigger={}
 _g.UPK_Animator={}
 _g.UPK_BaleSpawner={}
@@ -364,6 +348,34 @@ UPK_Storage.FIFO=3
 UPK_Storage.FILO=4
 
 _g.g_upkTipTrigger={}
+
+----------------------------------
+-- __c ---------------------------
+----------------------------------
+
+-- adds arithmetic operations to tables
+
+-- functionality for c() like in R, and a little more
+
+-- examples:
+
+-- same length
+-- c(1) = {1}
+-- c({1,2,3}) + c({4,5,6}) = {5,7,9}
+-- c({1,2,3}) - c({4,5,6}) = {-3,-3,-3}
+-- c({1,2,3}) * c({4,5,6}) = {4,10,18}
+-- c({1,2,3}) / c({4,5,6}) = {0.25,0.4,0.5}
+-- c({1,2,3}):min() = 1
+-- c({1,2,3}):max() = 3
+
+-- different length + - * /
+-- c({1,2,3}) + c({2,3}) = {3,5,5}
+
+-- with keys left (same like above with keys) + - * /
+-- c({a=1,b=2,c=3}) + c({2,3}) = {a=3,b=5,c=5}
+
+-- keys left and right (same, only take matching keys into account) + - * /
+-- c({a=1,b=2,c=3}) + c({b=2,d=4}) = {b=4}
 
 local c_mt={
 	__index=function(arr,key)
@@ -601,59 +613,161 @@ function _g.__c(...)
 	return arr
 end;
 
+----------------------------------
+-- ClassUPK ----------------------
+----------------------------------
+
 function _g.ClassUPK(members, baseClass)
 	members = members or {}
 	if baseClass ~= nil then
 		setmetatable(members, {__index = baseClass})
 	end
-
-	local orphan={} -- default values
-	orphan.fillType=nil
-	orphan.i18nNameSpace=nil
-	orphan.maxFillLevel=0
-
-	local mt = { __metatable = members,
-		__index=function(t,k)
-			if k=='fillType' then
-				local fillType=(rawget(t,'parent') or orphan).fillType
-				if fillType==nil then
-					local storageType=t.storageType
-					if storageType==UPK_Storage.SINGLE then
-						ret=t:getUniqueFillType()
-						return ret
-					elseif storageType==UPK_Storage.FIFO then
-						return nil
-					elseif storageType==UPK_Storage.FILO then
-						return nil
-					end
-					return nil
-				else
-					return fillType
-				end
-			elseif k=='fillLevel' then
-				local fillType=t.fillType
-				if fillType==Fillable.FILLTYPE_UNKNOWN then
+	
+	local mt = {
+		__index = function(t,k)
+			if t.storageType==UPK_Storage.SEPARATE then
+				if k=="capacity" then
+					return math.huge
+				elseif k=="fillLevel" then
 					return 0
-				elseif fillType~=nil then
-					return t.fillLevels[fillType]
-				else
-					return nil
+				elseif k=="fillType" then
+					return Fillable.FILLTYPE_UNKNOWN
 				end
-			elseif k=='i18nNameSpace' then
-				return (rawget(t,'parent') or orphan).i18nNameSpace
-			elseif k=='maxFillLevel' then
-				return (rawget(t,'parent') or orphan).maxFillLevel
-			else
-				return members[k]
+			elseif t.storageType==UPK_Storage.SINGLE then
+				if k=="capacity" then
+					return t.p_capacity
+				elseif k=="fillLevel" then
+					return t.p_flbs[1].fillLevel
+				elseif k=="fillType" then
+					return t.p_flbs[1].fillType
+				end
+			elseif t.storageType==UPK_Storage.FIFO or t.storageType==UPK_Storage.FILO then
+				if k=="capacity" then
+					return t.p_capacity
+				elseif k=="fillLevel" then
+					return t.p_totalFillLevel
+				elseif k=="fillType" then
+					return t.p_flbs[1].fillType
+				end
 			end
+			return members[k]
 		end,
-		__newindex=function(t,k,v)
-			if k=='maxFillLevel' and type(rawget(t,"parent"))=="table" then
-				t.parent.maxFillLevel=v
-			else
-				rawset(t,k,v)
-			end
+		__add = function(lhs,rhs)
+			local added = 0
+			if type(rhs)=="table" then
+				if not rhs.isflb then
+					rhs = FillLevelBubble:new(rhs)
+				end
+				if rhs.fillLevel<0 then
+					return lhs - {-rhs.fillLevel, rhs.fillType}
+				end
+			
+				if lhs.storageType==UPK_Storage.SEPARATE then
+					local newFillType = lhs.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN][rhs.fillType]
+					if newFillType~=nil then
+						added = lhs.p_flbs[newFillType] + rhs
+					elseif lhs.parent ~= nil then
+						added = lhs.parent + rhs
+					end
+				elseif lhs.storageType==UPK_Storage.SINGLE then
+					added = lhs.p_flbs[1] + rhs
+				elseif lhs.storageType==UPK_Storage.FIFO then
+					local newFillType = lhs.p_flbs[lhs.p_flbs_fifo_lastkey].fillTypesConversionMatrix[lhs.p_flbs[lhs.p_flbs_fifo_lastkey].fillType][rhs.fillType]
+					if newFillType~=nil then
+						local newCapacity = lhs.p_capacity - lhs.p_totalFillLevel
+						lhs.capacities[newFillType] = newCapacity
+						added = lhs.p_flbs[lhs.p_flbs_fifo_lastkey] + rhs
+					end
+					if added==0 then
+						local flb = FillLevelBubble:new()
+						flb.capacities = lhs.capacities
+						flb.fillTypesConversionMatrix = lhs.fillTypesConversionMatrix
+						flb:registerOnFillLevelChangeFunc(lhs,"onFillLevelChange")
+						local newFillType = flb.fillTypesConversionMatrix[flb.fillType][rhs.fillType]
+						if newFillType~=nil then
+							local newCapacity = lhs.p_capacity - lhs.p_totalFillLevel
+							lhs.capacities[newFillType] = newCapacity
+							added = flb + rhs
+						end
+						if added>0 then
+							lhs.p_flbs_fifo_lastkey = lhs.p_flbs_fifo_lastkey + 1
+							table.insert(lhs.p_flbs,lhs.p_flbs_fifo_lastkey,flb)
+						end
+					end
+					lhs.p_totalFillLevel = lhs.p_totalFillLevel + added
+				elseif lhs.storageType==UPK_Storage.FILO then
+					local newFillType = lhs.p_flbs[1].fillTypesConversionMatrix[lhs.p_flbs[1].fillType][rhs.fillType]
+					if newFillType~=nil then
+						local newCapacity = lhs.p_capacity - lhs.p_totalFillLevel
+						lhs.capacities[newFillType] = newCapacity
+						added = lhs.p_flbs[1] + rhs
+					end
+					if added==0 then
+						local flb = FillLevelBubble:new()
+						flb.capacities = lhs.capacities
+						flb.fillTypesConversionMatrix = lhs.fillTypesConversionMatrix
+						flb:registerOnFillLevelChangeFunc(lhs,"onFillLevelChange")
+						local newFillType = flb.fillTypesConversionMatrix[flb.fillType][rhs.fillType]
+						if newFillType~=nil then
+							local newCapacity = lhs.p_capacity - lhs.p_totalFillLevel
+							lhs.capacities[newFillType] = newCapacity
+							added = flb + rhs
+						end
+						if added>0 then
+							table.insert(lhs.p_flbs,1,flb)
+						end
+					end
+					lhs.p_totalFillLevel = lhs.p_totalFillLevel + added
+				end
+			end	
+			return added
 		end,
+		__sub = function(lhs,rhs)
+			local added = 0
+			if type(rhs)=="table" then
+				if not rhs.isflb then
+					rhs = FillLevelBubble:new(rhs)
+				end
+				if rhs.fillLevel<0 then
+					return lhs + {-rhs.fillLevel, rhs.fillType}
+				end
+			
+				if lhs.storageType==UPK_Storage.SEPARATE then
+					local newFillType = lhs.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN][rhs.fillType]
+					if newFillType~=nil then
+						added = lhs.p_flbs[newFillType] - rhs
+					elseif lhs.parent ~= nil then
+						added = lhs.parent - rhs
+					end
+				elseif lhs.storageType==UPK_Storage.SINGLE then
+					added = lhs.p_flbs[1] - rhs
+				elseif lhs.storageType==UPK_Storage.FIFO then
+					local newFillType = lhs.p_flbs[1].fillTypesConversionMatrix[lhs.p_flbs[1].fillType][rhs.fillType]
+					if newFillType~=nil then
+						local newCapacity = lhs.p_capacity - lhs.p_totalFillLevel + lhs.p_flbs[1].fillLevel
+						lhs.capacities[newFillType] = newCapacity
+						added = lhs.p_flbs[1] - rhs
+					end
+					if added<0 and lhs.p_flbs[1].fillLevel==0 and lhs.p_flbs[2]~=nil then
+						table.remove(lhs.p_flbs,1)
+						lhs.p_flbs_fifo_lastkey = lhs.p_flbs_fifo_lastkey - 1
+					end
+					lhs.p_totalFillLevel = lhs.p_totalFillLevel + added
+				elseif lhs.storageType==UPK_Storage.FILO then
+					local newFillType = lhs.p_flbs[1].fillTypesConversionMatrix[lhs.p_flbs[1].fillType][rhs.fillType]
+					if newFillType~=nil then
+						local newCapacity = lhs.p_capacity - lhs.p_totalFillLevel + lhs.p_flbs[1].fillLevel
+						lhs.capacities[newFillType] = newCapacity
+						added = lhs.p_flbs[1] - rhs
+					end
+					if added<0 and lhs.p_flbs[1].fillLevel==0 and lhs.p_flbs[2]~=nil then
+						table.remove(lhs.p_flbs,1)
+					end
+					lhs.p_totalFillLevel = lhs.p_totalFillLevel + added
+				end
+			end	
+			return added
+		end
 	}
 	
 	function members:class()
@@ -679,6 +793,10 @@ function _g.ClassUPK(members, baseClass)
 	
 	return mt
 end;
+
+----------------------------------
+-- debugMode ---------------------
+----------------------------------
 
 local debug_mt={
 	__index=function(obj,key)
@@ -732,6 +850,58 @@ local debug_mt={
 		obj:print('set '..tostring(key)..' = '..tostring(val))
 		local baseObj=rawget(obj,'baseObj')
 		baseObj[key]=val
+	end,
+	__call=function(t, ...)
+		local baseObj=rawget(t,'baseObj')
+		return baseObj(...)
+	end,
+	__add=function(lhs,rhs)
+		local baseObj=rawget(lhs,'baseObj')
+		return baseObj + rhs
+	end,
+	__sub=function(lhs,rhs)
+		local baseObj=rawget(lhs,'baseObj')
+		return baseObj - rhs
+	end,
+	__mul=function(lhs,rhs)
+		local baseObj=rawget(lhs,'baseObj')
+		return baseObj * rhs
+	end,
+	__div=function(lhs,rhs)
+		local baseObj=rawget(lhs,'baseObj')
+		return baseObj / rhs
+	end,
+	__mod=function(lhs,rhs)
+		local baseObj=rawget(lhs,'baseObj')
+		return baseObj % rhs
+	end,
+	__pow=function(lhs,rhs)
+		local baseObj=rawget(lhs,'baseObj')
+		return baseObj ^ rhs
+	end,
+	__concat=function(lhs,rhs)
+		local baseObj=rawget(lhs,'baseObj')
+		return baseObj .. rhs
+	end,
+	__len=function(t)
+		local baseObj=rawget(t,'baseObj')
+		return #baseObj
+	end,
+	__gt=function(lhs,rhs)
+		local baseObj=rawget(lhs,'baseObj')
+		return baseObj > rhs
+	end,
+	__ge=function(lhs,rhs)
+		local baseObj=rawget(lhs,'baseObj')
+		return baseObj >= rhs
+	end,
+	__lt=function(lhs,rhs)
+		local baseObj=rawget(lhs,'baseObj')
+		return baseObj < rhs
+	end,
+	__le=function(lhs,rhs)
+		local baseObj=rawget(lhs,'baseObj')
+		return baseObj <= rhs
 	end
 }
 

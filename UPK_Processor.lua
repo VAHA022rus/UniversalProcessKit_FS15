@@ -3,12 +3,6 @@
 --------------------
 -- Processor (converts and stores stuff)
 
--- storage stystems
--- separate - standard
--- single - allow only 1 fillType
--- fifo - layered, first in first out
--- lifo - layered, last in last out
-
 -- convertion rule: what recipe, what recipe
 -- ie: brewery
 -- convertion: beer 0.05 barley 1.1 water
@@ -311,7 +305,7 @@ function UPK_Processor:produce(processed)
 				end
 			end
 			if self.product~=UniversalProcessKit.FILLTYPE_MONEY then
-				processed=mathmin(processed,self:getStorageBitCapacity(self.product)-self:getFillLevel(self.product))
+				processed=mathmin(processed,self:getCapacity(self.product)-self:getFillLevel(self.product))
 			end
 			if round(processed,8)>0 then
 				if self.hasRecipe then
@@ -323,7 +317,7 @@ function UPK_Processor:produce(processed)
 					local ressourcesUsed=self.recipe*processed
 					for k,v in pairs(ressourcesUsed) do
 						if type(v)=="number" then
-							self:addFillLevel(-v,k)
+							_= self - {v,k}
 						end
 					end
 				end
@@ -342,11 +336,11 @@ function UPK_Processor:produce(processed)
 				end
 				finalProducts=round(finalProducts,8)
 				if finalProducts>0 then
-					self:addFillLevel(finalProducts,self.product)
+					_= self + {finalProducts,self.product}
 					if self.hasByproducts then
 						for k,v in pairs(self.byproducts) do
 							if type(v)=="number" and v>0 then
-								self:addFillLevel(v*finalProducts,k)
+								_= self + {v*finalProducts,k}
 							end
 						end
 					end
@@ -360,7 +354,7 @@ function UPK_Processor:produce(processed)
 					if self.hasAddIfProcessing then
 						for k,v in pairs(self.addIfProcessing) do
 							if type(v)=="number" and v>0 then
-								self:addFillLevel(v,k)
+								_= self + {v,k}
 							end
 						end
 					end
@@ -385,7 +379,7 @@ function UPK_Processor:produce(processed)
 					if self.hasAddIfNotProcessing then
 						for k,v in pairs(self.addIfNotProcessing) do
 							if type(v)=="number" and v>0 then
-								self:addFillLevel(v,k)
+								_= self + {v,k}
 							end
 						end
 					end

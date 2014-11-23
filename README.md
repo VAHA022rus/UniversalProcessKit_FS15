@@ -12,13 +12,19 @@ Bisher enthaltene Module:
 
 ##Changelog
 
+__V0.7.0__
+
+- neue Art Füllstände zu verwalten
+
+(Versionsnummern übersprungen)
+
 __V0.1.3__
 
 - Modultyp unspecified hinzugefügt
-- geändert: enableChildrenIfProcessing
-- neu: addIfProcessing
-- neu: emptyFillTypesIfProcessing
-- neu: enableChildrenIfNotProcessing
-- neu: disableChildrenIfProcessing
-- neu: disableChildrenIfNotProcessing
-- umbenannt: von „equal“ zu „uniform“ in outcomeVariationType
+- geändert: enableChildrenIfProcessing (pocessor)
+- neu: addIfProcessing (processor)
+- neu: emptyFillTypesIfProcessing (processor)
+- neu: enableChildrenIfNotProcessing (processor)
+- neu: disableChildrenIfProcessing (processor)
+- neu: disableChildrenIfNotProcessing (processor)
+- umbenannt: von „equal“ zu „uniform“ in outcomeVariationType (procesor)

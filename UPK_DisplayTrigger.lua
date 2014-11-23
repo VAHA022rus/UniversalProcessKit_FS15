@@ -65,9 +65,7 @@ function UPK_DisplayTrigger:update(dt)
 	if self.isEnabled then
 		for fillType,display in pairs(self.displayFillTypes) do
 			if display then
-				self:print('want to display '..tostring(fillType))
 				local fillLevel=self:getFillLevel(fillType)
-				self:print('fillLevel is '..tostring(fillLevel))
 				if fillLevel>0 or not self.onlyFilled then
 					local text=self.displayTexts[fillType] or ""
 					if text~="" then
@@ -77,7 +75,7 @@ function UPK_DisplayTrigger:update(dt)
 						text=text..mathceil(fillLevel) .. "[" .. self.fluid_unit_short .. "]"
 					end
 					if self.showPercentage then
-						local capacity = self.storageController:getStorageBitCapacity(fillType)
+						local capacity = self:getCapacity(fillType)
 						local ratio = mathceil(fillLevel/capacity*100)
 						if ratio==100 and fillLevel<capacity then
 							ratio = 99
