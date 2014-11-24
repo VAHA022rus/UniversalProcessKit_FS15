@@ -22,6 +22,9 @@ end
 function UniversalProcessKit:removeTrigger()
 	if self.triggerId~=nil and self.triggerId~=0 then
 		removeTrigger(self.triggerId)
+		for _,vehicle in pairs(self.entities) do
+			self.entities:triggerUpdate(vehicle,false)
+		end
 		self.triggerId = 0
 		self.allowedVehicles={}
 		self.entities={}

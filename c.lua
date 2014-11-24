@@ -664,7 +664,7 @@ function _g.ClassUPK(members, baseClass)
 			
 				if lhs.storageType==UPK_Storage.SEPARATE then
 					local newFillType = lhs.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN][rhs.fillType]
-					if newFillType~=nil then
+					if newFillType~=nil and lhs.p_flbs[newFillType]~=nil then
 						added = lhs.p_flbs[newFillType] + rhs
 					elseif lhs.parent ~= nil then
 						added = lhs.parent + rhs
@@ -734,7 +734,7 @@ function _g.ClassUPK(members, baseClass)
 			
 				if lhs.storageType==UPK_Storage.SEPARATE then
 					local newFillType = lhs.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN][rhs.fillType]
-					if newFillType~=nil then
+					if newFillType~=nil and lhs.p_flbs[newFillType]~=nil then
 						added = lhs.p_flbs[newFillType] - rhs
 					elseif lhs.parent ~= nil then
 						added = lhs.parent - rhs

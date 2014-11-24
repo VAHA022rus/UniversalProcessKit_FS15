@@ -8,9 +8,18 @@ Bisher enthaltene Module:
 - entitytrigger
 - displaytrigger
 - processor
+- tiptrigger
 - unspecified
 
 ##Changelog
+
+__V0.7.1__
+
+- Modultyp tiptrigger hinzugefügt
+- neu: acceptedFillTypes (tiptrigger)
+- neu: showNotAcceptedWarning (tiptrigger)
+- neu: showCapacityReachedWarning (tiptrigger)
+- Beispielmod UPK_TipTriggerTest hinzugefügt
 
 __V0.7.0__
 

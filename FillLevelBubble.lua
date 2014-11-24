@@ -45,6 +45,7 @@ _g.fillLevelBubble_mt = {
 			if rhs.fillLevel<0 then
 				return lhs - {-rhs.fillLevel, rhs.fillType}
 			end
+			print('wanne add '..tostring(rhs.fillLevel)..' to existing '..tostring(lhs.fillType))
 			local newFillType = lhs.fillTypesConversionMatrix[lhs.fillType][rhs.fillType]
 			if newFillType~=nil then
 				lhs.p_fillType = newFillType
@@ -138,7 +139,7 @@ end
 
 _g.FillTypesConversionMatrix = {}
 
-_g.fillTypesConversionMatrix_mt={
+_g.fillTypesConversionMatrix_mt = {
 	__index = function(t,k)
 		local newarr={}
 		newarr[k]=k
@@ -229,6 +230,8 @@ end
 ----------------------------------
 -- fill level bubbles shell ------
 ----------------------------------
+
+-- might not work, changed/ fixed version in ClassUPK
 
 _g.fillLevelBubbleShell_mt = {
 	__index = function(t,k)

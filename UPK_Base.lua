@@ -50,6 +50,25 @@ function UPK_Base:new(id, placeable, builtIn)
 	-- i18nNameSpace
 	
 	self.i18nNameSpace = getStringFromUserAttribute(id, "modname")
+	local i18n_mt = {
+		__index = function(t,key)
+			local text=""
+			if type(key)=="string" then
+				if self.i18nNameSpace~=nil and
+					(_g or {})[self.i18nNameSpace]~=nil and
+					_g[self.i18nNameSpace].g_i18n~=nil and
+					_g[self.i18nNameSpace].g_i18n:hasText(key) then
+					text=_g[self.i18nNameSpace].g_i18n:getText(key)
+				elseif g_i18n:hasText(key) then
+					text=g_i18n:getText(key)
+				end
+				rawset(self.i18n,key,text)
+				print('asked i18n for '..tostring(key)..' returning '..tostring(text))
+			end
+			return text
+		end
+	}
+	setmetatable(self.i18n, i18n_mt)
 	
 	self:print('loaded Base successfully')
 	

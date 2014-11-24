@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="no" ?>
 <modDesc descVersion="21">
     <author>mor2000</author>
-    <version>0.7.0</version>
+    <version>0.7.1</version>
     <title>
         <en>AAA UniversalProcessKit</en>
         <de>AAA UniversalProcessKit</de>
@@ -33,6 +33,7 @@
 		<sourceFile filename="UPK_EntityTrigger.lua"/>
 		<sourceFile filename="UPK_FillTrigger.lua"/>
 		<sourceFile filename="UPK_Processor.lua"/>
+		<sourceFile filename="UPK_TipTrigger.lua"/>
 		<sourceFile filename="PlaceableUPK.lua" />
     </extraSourceFiles>
 	<storeItems/>
@@ -103,6 +104,7 @@
 		<text name="wool"> <en>wool</en> <de>Wolle</de> </text>
 		<text name="egg"> <en>eggs</en> <de>Eier</de> </text>
 		
+		<text name="capacityReached"> <en>the maximum filllevel of %s is reached</en> <de><![CDATA[Die maximale Füllmenge von %s ist erreicht]]></de> </text>
 		<text name="forage_wagon_cant_collect"> <en>this forage wagon cannot collect %s</en> <de>Dieser Ladewagen kann kein %s aufsammeln</de> </text>
 		<text name="baler_cant_collect"> <en>this baler cannot collect %s</en> <de>Diese Ballenpresse kann kein %s aufsammeln</de> </text>
 		<text name="shovel_cant_load"> <en>this shovel cannot load %s</en> <de>Diese Schaufel kann kein %s laden</de> </text>

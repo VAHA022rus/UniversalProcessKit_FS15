@@ -73,6 +73,9 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 	
 	if self.parent~=nil then
 		self.i18nNameSpace = self.parent.i18nNameSpace
+		self.i18n = self.parent.i18n
+	else
+		self.i18n = {}
 	end
 	
 	-- fill types conversion matrix

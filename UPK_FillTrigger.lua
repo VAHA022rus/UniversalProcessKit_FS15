@@ -55,64 +55,11 @@ function UPK_FillTrigger:new(id, parent)
 		self.statName="other"
 	end
 
-    self.allowTrailer = tobool(Utils.getNoNil(getUserAttribute(self.nodeId, "allowTrailer"), true))
-    self.allowShovel = tobool(Utils.getNoNil(getUserAttribute(self.nodeId, "allowShovel"), true))
-	self.allowSowingMachine = tobool(Utils.getNoNil(getUserAttribute(self.nodeId, "allowSowingMachine"), false))
-	self.allowMilkTrailer = tobool(Utils.getNoNil(getUserAttribute(self.nodeId, "allowMilkTrailer"), true))
-	self.fillMilk=false
+    self.fillMilk=false
 	self.Zucht=self
-	self.allowWaterTrailer = tobool(Utils.getNoNil(getUserAttribute(self.nodeId, "allowWaterTrailer"), true))
-	self.allowLiquidManureTrailer=tobool(Utils.getNoNil(getUserAttribute(self.nodeId, "allowLiquidManureTrailer"), true))
-	self.allowSprayer = tobool(Utils.getNoNil(getUserAttribute(self.nodeId, "allowSprayer"), true))
-	self.allowFuelTrailer = tobool(Utils.getNoNil(getUserAttribute(self.nodeId, "allowFuelTrailer"), true))
-	self.allowFuelRefill = tobool(Utils.getNoNil(getUserAttribute(self.nodeId, "allowFuelRefill"), false))
 		
-	self.useParticleSystem = tobool(getUserAttribute(id, "useParticleSystem"))
 	
-    if self.isClient and self.useParticleSystem then
-        local dropParticleSystem = Utils.indexToObject(id, getUserAttribute(id, "dropParticleSystemIndex"))
-        if dropParticleSystem ~= nil then
-            self.dropParticleSystems = {}
-            Utils.loadParticleSystemFromNode(dropParticleSystem, self.dropParticleSystems, false, true)
-        end
-		--[[ somebody needs this??
-        local lyingParticleSystem = Utils.indexToObject(id, getUserAttribute(id, "lyingParticleSystemIndex"))
-        if lyingParticleSystem ~= nil then
-            self.lyingParticleSystems = {}
-            Utils.loadParticleSystemFromNode(lyingParticleSystem, self.lyingParticleSystems, true, true)
-            for _, ps in ipairs(self.lyingParticleSystems) do
-                local lifespan = getParticleSystemLifespan(ps.geometry)
-                addParticleSystemSimulationTime(ps.geometry, lifespan)
-            end
-            Utils.setParticleSystemTimeScale(self.lyingParticleSystems, 0)
-        end
-		]]--
-	  
-        if self.dropParticleSystems == nil then
-            local particleSystem = Utils.getNoNil(getUserAttribute(self.nodeId, "particleSystem"), "wheatParticleSystemLong")
-            local psData = {}
-            psData.psFile = getUserAttribute(id, "particleSystemFilename")
-            if psData.psFile == nil then
-                local particleSystem = Utils.getNoNil(getUserAttribute(self.nodeId, "particleSystem"), "wheatParticleSystemLong")
-                psData.psFile = "$data/vehicles/particleSystems/" .. particleSystem .. ".i3d"
-            end
-			self:print('psData.psFile: '..tostring(psData.psFile))
-            psData.posX, psData.posY, psData.posZ = unpack(getVectorFromUserAttribute(self.nodeId,"particlePosition", "0 0 0"))
-			psData.forceNoWorldSpace = true
-            self.dropParticleSystems = {}
-			-- psData.rotX, psData.rotY, psData.rotZ = unpack(self.rot*(-1))
-            Utils.loadParticleSystemFromData(psData, self.dropParticleSystems, nil, false, nil, g_currentMission.baseDirectory, self.nodeId)
-		end
-    end
-
-    self.useFillSound = tobool(Utils.getNoNil(getUserAttribute(id, "useFillSound"),"true"))
-    if self.useFillSound then
-  		local fillSoundStr = Utils.getNoNil(getUserAttribute(id, "fillSoundFilename"),"$data/maps/sounds/siloFillSound.wav")
-        local fillSoundFilename = Utils.getFilename(fillSoundStr, g_currentMission.baseDirectory)
-        self.siloFillSound = createAudioSource("siloFillSound", fillSoundFilename, 30, 10, 1, 0)
-        link(self.nodeId, self.siloFillSound)
-        setVisibility(self.siloFillSound, false)
-    end
+    
 	
 	self.displayName=""
 	if self.i18nNameSpace~=nil and (_g or {})[self.i18nNameSpace]~=nil then
@@ -127,111 +74,6 @@ function UPK_FillTrigger:new(id, parent)
 	self:print('loaded FillTrigger successfully')
 	
     return self
-end
-
-function UPK_FillTrigger:readStream(streamId, connection)
-	UPK_FillTrigger:superClass().readStream(self, streamId, connection)
-	if connection:getIsServer() then
-		local nrTrailersToSync=streamReadInt8(streamId) or 0
-		for i=1,nrTrailersToSync do
-			local vehicle = networkGetObject(streamReadInt32(streamId))
-			local shapeId=0
-			for k,v in pairs(self.trailers) do
-				if v.vehicle==vehicle then
-					shapeId=k
-					break
-				end
-			end
-			local isFilling = streamReadBool(streamId)
-			if shapeId~=0 then
-				self.trailers[shapeId].isFilling=isFilling
-			end
-		end
-	end
-end;
-
-function UPK_FillTrigger:writeStream(streamId, connection)
-	UPK_FillTrigger:superClass().writeStream(self, streamId, connection)
-	if not connection:getIsServer() then
-		local nrTrailersToSync=0
-		for k,v in pairs(self.trailers) do
-			if v.isFilling~=nil then
-				nrTrailersToSync=nrTrailersToSync+1
-			end
-		end
-		streamWriteInt8(streamId,nrTrailersToSync)
-		for k,v in pairs(self.trailers) do
-			if v.isFilling~=nil then
-				streamWriteInt32(streamId, networkGetObjectId(v.vehicle))
-				streamWriteBool(streamId, v.isFilling)
-			end
-		end
-	end
-end;
-
-function UPK_FillTrigger:readUpdateStream(streamId, timestamp, connection)
-	local dirtyMask=UPK_FillTrigger:superClass().readUpdateStream(self, streamId, timestamp, connection)
-	if bitAND(dirtyMask,self.isFillingDirtyFlag)~=0 then
-		--self:print('UPK_FillTrigger:readUpdateStream isFillingDirtyFlag')
-		local nrTrailersToSync=streamReadInt8(streamId) or 0
-		for i=1,nrTrailersToSync do
-			local vehicle = networkGetObject(streamReadInt32(streamId))
-			local shapeId=0
-			for k,v in pairs(self.trailers) do
-				if v.vehicle==vehicle then
-					shapeId=k
-					break
-				end
-			end
-			local isFilling = streamReadBool(streamId)
-			if shapeId~=0 then
-				self:setTrailerFilling(shapeId,isFilling,true)
-			end
-		end
-	end
-	return dirtyMask
-end;
-
-function UPK_FillTrigger:writeUpdateStream(streamId, connection, dirtyMask)
-	UPK_FillTrigger:superClass().writeUpdateStream(self, streamId, connection, dirtyMask)
-	if bitAND(dirtyMask,self.isFillingDirtyFlag)~=0 or syncall then
-		--self:print('UPK_FillTrigger:writeUpdateStream isFillingDirtyFlag')
-		local nrTrailersToSync=#self.trailersToSync
-		streamWriteInt8(streamId, nrTrailersToSync)
-		for k,v in pairs(self.trailersToSync) do
-			streamWriteInt32(streamId, networkGetObjectId(v.vehicle))
-			streamWriteBool(streamId, v.isFilling)
-		end
-		self.trailersToSync={}
-	end
-end;
-
-function UPK_FillTrigger:delete()
-	for k,v in pairs(self.trailers) do
-		local trailer=g_currentMission.objectToTrailer[k] or g_currentMission.nodeToVehicle[k]
-		if trailer~=nil then
-			if v.vehicleType==UniversalProcessKit.VEHICLE_SOWINGMACHINE then
-				trailer:removeSowingMachineFillTrigger(self)
-			elseif v.vehicleType==UniversalProcessKit.VEHICLE_WATERTRAILER then
-				trailer:removeWaterTrailerFillTrigger(self)
-			elseif v.vehicleType==UniversalProcessKit.VEHICLE_LIQUIDMANURETRAILER then
-				trailer:removeSprayerFillTrigger(self)
-			elseif v.vehicleType==UniversalProcessKit.VEHICLE_SPRAYER then
-				trailer:removeSprayerFillTrigger(self)
-			elseif v.vehicleType==UniversalProcessKit.VEHICLE_FUELTRAILER then
-				trailer:removeFuelFillTrigger(self)
-			elseif v.vehicleType==UniversalProcessKit.VEHICLE_MOTORIZED then
-				trailer:removeFuelFillTrigger(self)
-			end
-		end
-		self.trailers[k]=nil
-	end
-	self.trailers={}
-
-	g_currentMission:removeActivatableObject(self.fillTriggerActivatable)
-	self.fillTriggerActivatable=nil
-
-	UPK_FillTrigger:superClass().delete(self)
 end
 
 function UPK_FillTrigger:update(dt)

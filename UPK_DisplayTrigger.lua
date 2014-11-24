@@ -21,25 +21,7 @@ function UPK_DisplayTrigger:new(nodeId, parent)
 	for _,fillType in pairs(UniversalProcessKit.fillTypeNameToInt(displayFillTypesArr)) do
 		self.displayFillTypes[fillType] = true
 	end
-	
-	self.displayTexts={}
-	for fillType,_ in pairs(self.displayFillTypes) do
-		local i18n_key=UniversalProcessKit.fillTypeIntToName[fillType]
-		self:print('i18n_key: '..tostring(i18n_key))
-		local text=""
-		self:print('self.i18nNameSpace: '..tostring(self.i18nNameSpace))
-		if self.i18nNameSpace~=nil and (_g or {})[self.i18nNameSpace]~=nil and _g[self.i18nNameSpace].g_i18n~=nil and _g[self.i18nNameSpace].g_i18n:hasText(i18n_key) then
-			text=_g[self.i18nNameSpace].g_i18n:getText(i18n_key)
-			self:print('text1: '..tostring(text))
-		elseif g_i18n:hasText(i18n_key) then
-			text=g_i18n:getText(i18n_key)
-			self:print('text2: '..tostring(text))
-		end
-		self.displayTexts[fillType]=text
-	end
-	
-	self.fluid_unit_short=g_i18n:getText("fluid_unit_short")
-	
+
 	self:addTrigger()
 
 	self:print('loaded DisplayTrigger successfully')
@@ -67,12 +49,12 @@ function UPK_DisplayTrigger:update(dt)
 			if display then
 				local fillLevel=self:getFillLevel(fillType)
 				if fillLevel>0 or not self.onlyFilled then
-					local text=self.displayTexts[fillType] or ""
+					local text=self.i18n[UniversalProcessKit.fillTypeIntToName[fillType]]
 					if text~="" then
 						text=text..": "
 					end
 					if self.showFillLevel then
-						text=text..mathceil(fillLevel) .. "[" .. self.fluid_unit_short .. "]"
+						text=text..mathceil(fillLevel) .. "[" .. self.i18n["fluid_unit_short"] .. "]"
 					end
 					if self.showPercentage then
 						local capacity = self:getCapacity(fillType)
