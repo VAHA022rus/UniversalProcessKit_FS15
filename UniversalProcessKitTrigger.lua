@@ -63,7 +63,7 @@ function UniversalProcessKit:getAllowedVehicles()
 	self.allowedVehicles[UniversalProcessKit.VEHICLE_TRAFFICVEHICLE] = getBoolFromUserAttribute(self.nodeId, "allowTrafficVehicle", self.allowedVehicles[UniversalProcessKit.VEHICLE_TRAFFICVEHICLE])
 	self.allowedVehicles[UniversalProcessKit.VEHICLE_MILKTRUCK] = getBoolFromUserAttribute(self.nodeId, "allowMilktruck", self.allowedVehicles[UniversalProcessKit.VEHICLE_MILKTRUCK])
 	
-	self.allowWalker = getBoolFromUserAttribute(self.nodeId, "allowWalker", true)
+	self.allowWalker = self.allowWalker or getBoolFromUserAttribute(self.nodeId, "allowWalker", true)
 end
 
 function UniversalProcessKit:fitCollisionMaskToAllowedVehicles()

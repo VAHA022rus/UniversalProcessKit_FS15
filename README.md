@@ -2,16 +2,32 @@
 
 Dieses projekt befindet sich zur Zeit in der "Konvertierungsphase" aus den LS13-Skripten. Unter der Haube vom UPK hat sich sehr viel verändert und nach und nach werden jetzt die Module ergänzt.
 
+__aktuelle Entwickler-Version -> AAA\_UniversalProcessKit-dev__
+
+__Dokumentation -> 00\_documentation__
+
+__Beispiel-Mods -> 00\_examples__
+
 Bisher enthaltene Module:
 
 - base
 - entitytrigger
+- filltrigger
 - displaytrigger
 - processor
 - tiptrigger
 - unspecified
 
 ##Changelog
+
+__V0.7.2__
+
+- Modul filltrigger hinzugefügt
+- neu: fillType (filltrigger)
+- neu: fillLitersPerSecond (filltrigger)
+- neu: createFillType (filltrigger)
+- neu: pricePerLiter (filltrigger)
+- neu: statName (filltrigger)
 
 __V0.7.1__
 

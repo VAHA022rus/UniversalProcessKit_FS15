@@ -36,6 +36,11 @@ function UPK_TipTrigger:new(id, parent)
 	</l10n>
 	--]]
 	
+	self.allowedVehicles={}
+	self.allowedVehicles[UniversalProcessKit.VEHICLE_TIPPER] = getBoolFromUserAttribute(self.nodeId, "allowTipper", true)
+	
+	self.allowWalker = getBoolFromUserAttribute(self.nodeId, "allowWalker", false)
+	
 	-- register trigger
 	
 	self:addTrigger()
