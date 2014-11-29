@@ -39,6 +39,11 @@ function UniversalProcessKit.getVehicleType(vehicle)
 	if vehicle.upk_vehicleType==nil then
 		local vehicleType=0
 		
+		print('checking vehicle')
+		if SpecializationUtil.hasSpecialization(Motorized, vehicle.specializations) then
+			print('its motorized')
+			vehicleType=vehicleType+UniversalProcessKit.VEHICLE_MOTORIZED
+		end
 		if SpecializationUtil.hasSpecialization(SowingMachine, vehicle.specializations) then
 			vehicleType=vehicleType+UniversalProcessKit.VEHICLE_SOWINGMACHINE
 		end
@@ -71,9 +76,6 @@ function UniversalProcessKit.getVehicleType(vehicle)
 		end
 		if SpecializationUtil.hasSpecialization(Baler, vehicle.specializations) then
 			vehicleType=vehicleType+UniversalProcessKit.VEHICLE_BALER
-		end
-		if SpecializationUtil.hasSpecialization(Motorized, vehicle.specializations) then
-			vehicleType=vehicleType+UniversalProcessKit.VEHICLE_MOTORIZED
 		end
 		if SpecializationUtil.hasSpecialization(Combine, vehicle.specializations) then -- doenst seem to recognize combines
 			vehicleType=vehicleType+UniversalProcessKit.VEHICLE_COMBINE

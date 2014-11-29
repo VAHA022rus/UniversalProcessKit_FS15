@@ -84,3 +84,35 @@ function UPK_Base:delete()
 	end
 	UPK_Base:superClass().delete(self)
 end
+
+function UPK_Base:loadFromAttributesAndNodes(xmlFile, key)
+	self:print('calling UPK_Base:loadFromAttributesAndNodes for id '..tostring(self.nodeId))
+	
+	self.timesSaved = getXMLInt(xmlFile, key .. "#timesSaved") or 0
+	
+	self:print('times saved: '..tostring(self.timesSaved))
+	
+	return UPK_Base:superClass().loadFromAttributesAndNodes(self, xmlFile, key)
+end;
+
+function UPK_Base:getSaveAttributesAndNodes(nodeIdent)
+	self:print('calling UPK_Base:getSaveAttributesAndNodes for id '..tostring(self.nodeId))
+	
+	local attributes, nodes = UPK_Base:superClass().getSaveAttributesAndNodes(self,nodeIdent)
+	
+	if nodes~="" then
+		nodes = "\t\t" .. nodes
+	end
+	
+	local timesSaved = ' timesSaved=\"' .. ((self.timesSaved or 0)+1) .. '\"'
+
+	if attributes~="" then
+		attributes = timesSaved .. ' ' .. attributes
+	else
+		attributes = timesSaved
+	end
+
+	return attributes, nodes
+end;
+
+

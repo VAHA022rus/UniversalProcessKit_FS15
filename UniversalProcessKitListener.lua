@@ -31,7 +31,43 @@ function UniversalProcessKitListener.loadMap(name)
 	
 	g_currentMission.environment:addDayChangeListener(UniversalProcessKitListener)
 	g_currentMission.environment:addHourChangeListener(UniversalProcessKitListener)
-	g_currentMission.environment:addMinuteChangeListener(UniversalProcessKitListener)	
+	g_currentMission.environment:addMinuteChangeListener(UniversalProcessKitListener)
+	
+
+	
+	--[[
+
+	if type(g_currentMission.missionStats.financeStats)=="table" then
+		print('g_currentMission.missionStats is table')
+		for k,v in pairs(g_currentMission.missionStats.financeStats) do
+			print(tostring(k)..': '..tostring(v))
+		end
+	end
+	
+1: Neue Fahrzeuge
+ [UPK] DEBUG 2: Tierkosten
+ [UPK] DEBUG 3: Baukosten
+ [UPK] DEBUG 4: Betriebskosten Fahrzeuge
+ [UPK] DEBUG 5: Betriebskosten Gebäude
+ [UPK] DEBUG 6: Lohnzahlungen
+ [UPK] DEBUG 7: Einnahmen Ernte
+ [UPK] DEBUG 8: Einnahmen Missionen
+ [UPK] DEBUG 9: Sonstiges
+ [UPK] DEBUG 10: Kreditzinsen
+
+ [UPK] DEBUG other: 0
+ [UPK] DEBUG vehicleRunningCost: 0
+ [UPK] DEBUG missionIncome: 0
+ [UPK] DEBUG newAnimalsCost: 0
+ [UPK] DEBUG statNamesI18n: table: 0x7fd0353aeb80
+ [UPK] DEBUG constructionCost: 0
+ [UPK] DEBUG wagePayment: 0
+ [UPK] DEBUG harvestIncome: 0
+ [UPK] DEBUG newVehiclesCost: 0
+ [UPK] DEBUG propertyMaintenance: 0
+ [UPK] DEBUG loanInterest: 0
+
+	]]--
 end
 
 function UniversalProcessKitListener.deleteMap(name)

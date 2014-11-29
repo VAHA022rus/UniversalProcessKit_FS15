@@ -50,7 +50,12 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 	self.nodeId = nodeId
 	self.triggerId = 0
 	
-	self.parent= parent
+	self.parent = parent
+	if self.parent == nil then
+		self.base = self
+	else
+		self.base = self.parent.base
+	end
 	self.kids={}
 	self.type=nil
 
@@ -87,6 +92,7 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 	self.storageType = UPK_Storage.SEPARATE
 	
 	local storeArr = getArrayFromUserAttribute(self.nodeId, "store")
+	
 	if #storeArr==1 then
 		if storeArr[1]=="single" then
 			self.storageType = UPK_Storage.SINGLE
@@ -96,11 +102,11 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 			self.storageType = UPK_Storage.FILO
 		end
 	end
-	
+
 	-- capacity/ capacities
-	
+
 	self.p_capacity = getNumberFromUserAttribute(nodeId, "capacity", math.huge)
-	
+
 	local capacities = {}
 	if self.storageType==UPK_Storage.SEPARATE or self.storageType==UPK_Storage.SINGLE then
 		local capacitiesArr = getArrayFromUserAttribute(nodeId, "capacities")
@@ -113,19 +119,19 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 			end
 		end
 	end
-	
+
 	self.capacities = FillLevelBubbleCapacities:new(self.p_capacity, capacities)
-	
+
 	for k,v in pairs(self.capacities) do
 		print('capacity of '..tostring(k)..': '..tostring(v))
 	end
-	
+
 	-- set metatable
-	
+
 	setmetatable(self, customMt or UniversalProcessKit_mt)
-	
+
 	-- fill level bubbles
-	
+
 	self.p_flbs = {}
 	if self.storageType == UPK_Storage.SEPARATE then
 		for _,v in pairs(UniversalProcessKit.fillTypeNameToInt(storeArr)) do
@@ -145,7 +151,7 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 		self.p_flbs = {flb}
 		self.p_totalFillLevel = 0
 	end
-	
+
 	for _,flb in pairs(self.p_flbs) do
 		flb.capacities = self.capacities
 		for k,v in pairs(flb.capacities) do
@@ -154,17 +160,30 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 		flb.fillTypesConversionMatrix = self.fillTypesConversionMatrix
 		flb:registerOnFillLevelChangeFunc(self,"onFillLevelChange")
 	end
+
+	-- fill types conversion matrix
+
+	local fillTypesConversionMatrixStrStr = getStringFromUserAttribute(nodeId, "convertFillTypes", "")
+	self:print('fillTypesConversionMatrixStrStr: '..tostring(fillTypesConversionMatrixStrStr))
+	local fillTypesConversionMatrixStrArr = gmatch(fillTypesConversionMatrixStrStr..',','(.-),')
+	for _,fillTypesConversionMatrixStr in pairs(fillTypesConversionMatrixStrArr) do
+		if fillTypesConversionMatrixStr~=nil and fillTypesConversionMatrixStr~="" then
+			self:print('dealing with '..tostring(fillTypesConversionMatrixStr))
+			self.fillTypesConversionMatrix = self.fillTypesConversionMatrix + FillTypesConversionMatrix:new(UniversalProcessKit.fillTypeNameToInt(gmatch(fillTypesConversionMatrixStr,'%S+')))
+		end
+	end
+
+	self:print('FILLTYPE_FUEL: '..tostring(UniversalProcessKit.FILLTYPE_FUEL))
+	self:print('FILLTYPE_OIL: '..tostring(UniversalProcessKit.FILLTYPE_OIL))
+
+	local arr1 = self.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN or 2345]
+	if arr1~=nil then
+		self:print('self.fillTypesConversionMatrix[oil][fuel]: '..tostring(arr1[UniversalProcessKit.FILLTYPE_FUEL or 2345]))
+	end
 	
-	-- initial fill levels
-	
-	self.initialFillLevels = {} -- redo for fifo and filo
-	local initialFillLevelsArr = getArrayFromUserAttribute(nodeId, "initialFillLevels")
-	for i=1,#initialFillLevelsArr,2 do
-		local fillLevel=tonumber(initialFillLevelsArr[i])
-		local fillType=unpack(UniversalProcessKit.fillTypeNameToInt(initialFillLevelsArr[i+1]))
-		self:print('want to initially add '..tostring(fillLevel)..' to '..tostring(fillType))
-		if fillLevel~=nil and fillType~=nil then
-			self.initialFillLevels[fillType] = self:addFillLevel(fillLevel, fillType) -- gets removed when save is loaded
+	for k,v in pairs(self.fillTypesConversionMatrix) do
+		for l,w in pairs(v) do
+			print('convert from '..tostring(k)..' to '..tostring(l)..' end up as '..tostring(w))
 		end
 	end
 	
@@ -269,13 +288,19 @@ end;
 
 function UniversalProcessKit:delete()
 	print('delete module '..tostring(self.name)..' with id '..tostring(self.id))
-	
+
 	for _,v in pairs(self.kids) do
 		v:removeTrigger()
 		v:delete()
 	end
 	
 	self.kids={}
+	
+	UniversalProcessKitListener.removeUpdateable(self)
+	UniversalProcessKitListener.removeDayChangeListener(self)
+	UniversalProcessKitListener.removeHourChangeListener(self)
+	UniversalProcessKitListener.removeMinuteChangeListener(self)
+	UniversalProcessKitListener.removeSecondChangeListener(self)
 
 	if self.addNodeObject and self.nodeId ~= 0 then
 		g_currentMission:removeNodeObject(self.nodeId)
@@ -337,7 +362,6 @@ function UniversalProcessKit:resetFillLevelIfNeeded()
 end
 
 function UniversalProcessKit:allowFillType(fillType, allowEmptying) -- also check for capcity
-	local flb = self.p_flbs[self.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN][fillType]]
 	if self.storageType==UPK_Storage.SEPARATE and fillType~=nil then
 		local newFillType=self.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN][fillType]
 		local flb=self.p_flbs[newFillType]
@@ -426,37 +450,39 @@ function UniversalProcessKit:loadFromAttributesAndNodes(xmlFile, key)
 	self:print('calling UniversalProcessKit:loadFromAttributesAndNodes for id '..tostring(self.nodeId))
 	key=key.."."..self.name
 	
-	--[[
-	for fillType, fillLevel in pairs(self.initialFillLevels) do
-		self:addFillLevel(-fillLevel, fillType)
+	-- initial fill levels
+	
+	if self.base.timesSaved==0 then
+		local initialFillLevelsArr = getArrayFromUserAttribute(self.nodeId, "initialFillLevels")
+		for i=1,#initialFillLevelsArr,2 do
+			local fillLevel=tonumber(initialFillLevelsArr[i])
+			local fillType=unpack(UniversalProcessKit.fillTypeNameToInt(initialFillLevelsArr[i+1]))
+			self:print('want to initially add '..tostring(fillLevel)..' to '..tostring(fillType))
+			if fillLevel~=nil and fillType~=nil then
+				self:addFillLevel(fillLevel, fillType)
+			end
+		end
 	end
-	--]]
 	
-	--local fillType=getXMLFloat(xmlFile, key .. "#fillType")
-	--if fillType~=nil then
-	--	self:setFillType(unpack(UniversalProcessKit.fillTypeNameToInt(fillType)))
-	--end
+	local fillLevelsStr = getXMLString(xmlFile, key .. "#fillLevels")
+	self:print('read save fillLevels '..tostring(fillLevelsStr))
+	local fillLevelsArr = gmatch(fillLevelsStr, "%S+")
+	for i=1,#fillLevelsArr,2 do
+		local fillLevel=tonumber(fillLevelsArr[i])
+		local fillType=unpack(UniversalProcessKit.fillTypeNameToInt(fillLevelsArr[i+1]))
+		self:print('want to add saved '..tostring(fillLevel)..' to '..tostring(fillType))
+		if fillLevel~=nil and fillType~=nil then
+			self:addFillLevel(fillLevel, fillType) -- should be good for fifo and filo
+		end
+	end
 	
-	--[[
 	if getXMLFloat(xmlFile, key .. "#isEnabled")=="false" then
 		self:setEnable(false)
 	end
-	if getXMLFloat(xmlFile, key .. "#showMapHotspot")=="false" then
-		self:showMapHotspot(false)
-	end
 	
-	for k,v in pairs(UniversalProcessKit.fillTypeIntToName) do
-		local fillLevel = getXMLFloat(xmlFile, key .. "#" .. tostring(v))
-		if fillLevel~=nil then
-			self:setFillLevel(fillLevel,k,true)
-		end
-	end
-
 	for k,v in pairs(self.kids) do
 		v:loadFromAttributesAndNodes(xmlFile, key)
 	end
-
-	--]]
 	
 	return self:loadExtraNodes(xmlFile, key)
 end;
@@ -464,29 +490,48 @@ end;
 function UniversalProcessKit:getSaveAttributesAndNodes(nodeIdent)
 	self:print('calling UniversalProcessKit:getSaveAttributesAndNodes for id '..tostring(self.nodeId))
 	local attributes=""
-	local nodes=""
+		
+	local nodes = "<"..tostring(self.name)
 	
-	--[[
-	
-	local nodes = "\t<"..tostring(self.name)
-
-	--nodes=nodes.." fillType=\""..tostring(UniversalProcessKit.fillTypeIntToName[self.fillType]).."\""
 	if not self.isEnabled then
 		nodes=nodes.." isEnabled=\"false\""
 	end
-	if self.mapHotspot~=nil then
-		nodes=nodes.." showMapHotspot=\"true\""
-	end
 	
-	local extraNodes=""
-	for k,v in pairs(UniversalProcessKit.fillTypeIntToName) do
-		local fillLevel=rawget(self.fillLevels,k)
-		if fillLevel~=nil and fillLevel>=0.001 then
-			extraNodes = extraNodes .. " " .. tostring(v) .. "=\"" .. tostring(mathfloor(fillLevel*1000+0.5)/1000) .. "\""
+	local fillLevels = ""
+	if self.storageType==UPK_Storage.SEPARATE then
+		for _,flb in pairs(self.p_flbs) do
+			local fillType = UniversalProcessKit.fillTypeIntToName[flb.fillType]
+			local fillLevel = flb.fillLevel
+			if fillLevels~="" then
+				fillLevels = fillLevels .. ' '
+			end
+			fillLevels = fillLevels .. tostring(round(fillLevel,4)) .. ' ' .. tostring(fillType)
+		end
+	elseif self.storageType==UPK_Storage.SINGLE or self.storageType==UPK_Storage.FIFO or self.storageType==UPK_Storage.FILO then
+		for i=1,#self.p_flbs do
+			local flb = self.p_flbs[i]
+			local fillType = UniversalProcessKit.fillTypeIntToName[flb.fillType]
+			local fillLevel = flb.fillLevel
+			if fillLevels~="" then
+				fillLevels = fillLevels .. ' '
+			end
+			fillLevels = fillLevels .. tostring(round(fillLevel,4)) .. ' ' .. tostring(fillType)
 		end
 	end
-
-	extraNodes=extraNodes..self:getSaveExtraNodes(nodeIdent)
+	
+	self:print('fillLevels: '..tostring(fillLevels))
+	
+	local extraNodes=""
+	
+	if fillLevels~="" then
+		extraNodes = " fillLevels=\"" .. tostring(fillLevels) .. "\""
+	end
+	
+	local extraNodesF = self:getSaveExtraNodes(nodeIdent)
+	
+	if extraNodesF ~= "" then
+		extraNodes = extraNodes .. ' ' .. extraNodesF
+	end
 	
 	local nodesKids=""
 	for k,v in pairs(self.kids) do
@@ -501,13 +546,13 @@ function UniversalProcessKit:getSaveAttributesAndNodes(nodeIdent)
 		if extraNodes=="" then
 			nodes=""
 		else
-			nodes = nodes .. extraNodes .. " />\n"
+			nodes = nodes .. extraNodes .. " />"
 		end
 	else
-		nodes = nodes .. extraNodes ..">\n" .. string.gsub(nodesKids,"\n","\n\t") .. "\n\t</"..tostring(self.name)..">"
+		nodes = nodes .. extraNodes ..">\n" .. "\t" .. nodesKids .. "\n" .. "</"..tostring(self.name)..">"
 	end
 	
-	--]]
+	self:print('nodes: '..tostring(nodes))
 	
 	return attributes, nodes
 end;

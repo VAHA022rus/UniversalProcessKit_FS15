@@ -17,6 +17,19 @@ _m.mathsin = math.sin
 _m.mathcos = math.cos
 
 _g.UniversalProcessKit = {};
+
+local UniversalProcessKit_mt = {
+	__index=function(t,k)
+		local wantFillType = string.match(k, "FILLTYPE_%S+")
+		if wantFillType~=nil and Fillable[k]~=nil then
+			rawset(UniversalProcessKit,k,Fillable[k])
+			return Fillable[k]
+		end
+		return nil
+	end
+	}
+setmetatable(UniversalProcessKit,UniversalProcessKit_mt)
+
 _g.UniversalProcessKitStorageBit={};
 _g.UniversalProcessKitStorageController={};
 
@@ -217,6 +230,17 @@ function removeValueFromTable(tbl, value, all)
 	return 0
 end;
 
+function isInTable(t,e)
+	if type(t)=="table" then
+		for _,v in pairs(t) do
+			if v==e then
+				return true
+			end
+		end
+	end
+	return false
+end;
+
 function loopThruChildren(id,loopFunction,obj)
 	print('loopThruChildren nodeId '..tostring(id))
 	if id==nil or id==0 or type(obj)~="table" or type(loopFunction)~="string" then
@@ -327,6 +351,7 @@ _g.UPK_BuyTrigger={}
 _g.UPK_Conveyor={}
 _g.UPK_DisplayTrigger={}
 _g.UPK_DumpTrigger={}
+_g.UPK_EmptyTrigger={}
 _g.UPK_EntityTrigger={}
 _g.UPK_FillTrigger={}
 _g.UPK_BalerTrigger={}

@@ -13,7 +13,7 @@ function UPK_FillTrigger:new(id, parent)
 	
 	self.fillFillType = UniversalProcessKit.fillTypeNameToInt[getStringFromUserAttribute(id, "fillType", "unknown")]
 	
-    self.fillLitersPerSecond = getNumberFromUserAttribute(id, "fillLitersPerSecond", 1500)
+    self.fillLitersPerSecond = getNumberFromUserAttribute(id, "fillLitersPerSecond", 1500, 0)
 	self.createFillType = getBoolFromUserAttribute(id, "createFillType", false)
     self.pricePerLiter = getNumberFromUserAttribute(id, "pricePerLiter", 0)
 	
@@ -124,8 +124,8 @@ function UPK_FillTrigger:fillTrailer(trailer, deltaFillLevel) -- tippers, shovel
 			deltaFillLevel = trailer:getFillLevel(self.fillFillType) - trailerFillLevel
 			if(deltaFillLevel>0 and self.pricePerLiter~=0)then
 				local price = delta * self.pricePerLiter
-				g_currentMission.missionStats.expensesTotal = g_currentMission.missionStats.expensesTotal + price
-				g_currentMission.missionStats.expensesSession = g_currentMission.missionStats.expensesSession + price
+				--g_currentMission.missionStats.expensesTotal = g_currentMission.missionStats.expensesTotal + price
+				--g_currentMission.missionStats.expensesSession = g_currentMission.missionStats.expensesSession + price
 				g_currentMission:addSharedMoney(-price, self.statName)
 			end
 			if not self.createFillType then
@@ -147,8 +147,8 @@ function UPK_FillTrigger:fillMotorized(trailer, deltaFillLevel) -- motorized
 			deltaFillLevel = trailer.fuelFillLevel - trailerFillLevel
 			if(deltaFillLevel>0 and self.pricePerLiter~=0)then
 				local price = delta * self.pricePerLiter
-				g_currentMission.missionStats.expensesTotal = g_currentMission.missionStats.expensesTotal + price
-				g_currentMission.missionStats.expensesSession = g_currentMission.missionStats.expensesSession + price
+				--g_currentMission.missionStats.expensesTotal = g_currentMission.missionStats.expensesTotal + price
+				--g_currentMission.missionStats.expensesSession = g_currentMission.missionStats.expensesSession + price
 				g_currentMission:addSharedMoney(-price, self.statName)
 			end
 			if not self.createFillType then

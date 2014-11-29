@@ -26,7 +26,7 @@ function UniversalProcessKit:removeTrigger()
 			self.entities:triggerUpdate(vehicle,false)
 		end
 		self.triggerId = 0
-		self.allowedVehicles={}
+		self.allowedVehicles=nil
 		self.entities={}
 		self.entitiesInTrigger=0
 		self.playerInRange=false
@@ -90,6 +90,9 @@ function UniversalProcessKit:fitCollisionMaskToAllowedVehicles()
 
 	local collisionMask_old = getCollisionMask(self.triggerId)
 	local collisionMask_new = collisionMask_old
+	
+	-- add colision mask bits if necessary
+	
 	if self.allowWalker and bitAND(collisionMask_new,trigger_player)==0 then
 		self:print('Warning: allowWalker is set to true but collisionMask was not fitting (fixed)')
 		collisionMask_new = collisionMask_new + trigger_player
@@ -121,8 +124,45 @@ function UniversalProcessKit:fitCollisionMaskToAllowedVehicles()
 		self:print('Warning: allowTrafficVehicle is set to true but collisionMask was not fitting (fixed)')
 		collisionMask_new = collisionMask_new + trigger_trafficVehicle
 	end
+	
+	-- substract colision mask bits if necessary
+	
+	if not self.allowWalker and bitAND(collisionMask_new,trigger_player)==1 then
+		self:print('Warning: allowWalker is set to false but collisionMask was not fitting (fixed)')
+		collisionMask_new = collisionMask_new - trigger_player
+	end
+	if not self.allowedVehicles[UniversalProcessKit.VEHICLE_MOTORIZED] and bitAND(collisionMask_new,trigger_tractor)==1 then
+		self:print('Warning: allowMotorized is set to false but collisionMask was not fitting (fixed)')
+		collisionMask_new = collisionMask_new - trigger_tractor
+	end
+	if not self.allowedVehicles[UniversalProcessKit.VEHICLE_COMBINE] and bitAND(collisionMask_new,trigger_combine)==1 then
+		self:print('Warning: allowCombine is set to false but collisionMask was not fitting (fixed)')
+		collisionMask_new = collisionMask_new - trigger_combine
+	end
+	if not (self.allowedVehicles[UniversalProcessKit.VEHICLE_FILLABLE] or -- check every fillable type
+		self.allowedVehicles[UniversalProcessKit.VEHICLE_TIPPER] or
+		self.allowedVehicles[UniversalProcessKit.VEHICLE_SHOVEL] or
+		self.allowedVehicles[UniversalProcessKit.VEHICLE_WATERTRAILER] or
+		self.allowedVehicles[UniversalProcessKit.VEHICLE_FUELTRAILER] or
+		self.allowedVehicles[UniversalProcessKit.VEHICLE_LIQUIDMANURETRAILER] or
+		self.allowedVehicles[UniversalProcessKit.VEHICLE_MILKTRAILER] or
+		self.allowedVehicles[UniversalProcessKit.VEHICLE_SOWINGMACHINE] or
+		self.allowedVehicles[UniversalProcessKit.VEHICLE_SPRAYER] or
+		self.allowedVehicles[UniversalProcessKit.VEHICLE_FORAGEWAGON] or
+		self.allowedVehicles[UniversalProcessKit.VEHICLE_BALER]) and bitAND(collisionMask_new,trigger_fillable)==1 then
+		self:print('Warning: some kind of allowFillable is set to false but collisionMask was not fitting (fixed)')
+		collisionMask_new = collisionMask_new - trigger_fillable
+	end
+	if not (self.allowedVehicles[UniversalProcessKit.VEHICLE_TRAFFICVEHICLE] or
+		self.allowedVehicles[UniversalProcessKit.VEHICLE_MILKTRUCK]) and bitAND(collisionMask_new,trigger_trafficVehicle)==1 then
+		self:print('Warning: allowTrafficVehicle is set to false but collisionMask was not fitting (fixed)')
+		collisionMask_new = collisionMask_new - trigger_trafficVehicle
+	end
+	
+	-- result
+	
 	if collisionMask_new ~= collisionMask_old then
-		self:print('Notice: set collisionMask according to allowed vehicles to '..tostring(collisionMask_new)..' (you may want to fix that)')
+		self:print('Warning: set collisionMask according to allowed vehicles to '..tostring(collisionMask_new)..' (you may want to fix that)')
 		setCollisionMask(self.triggerId,collisionMask_new)
 	end
 end
@@ -130,8 +170,14 @@ end
 function UniversalProcessKit:triggerCallback(triggerId, otherActorId, onEnter, onLeave, onStay, otherShapeId)
 	if self.isEnabled then
 		--self:print('otherShapeId: '..tostring(otherShapeId)..', otherActorId: '..tostring(otherActorId))
-		local vehicle=g_currentMission.objectToTrailer[otherShapeId] or g_currentMission.nodeToVehicle[otherShapeId]
-		--self:print('test '..tostring(g_currentMission.nodeToVehicle[otherActorId]))
+		local vehicle=g_currentMission.objectToTrailer[otherShapeId] or
+						g_currentMission.nodeToVehicle[otherShapeId] or
+						g_currentMission.objectToTrailer[otherActorId] or
+						g_currentMission.nodeToVehicle[otherActorId]
+		--self:print('g_currentMission.objectToTrailer[otherShapeId] '..tostring(g_currentMission.objectToTrailer[otherShapeId]))
+		--self:print('g_currentMission.nodeToVehicle[otherShapeId] '..tostring(g_currentMission.nodeToVehicle[otherShapeId]))
+		--self:print('g_currentMission.objectToTrailer[otherActorId] '..tostring(g_currentMission.objectToTrailer[otherActorId]))
+		--self:print('g_currentMission.nodeToVehicle[otherActorId] '..tostring(g_currentMission.nodeToVehicle[otherActorId]))
 		--self:print('vehicle is '..tostring(vehicle))
 		if vehicle~=nil then
 			for k,v in pairs(UniversalProcessKit.getVehicleTypes(vehicle)) do
@@ -189,7 +235,7 @@ function UniversalProcessKit:getShowInfo()
 		return g_currentMission.controlPlayer or false
 	else
 		for k,v in pairs(self.entities) do
-			if v:getIsActiveForInput() then
+			if v.isEntered or v:getIsActiveForInput(true) then
 				return true
 			end
 		end

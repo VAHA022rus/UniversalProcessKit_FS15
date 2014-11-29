@@ -16,7 +16,6 @@ function UPK_DisplayTrigger:new(nodeId, parent)
 	self.showPercentage = getBoolFromUserAttribute(self.nodeId, "showPercentage", true)
 
 	self.displayFillTypes={}
-	
 	local displayFillTypesArr = getArrayFromUserAttribute(self.nodeId, "displayFillTypes")
 	for _,fillType in pairs(UniversalProcessKit.fillTypeNameToInt(displayFillTypesArr)) do
 		self.displayFillTypes[fillType] = true
@@ -34,8 +33,9 @@ function UPK_DisplayTrigger:delete()
 end
 
 function UPK_DisplayTrigger:triggerUpdate(vehicle,isInTrigger)
+	self:print('UPK_DisplayTrigger:triggerUpdate('..tostring(vehicle)..','..tostring(isInTrigger)..')')
 	if self.isClient then
-		if self.entitiesInTrigger>0 and self:getShowInfo() then
+		if self.entitiesInTrigger>0 then
 			UniversalProcessKitListener.addUpdateable(self)
 		else
 			UniversalProcessKitListener.removeUpdateable(self)
@@ -44,7 +44,7 @@ function UPK_DisplayTrigger:triggerUpdate(vehicle,isInTrigger)
 end
 
 function UPK_DisplayTrigger:update(dt)
-	if self.isEnabled then
+	if self.isEnabled and self:getShowInfo() then
 		for fillType,display in pairs(self.displayFillTypes) do
 			if display then
 				local fillLevel=self:getFillLevel(fillType)

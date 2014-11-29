@@ -20,14 +20,30 @@ Bisher enthaltene Module:
 
 ##Changelog
 
+__V0.7.3__
+
+- neu: Speichern und Laden von Füllständen
+- neu: convertFillTypes (Standard-UserAttributes)
+- Modultyp emptytrigger hinzugefügt
+- neu: emptyFillTypes (emptytrigger)
+- neu: emptyLitersPerSecond (emptytrigger)
+- neu: revenuePerLiter (emptytrigger)
+- neu: revenuesPerLiter (emptytrigger)
+- neu: statName (emptytrigger)
+- neu: revenuePerLiter (tiptrigger)
+- neu: revenuesPerLiter (tiptrigger)
+- neu: statName (tiptrigger)
+- Beispielmod UPK_EmptyTriggerTest hinzugefügt
+
 __V0.7.2__
 
-- Modul filltrigger hinzugefügt
+- Modultyp filltrigger hinzugefügt
 - neu: fillType (filltrigger)
 - neu: fillLitersPerSecond (filltrigger)
 - neu: createFillType (filltrigger)
 - neu: pricePerLiter (filltrigger)
 - neu: statName (filltrigger)
+- Beispielmod UPK_FillTriggerTest hinzugefügt
 
 __V0.7.1__
 

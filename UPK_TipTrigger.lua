@@ -16,11 +16,61 @@ function UPK_TipTrigger:new(id, parent)
 	
 	self.acceptedFillTypes = {}
 	
-	local acceptedFillTypesArr = getArrayFromUserAttribute(self.nodeId, "acceptedFillTypes")
+	local acceptedFillTypesArr = getArrayFromUserAttribute(id, "acceptedFillTypes")
 	for _,fillType in pairs(UniversalProcessKit.fillTypeNameToInt(acceptedFillTypesArr)) do
 		self:print('accepting '..tostring(UniversalProcessKit.fillTypeIntToName[fillType])..' ('..tostring(fillType)..')')
 		self.acceptedFillTypes[fillType] = true
 		self.fillTypesConversionMatrix = self.fillTypesConversionMatrix + FillTypesConversionMatrix:new(fillType)
+	end
+	
+	-- revenues
+	
+	self.revenuePerLiter = getNumberFromUserAttribute(id, "revenuePerLiter", 0)
+	self.revenuesPerLiter = {}
+		
+	local revenuesPerLiterArr = getArrayFromUserAttribute(id, "revenuesPerLiter")
+	for i=1,#revenuesPerLiterArr,2 do
+		local revenue=tonumber(revenuesPerLiterArr[i])
+		local fillType=unpack(UniversalProcessKit.fillTypeNameToInt(revenuesPerLiterArr[i+1]))
+		if revenue~=nil and fillType~=nil then
+			self.revenuesPerLiter[fillType] = revenue
+		end
+	end
+	
+	local revenues_mt = {
+		__index=function(t,k)
+			return self.revenuePerLiter
+		end
+	}
+	setmetatable(self.revenuesPerLiter,revenues_mt)
+	
+	--[[
+	FinanceStats.statNames = {
+		"newVehiclesCost",
+		"newAnimalsCost",
+		"constructionCost",
+		"vehicleRunningCost",
+		"propertyMaintenance",
+		"wagePayment",
+		"harvestIncome",
+		"missionIncome",
+		"other",
+		"loanInterest"
+	}
+	--]]
+	
+	self.statName=getStringFromUserAttribute(id, "statName")
+	local validStatName=false
+	if self.statName~=nil then
+		for _,v in pairs(FinanceStats.statNames) do
+			if self.statName==v then
+				validStatName=true
+				break
+			end
+		end
+	end
+	if not validStatName then
+		self.statName="other"
 	end
 	
 	-- texts
@@ -72,6 +122,10 @@ function UPK_TipTrigger:updateTrailerTipping(trailer, fillDelta, fillType)
 			if fillDelta < 0 and fillType~=nil then
 				--self:print('fillDelta: '..tostring(fillDelta))
 				local fill = self:addFillLevel(-fillDelta,fillType)
+				if fill~=0 and self.revenuesPerLiter[fillType]~=0 then
+					local revenue = fill * self.revenuesPerLiter[fillType]
+					g_currentMission:addSharedMoney(revenue, self.statName)
+				end
 				--self:print('fill: '..tostring(fill))
 				toomuch = fillDelta + fill -- max 0
 			end
@@ -85,23 +139,16 @@ function UPK_TipTrigger:updateTrailerTipping(trailer, fillDelta, fillType)
 end
 
 function UPK_TipTrigger:getTipInfoForTrailer(trailer, tipReferencePointIndex)
-	--self:print('UPK_TipTrigger:getTipInfoForTrailer')
+	self:print('UPK_TipTrigger:getTipInfoForTrailer')
 	if trailer.upk_currentTipTrigger==self then
-		--self:print('trailer.upk_currentTipTrigger==self')
 		local minDistance, bestPoint = self:getTipDistanceFromTrailer(trailer, tipReferencePointIndex)
-		--self:print('minDistance='..tostring(minDistance)..' bestPoint='..tostring(bestPoint))
 		trailerFillType = trailer.currentFillType
-		fillType = self:getFillType()
-		newFillType = self.fillTypesConversionMatrix[fillType][trailerFillType]
-		--self:print('fillType: '..tostring(fillType))
-		--self:print('trailerFillType: '..tostring(trailerFillType))
-		--self:print('newFillType: '..tostring(newFillType))
 		local isAllowed = minDistance<1 and
-			self.acceptedFillTypes[newFillType] and
-			self:allowFillType(newFillType)
-		--self:print('minDistance<1? '..tostring(minDistance<1))
-		--self:print('self.acceptedFillTypes[newFillType]? '..tostring(self.acceptedFillTypes[newFillType]))
-		--self:print('self:allowFillType(newFillType)? '..tostring(self:allowFillType(newFillType)))
+			self.acceptedFillTypes[trailerFillType] and
+			self:allowFillType(trailerFillType)
+		--self:print('minDistance<1: '..tostring(minDistance<1))
+		--self:print('self.acceptedFillTypes[trailerFillType]: '..tostring(self.acceptedFillTypes[trailerFillType]))
+		--self:print('self:allowFillType(trailerFillType): '..tostring(self:allowFillType(trailerFillType)))
 		return isAllowed, minDistance, bestPoint
 	end
 	return false,math.huge,nil
@@ -180,6 +227,7 @@ function UPK_TipTrigger:getNoAllowedText(trailer)
 end
 
 function UPK_TipTrigger:triggerUpdate(vehicle,isInTrigger)
+	self:print('UPK_TipTrigger:triggerUpdate('..tostring(vehicle)..','..tostring(isInTrigger)..')')
 	if self.isEnabled and self.isServer then
 		if UniversalProcessKit.isVehicleType(vehicle, UniversalProcessKit.VEHICLE_TIPPER) then
 			if isInTrigger then

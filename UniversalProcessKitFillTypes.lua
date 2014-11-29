@@ -58,6 +58,8 @@ local fillTypeIntToName_mt={
 setmetatable(UniversalProcessKit.fillTypeNameToInt,fillTypeNameToInt_mt)
 setmetatable(UniversalProcessKit.fillTypeIntToName,fillTypeIntToName_mt)
 
+local specialFillTypes = {"money","void","sun","rain","temperature"}
+
 function UniversalProcessKit.addFillType(name,index)
 	if type(name)=="table" then
 		for k,v in pairs(name) do
@@ -71,11 +73,10 @@ function UniversalProcessKit.addFillType(name,index)
 			if UniversalProcessKit.fillTypeIntToName[index]~=nil then
 				UniversalProcessKit.addFillType(name,index+1)
 			else
-				if name~="money" and name~="void" and name~="sun" and name~="rain" and name~="temperature" then
+				if isInTable(specialFillTypes,name) then
 					print("Notice: filltype labeled \""..tostring(name).."\" is not part of the game economy")
-				else
-					UniversalProcessKit['FILLTYPE_'..string.upper(name)]=index
 				end
+				UniversalProcessKit['FILLTYPE_'..string.upper(name)]=index
 				print("Notice: adding "..tostring(name).." ("..tostring(index)..") to fillTypes")
 				rawset(UniversalProcessKit.fillTypeIntToName,index,name)
 				rawset(UniversalProcessKit.fillTypeNameToInt,name,index)
@@ -91,11 +92,8 @@ function UniversalProcessKit.registerFillType(name, hudFilename)
 	UniversalProcessKit.addFillType(name)
 end;
 
--- special fillType "money", "void" et al
-UniversalProcessKit.addFillType("money")
-UniversalProcessKit.addFillType("void")
-UniversalProcessKit.addFillType("sun")
-UniversalProcessKit.addFillType("rain")
-UniversalProcessKit.addFillType("temperature")
+for _,name in pairs(specialFillTypes) do
+	UniversalProcessKit.addFillType(name)
+end
 
 

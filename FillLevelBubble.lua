@@ -45,7 +45,6 @@ _g.fillLevelBubble_mt = {
 			if rhs.fillLevel<0 then
 				return lhs - {-rhs.fillLevel, rhs.fillType}
 			end
-			print('wanne add '..tostring(rhs.fillLevel)..' to existing '..tostring(lhs.fillType))
 			local newFillType = lhs.fillTypesConversionMatrix[lhs.fillType][rhs.fillType]
 			if newFillType~=nil then
 				lhs.p_fillType = newFillType
@@ -151,36 +150,26 @@ _g.fillTypesConversionMatrix_mt = {
 			return FillTypesConversionMatrix:new()
 		end
 		local ret = FillTypesConversionMatrix:new()
-		for k,v in pairs(lhs) do
-			for l,w in pairs(v) do
-				ret[k][l] = w
-			end
-		end
 		for k,v in pairs(rhs) do
 			for l,w in pairs(v) do
-				ret[k][l] = w
+				lhs[k][l] = w
 			end
 		end
-		return ret
+		return lhs
 	end,
 	__sub = function(lhs,rhs)
 		if type(lhs)~="table" or type(rhs)~="table" then
 			return FillTypesConversionMatrix:new()
 		end
 		local ret = FillTypesConversionMatrix:new()
-		for k,v in pairs(lhs) do
-			for l,w in pairs(v) do
-				ret[k][l] = w
-			end
-		end
 		for k,v in pairs(rhs) do
 			for l,_ in pairs(v) do
 				if k~=Fillable.FILLTYPE_UNKNOWN and l~=Fillable.FILLTYPE_UNKNOWN then
-					ret[k][l] = nil
+					lhs[k][l] = nil
 				end
 			end
 		end
-		return ret
+		return lhs
 	end	
 }
 
@@ -196,6 +185,7 @@ function FillTypesConversionMatrix:new(...)
 	self[Fillable.FILLTYPE_UNKNOWN][Fillable.FILLTYPE_UNKNOWN] = Fillable.FILLTYPE_UNKNOWN
 	if #arr>=1 then
 		for i=1,#arr do
+			print('setting filltype '..tostring(arr[1])..' equal to '..tostring(arr[i]))
 			self[arr[1]][arr[i]] = arr[1]
 			self[Fillable.FILLTYPE_UNKNOWN][arr[i]] = arr[1]
 		end
