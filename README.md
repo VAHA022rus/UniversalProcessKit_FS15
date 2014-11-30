@@ -21,6 +21,11 @@ Bisher enthaltene Module:
 
 ##Changelog
 
+__V0.7.5__
+
+- Fix für convertFillTypes (Standard-UserAttributes)
+- Beispielmod UPK_TipTriggerTest2 hinzugefügt
+
 __V0.7.4__
 
 - neu: Fülltypen-Behandlung für money, void, sun, rain und temperature

@@ -687,11 +687,11 @@ function _g.ClassUPK(members, baseClass)
 					return lhs - {-rhs.fillLevel, rhs.fillType}
 				end
 				
-				if UniversalProcessKit.isSpecialFillType(rhs.fillType) then
-					added = UniversalProcessKitEnvironment.flbs[rhs.fillType] + rhs.fillLevel
-					print(tostring(added)..' was added to special fill type '..tostring(rhs.fillType))
+				local newFillType = lhs.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN][rhs.fillType]
+								
+				if UniversalProcessKit.isSpecialFillType(newFillType) then
+					added = UniversalProcessKitEnvironment.flbs[newFillType] + rhs.fillLevel
 				elseif lhs.storageType==UPK_Storage.SEPARATE then
-					local newFillType = lhs.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN][rhs.fillType]
 					if newFillType~=nil and lhs.p_flbs[newFillType]~=nil then
 						added = lhs.p_flbs[newFillType] + rhs
 					elseif lhs.parent ~= nil then
@@ -700,7 +700,7 @@ function _g.ClassUPK(members, baseClass)
 				elseif lhs.storageType==UPK_Storage.SINGLE then
 					added = lhs.p_flbs[1] + rhs
 				elseif lhs.storageType==UPK_Storage.FIFO then
-					local newFillType = lhs.p_flbs[lhs.p_flbs_fifo_lastkey].fillTypesConversionMatrix[lhs.p_flbs[lhs.p_flbs_fifo_lastkey].fillType][rhs.fillType]
+					newFillType = lhs.p_flbs[lhs.p_flbs_fifo_lastkey].fillTypesConversionMatrix[lhs.p_flbs[lhs.p_flbs_fifo_lastkey].fillType][rhs.fillType]
 					if newFillType~=nil then
 						local newCapacity = lhs.p_capacity - lhs.p_totalFillLevel
 						lhs.capacities[newFillType] = newCapacity
@@ -724,7 +724,7 @@ function _g.ClassUPK(members, baseClass)
 					end
 					lhs.p_totalFillLevel = lhs.p_totalFillLevel + added
 				elseif lhs.storageType==UPK_Storage.FILO then
-					local newFillType = lhs.p_flbs[1].fillTypesConversionMatrix[lhs.p_flbs[1].fillType][rhs.fillType]
+					newFillType = lhs.p_flbs[1].fillTypesConversionMatrix[lhs.p_flbs[1].fillType][rhs.fillType]
 					if newFillType~=nil then
 						local newCapacity = lhs.p_capacity - lhs.p_totalFillLevel
 						lhs.capacities[newFillType] = newCapacity
@@ -760,11 +760,11 @@ function _g.ClassUPK(members, baseClass)
 					return lhs + {-rhs.fillLevel, rhs.fillType}
 				end
 			
-				if UniversalProcessKit.isSpecialFillType(rhs.fillType) then
-					added = UniversalProcessKitEnvironment.flbs[rhs.fillType] - rhs.fillLevel
-					print(tostring(-added)..' was substr from special fill type '..tostring(rhs.fillType))
+				local newFillType = lhs.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN][rhs.fillType]
+				
+				if newFillType~=nil and UniversalProcessKit.isSpecialFillType(newFillType) then
+					added = UniversalProcessKitEnvironment.flbs[newFillType] - rhs.fillLevel
 				elseif lhs.storageType==UPK_Storage.SEPARATE then
-					local newFillType = lhs.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN][rhs.fillType]
 					if newFillType~=nil and lhs.p_flbs[newFillType]~=nil then
 						added = lhs.p_flbs[newFillType] - rhs
 					elseif lhs.parent ~= nil then
@@ -773,7 +773,7 @@ function _g.ClassUPK(members, baseClass)
 				elseif lhs.storageType==UPK_Storage.SINGLE then
 					added = lhs.p_flbs[1] - rhs
 				elseif lhs.storageType==UPK_Storage.FIFO then
-					local newFillType = lhs.p_flbs[1].fillTypesConversionMatrix[lhs.p_flbs[1].fillType][rhs.fillType]
+					newFillType = lhs.p_flbs[1].fillTypesConversionMatrix[lhs.p_flbs[1].fillType][rhs.fillType]
 					if newFillType~=nil then
 						local newCapacity = lhs.p_capacity - lhs.p_totalFillLevel + lhs.p_flbs[1].fillLevel
 						lhs.capacities[newFillType] = newCapacity
@@ -785,7 +785,7 @@ function _g.ClassUPK(members, baseClass)
 					end
 					lhs.p_totalFillLevel = lhs.p_totalFillLevel + added
 				elseif lhs.storageType==UPK_Storage.FILO then
-					local newFillType = lhs.p_flbs[1].fillTypesConversionMatrix[lhs.p_flbs[1].fillType][rhs.fillType]
+					newFillType = lhs.p_flbs[1].fillTypesConversionMatrix[lhs.p_flbs[1].fillType][rhs.fillType]
 					if newFillType~=nil then
 						local newCapacity = lhs.p_capacity - lhs.p_totalFillLevel + lhs.p_flbs[1].fillLevel
 						lhs.capacities[newFillType] = newCapacity

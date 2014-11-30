@@ -20,7 +20,7 @@ function UPK_TipTrigger:new(id, parent)
 	for _,fillType in pairs(UniversalProcessKit.fillTypeNameToInt(acceptedFillTypesArr)) do
 		self:print('accepting '..tostring(UniversalProcessKit.fillTypeIntToName[fillType])..' ('..tostring(fillType)..')')
 		self.acceptedFillTypes[fillType] = true
-		self.fillTypesConversionMatrix = self.fillTypesConversionMatrix + FillTypesConversionMatrix:new(fillType)
+		--self.fillTypesConversionMatrix = self.fillTypesConversionMatrix + FillTypesConversionMatrix:new(fillType)
 	end
 	
 	-- revenues
@@ -139,7 +139,7 @@ function UPK_TipTrigger:updateTrailerTipping(trailer, fillDelta, fillType)
 end
 
 function UPK_TipTrigger:getTipInfoForTrailer(trailer, tipReferencePointIndex)
-	self:print('UPK_TipTrigger:getTipInfoForTrailer')
+	--self:print('UPK_TipTrigger:getTipInfoForTrailer')
 	if trailer.upk_currentTipTrigger==self then
 		local minDistance, bestPoint = self:getTipDistanceFromTrailer(trailer, tipReferencePointIndex)
 		trailerFillType = trailer.currentFillType
@@ -204,8 +204,11 @@ function UPK_TipTrigger:getNoAllowedText(trailer)
 	
 	local trailerFillType = trailer.currentFillType
 	local fillTypeName = self.i18n[UniversalProcessKit.fillTypeIntToName[trailerFillType]]
-	local fillType=self:getFillType()
+	local fillType = self:getFillType()
+	--local fillLevel = self:getFillLevel(fillType)
+	--local capcity = self:getCapacity(fillType)
 	local newFillType = self.fillTypesConversionMatrix[fillType][trailerFillType]
+	
 	
 	if newFillType==nil and trailerFillType~=Fillable.FILLTYPE_UNKNOWN and self.showNotAcceptedWarning then
 		if string.find(self.i18n["notAcceptedHere"], "%%s")~=nil then
@@ -215,7 +218,7 @@ function UPK_TipTrigger:getNoAllowedText(trailer)
 		end
 	end
 	
-	if newFillType~=nil and self.showCapacityReachedWarning then
+	if newFillType~=nil and newFillType~=Fillable.FILLTYPE_UNKNOWN and self.showCapacityReachedWarning then
 		if string.find(self.i18n["capacityReached"], "%%s")~=nil then
 			return string.format(self.i18n["capacityReached"], fillTypeName)
 		else

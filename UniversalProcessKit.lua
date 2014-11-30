@@ -32,6 +32,15 @@ function UniversalProcessKit:print(string, debug)
 	end
 end;
 
+local p_flbs_mt = {
+	__index=function(t,fillType)
+		if UniversalProcessKit.isSpecialFillType(fillType) then
+			return UniversalProcessKitEnvironment.flbs[fillType]
+		end
+		return nil
+	end
+}
+
 function UniversalProcessKit:new(nodeId, parent, customMt)
 	if nodeId==nil then
 		print('Error: UniversalProcessKit:new() called with id=nil')
@@ -133,6 +142,8 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 	-- fill level bubbles
 
 	self.p_flbs = {}
+	--setmetatable(self.p_flbs,p_flbs_mt)
+
 	if self.storageType == UPK_Storage.SEPARATE then
 		for _,v in pairs(UniversalProcessKit.fillTypeNameToInt(storeArr)) do
 			self.p_flbs[v] = FillLevelBubble:new()
@@ -152,14 +163,7 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 		self.p_totalFillLevel = 0
 	end
 
-	for _,flb in pairs(self.p_flbs) do
-		flb.capacities = self.capacities
-		for k,v in pairs(flb.capacities) do
-			print('capacity of '..tostring(k)..': '..tostring(v))
-		end
-		flb.fillTypesConversionMatrix = self.fillTypesConversionMatrix
-		flb:registerOnFillLevelChangeFunc(self,"onFillLevelChange")
-	end
+	
 
 	-- fill types conversion matrix
 
@@ -173,10 +177,21 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 		end
 	end
 
+	print('self.fillTypesConversionMatrix is '..tostring(self.fillTypesConversionMatrix))
+	
 	for k,v in pairs(self.fillTypesConversionMatrix) do
 		for l,w in pairs(v) do
-			print('convert from '..tostring(l)..' (incoming) to '..tostring(k)..' (stored) ends up as '..tostring(w))
+			print('adding '..tostring(l)..' (incoming) to '..tostring(k)..' (stored) ends up as '..tostring(w))
 		end
+	end
+	
+	for _,flb in pairs(self.p_flbs) do
+		flb.capacities = self.capacities
+		for k,v in pairs(flb.capacities) do
+			print('capacity of '..tostring(k)..': '..tostring(v))
+		end
+		flb.fillTypesConversionMatrix = self.fillTypesConversionMatrix
+		flb:registerOnFillLevelChangeFunc(self,"onFillLevelChange")
 	end
 	
 	-- addNodeObject
@@ -314,18 +329,14 @@ end
 
 function UniversalProcessKit:getFillLevel(fillType)
 	--self:print('UniversalProcessKit:getFillLevel('..tostring(fillType)..')')
-	if UniversalProcessKit.isSpecialFillType(fillType) then
-		return UniversalProcessKitEnvironment.flbs[fillType].fillLevel
-	elseif self.storageType==UPK_Storage.SEPARATE and fillType~=nil then
-		local newFillType=self.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN][fillType]
+	if self.storageType==UPK_Storage.SEPARATE and fillType~=nil then
+		local newFillType=self.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN][fillType] or fillType
 		local flb=self.p_flbs[newFillType]
 		if flb~=nil then
-			local fillLevel = flb.fillLevel
-			return fillLevel
+			return flb.fillLevel
 		else
 			if self.parent~=nil then
-				local fillLevel = self.parent:getFillLevel(fillType)
-				return fillLevel
+				return self.parent:getFillLevel(fillType)
 			end
 		end
 	end
@@ -334,13 +345,11 @@ end
 
 function UniversalProcessKit:getCapacity(fillType)
 	--self:print('UniversalProcessKit:getCapacity('..tostring(fillType)..')')
-	if UniversalProcessKit.isSpecialFillType(fillType) then
-		return UniversalProcessKitEnvironment.flbs[fillType].capacity
-	elseif self.storageType==UPK_Storage.SEPARATE and fillType~=nil then
-		local newFillType=self.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN][fillType]
+	if self.storageType==UPK_Storage.SEPARATE and fillType~=nil then
+		local newFillType=self.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN][fillType] or fillType
 		local flb=self.p_flbs[newFillType]
 		if flb~=nil then
-			return self.capacities[newFillType]
+			return flb.capacity
 		else
 			if self.parent~=nil then
 				return self.parent:getCapacity(fillType)
@@ -358,30 +367,35 @@ function UniversalProcessKit:resetFillLevelIfNeeded()
 end
 
 function UniversalProcessKit:allowFillType(fillType, allowEmptying) -- also check for capcity
-	if UniversalProcessKit.isSpecialFillType(fillType) then
-		return true
-	elseif self.storageType==UPK_Storage.SEPARATE and fillType~=nil then
-		local newFillType=self.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN][fillType]
-		local flb=self.p_flbs[newFillType]
-		if flb~=nil then
-			return flb.fillLevel < flb.capacity
-		else
-			if self.parent~=nil then
-				return self.parent:allowFillType(fillType, allowEmptying)
+	if fillType~=nil then
+		newFillType=self.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN][fillType] or fillType
+		if UniversalProcessKit.isSpecialFillType(newFillType) then
+			return true
+		elseif self.storageType==UPK_Storage.SEPARATE then
+			local flb=self.p_flbs[newFillType]
+			if flb~=nil then
+				return flb.fillLevel < flb.capacity
+			else
+				if self.parent~=nil then
+					return self.parent:allowFillType(fillType, allowEmptying)
+				end
 			end
+		elseif self.storageType==UPK_Storage.SINGLE or self.storageType==UPK_Storage.FIFO or self.storageType==UPK_Storage.FILO then
+			return self.fillLevel < self.capacity
 		end
-	elseif self.storageType==UPK_Storage.SINGLE or self.storageType==UPK_Storage.FIFO or self.storageType==UPK_Storage.FILO then
-		return self.fillLevel < self.capacity
 	end
 	return false
 end
 
 function UniversalProcessKit:setFillLevel(newFillLevel, fillType, force)
-	if UniversalProcessKit.isSpecialFillType(fillType) then -- should not happen
-		self:addFillLevel(newFillLevel, fillType)
-	else
-		local oldFillLevel = self:getFillLevel(fillType)
-		self:addFillLevel(newFillLevel-oldFillLevel, fillType)
+	if fillType~=nil then
+		newFillType=self.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN][fillType] or fillType
+		if UniversalProcessKit.isSpecialFillType(newFillType) then -- should not happen
+			self:addFillLevel(newFillLevel, newFillType)
+		else
+			local oldFillLevel = self:getFillLevel(newFillType)
+			self:addFillLevel(newFillLevel-oldFillLevel, newFillType)
+		end
 	end
 end
 

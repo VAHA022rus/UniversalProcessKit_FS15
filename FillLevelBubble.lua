@@ -149,7 +149,6 @@ _g.fillTypesConversionMatrix_mt = {
 		if type(lhs)~="table" or type(rhs)~="table" then
 			return FillTypesConversionMatrix:new()
 		end
-		local ret = FillTypesConversionMatrix:new()
 		for k,v in pairs(rhs) do
 			for l,w in pairs(v) do
 				lhs[k][l] = w
@@ -161,7 +160,6 @@ _g.fillTypesConversionMatrix_mt = {
 		if type(lhs)~="table" or type(rhs)~="table" then
 			return FillTypesConversionMatrix:new()
 		end
-		local ret = FillTypesConversionMatrix:new()
 		for k,v in pairs(rhs) do
 			for l,_ in pairs(v) do
 				if k~=Fillable.FILLTYPE_UNKNOWN and l~=Fillable.FILLTYPE_UNKNOWN then
