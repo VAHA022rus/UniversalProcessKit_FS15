@@ -11,6 +11,7 @@ __Beispiel-Mods -> 00\_examples__
 Bisher enthaltene Module:
 
 - base
+- emptytrigger
 - entitytrigger
 - filltrigger
 - displaytrigger
@@ -19,6 +20,11 @@ Bisher enthaltene Module:
 - unspecified
 
 ##Changelog
+
+__V0.7.4__
+
+- neu: Fülltypen-Behandlung für money, void, sun, rain und temperature
+- Beispielmod UPK_ProcessorTest3 hinzugefügt
 
 __V0.7.3__
 

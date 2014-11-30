@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="no" ?>
 <modDesc descVersion="21">
     <author>mor2000</author>
-    <version>0.7.3</version>
+    <version>0.7.4</version>
     <title>
         <en>AAA UniversalProcessKit</en>
         <de>AAA UniversalProcessKit</de>
@@ -40,6 +40,11 @@
 	<storeItems/>
 		
     <l10n>
+		<text name="sun"> <en>daylight</en> <de><![CDATA[Helligkeit]]></de> </text>
+		<text name="rain"> <en>rain intensity</en> <de><![CDATA[Regenintensität]]></de> </text>
+		<text name="temperature"> <en>temperature</en> <de><![CDATA[Temperatur]]></de> </text>
+		<text name="money"> <en>bank ballance</en> <de><![CDATA[Kontostand]]></de> </text>
+		
 		<text name="wheat"> <en>wheat</en> <de>Weizen</de> </text>
 		<text name="barley"> <en>barley</en> <de>Gerste</de> </text>
 		<text name="rape"> <en>rape</en> <de>Raps</de> </text>

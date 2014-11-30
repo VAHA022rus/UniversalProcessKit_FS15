@@ -72,3 +72,4 @@ function UniversalProcessKitEnvironment:setTemperature()
 	--print('g_currentMission.environment.weatherTemperaturesDay[1]='..tostring(g_currentMission.environment.weatherTemperaturesDay[1]))
 	--print('g_currentMission.environment.weatherTemperaturesNight[1]='..tostring(g_currentMission.environment.weatherTemperaturesNight[1]))
 end
+

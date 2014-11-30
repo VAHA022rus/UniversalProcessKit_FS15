@@ -173,17 +173,9 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 		end
 	end
 
-	self:print('FILLTYPE_FUEL: '..tostring(UniversalProcessKit.FILLTYPE_FUEL))
-	self:print('FILLTYPE_OIL: '..tostring(UniversalProcessKit.FILLTYPE_OIL))
-
-	local arr1 = self.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN or 2345]
-	if arr1~=nil then
-		self:print('self.fillTypesConversionMatrix[oil][fuel]: '..tostring(arr1[UniversalProcessKit.FILLTYPE_FUEL or 2345]))
-	end
-	
 	for k,v in pairs(self.fillTypesConversionMatrix) do
 		for l,w in pairs(v) do
-			print('convert from '..tostring(k)..' to '..tostring(l)..' end up as '..tostring(w))
+			print('convert from '..tostring(l)..' (incoming) to '..tostring(k)..' (stored) ends up as '..tostring(w))
 		end
 	end
 	
@@ -322,7 +314,9 @@ end
 
 function UniversalProcessKit:getFillLevel(fillType)
 	--self:print('UniversalProcessKit:getFillLevel('..tostring(fillType)..')')
-	if self.storageType==UPK_Storage.SEPARATE and fillType~=nil then
+	if UniversalProcessKit.isSpecialFillType(fillType) then
+		return UniversalProcessKitEnvironment.flbs[fillType].fillLevel
+	elseif self.storageType==UPK_Storage.SEPARATE and fillType~=nil then
 		local newFillType=self.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN][fillType]
 		local flb=self.p_flbs[newFillType]
 		if flb~=nil then
@@ -340,7 +334,9 @@ end
 
 function UniversalProcessKit:getCapacity(fillType)
 	--self:print('UniversalProcessKit:getCapacity('..tostring(fillType)..')')
-	if self.storageType==UPK_Storage.SEPARATE and fillType~=nil then
+	if UniversalProcessKit.isSpecialFillType(fillType) then
+		return UniversalProcessKitEnvironment.flbs[fillType].capacity
+	elseif self.storageType==UPK_Storage.SEPARATE and fillType~=nil then
 		local newFillType=self.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN][fillType]
 		local flb=self.p_flbs[newFillType]
 		if flb~=nil then
@@ -362,7 +358,9 @@ function UniversalProcessKit:resetFillLevelIfNeeded()
 end
 
 function UniversalProcessKit:allowFillType(fillType, allowEmptying) -- also check for capcity
-	if self.storageType==UPK_Storage.SEPARATE and fillType~=nil then
+	if UniversalProcessKit.isSpecialFillType(fillType) then
+		return true
+	elseif self.storageType==UPK_Storage.SEPARATE and fillType~=nil then
 		local newFillType=self.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN][fillType]
 		local flb=self.p_flbs[newFillType]
 		if flb~=nil then
@@ -379,8 +377,12 @@ function UniversalProcessKit:allowFillType(fillType, allowEmptying) -- also chec
 end
 
 function UniversalProcessKit:setFillLevel(newFillLevel, fillType, force)
-	local oldFillLevel = self:getFillLevel(fillType)
-	self:addFillLevel(newFillLevel-oldFillLevel, fillType)
+	if UniversalProcessKit.isSpecialFillType(fillType) then -- should not happen
+		self:addFillLevel(newFillLevel, fillType)
+	else
+		local oldFillLevel = self:getFillLevel(fillType)
+		self:addFillLevel(newFillLevel-oldFillLevel, fillType)
+	end
 end
 
 function UniversalProcessKit:addFillLevel(deltaFillLevel, fillType)

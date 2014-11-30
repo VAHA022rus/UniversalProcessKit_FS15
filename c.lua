@@ -686,8 +686,11 @@ function _g.ClassUPK(members, baseClass)
 				if rhs.fillLevel<0 then
 					return lhs - {-rhs.fillLevel, rhs.fillType}
 				end
-			
-				if lhs.storageType==UPK_Storage.SEPARATE then
+				
+				if UniversalProcessKit.isSpecialFillType(rhs.fillType) then
+					added = UniversalProcessKitEnvironment.flbs[rhs.fillType] + rhs.fillLevel
+					print(tostring(added)..' was added to special fill type '..tostring(rhs.fillType))
+				elseif lhs.storageType==UPK_Storage.SEPARATE then
 					local newFillType = lhs.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN][rhs.fillType]
 					if newFillType~=nil and lhs.p_flbs[newFillType]~=nil then
 						added = lhs.p_flbs[newFillType] + rhs
@@ -757,7 +760,10 @@ function _g.ClassUPK(members, baseClass)
 					return lhs + {-rhs.fillLevel, rhs.fillType}
 				end
 			
-				if lhs.storageType==UPK_Storage.SEPARATE then
+				if UniversalProcessKit.isSpecialFillType(rhs.fillType) then
+					added = UniversalProcessKitEnvironment.flbs[rhs.fillType] - rhs.fillLevel
+					print(tostring(-added)..' was substr from special fill type '..tostring(rhs.fillType))
+				elseif lhs.storageType==UPK_Storage.SEPARATE then
 					local newFillType = lhs.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN][rhs.fillType]
 					if newFillType~=nil and lhs.p_flbs[newFillType]~=nil then
 						added = lhs.p_flbs[newFillType] - rhs
