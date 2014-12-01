@@ -11,15 +11,26 @@ __Beispiel-Mods -> 00\_examples__
 Bisher enthaltene Module:
 
 - base
+- displaytrigger
+- dumptrigger
 - emptytrigger
 - entitytrigger
 - filltrigger
-- displaytrigger
 - processor
 - tiptrigger
 - unspecified
 
 ##Changelog
+
+__V0.7.6__
+
+- Modultyp dumptrigger hinzugefügt
+- neu: acceptedFillTypes (dumptrigger)
+- neu: revenuePerLiter (dumptrigger)
+- neu: revenuesPerLiter (dumptrigger)
+- neu: statName (dumptrigger)
+- Fix für initialFillLevels (Standard-UserAttributes)
+- Beispielmod UPK_DumpTriggerTest hinzugefügt
 
 __V0.7.5__
 

@@ -652,10 +652,19 @@ function _g.ClassUPK(members, baseClass)
 		__index = function(t,k)
 			if t.storageType==UPK_Storage.SEPARATE then
 				if k=="capacity" then
+					if t.interestedInFillType ~= nil then -- exception for dumptrigger
+						return t:getCapacity(t.interestedInFillType)
+					end
 					return math.huge
 				elseif k=="fillLevel" then
+					if t.interestedInFillType ~= nil then -- exception for dumptrigger
+						return t:getFillLevel(t.interestedInFillType)
+					end
 					return 0
 				elseif k=="fillType" then
+					if t.interestedInFillType ~= nil then -- exception for dumptrigger
+						return t.interestedInFillType
+					end
 					return Fillable.FILLTYPE_UNKNOWN
 				end
 			elseif t.storageType==UPK_Storage.SINGLE then

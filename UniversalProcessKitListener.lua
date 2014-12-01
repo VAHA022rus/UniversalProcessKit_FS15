@@ -7,6 +7,9 @@ UniversalProcessKitListener.updateablesHour = {}
 UniversalProcessKitListener.updateablesMinute = {}
 UniversalProcessKitListener.updateablesSecond = {}
 UniversalProcessKitListener.dtsum = 0
+UniversalProcessKitListener.postLoadObjects = {}
+
+print('UniversalProcessKitListener.postLoadObjects is '..tostring(UniversalProcessKitListener.postLoadObjects))
 
 function UniversalProcessKitListener.loadMap(name)
 	--cleanup at map loaded
@@ -32,42 +35,7 @@ function UniversalProcessKitListener.loadMap(name)
 	g_currentMission.environment:addDayChangeListener(UniversalProcessKitListener)
 	g_currentMission.environment:addHourChangeListener(UniversalProcessKitListener)
 	g_currentMission.environment:addMinuteChangeListener(UniversalProcessKitListener)
-	
 
-	
-	--[[
-
-	if type(g_currentMission.missionStats.financeStats)=="table" then
-		print('g_currentMission.missionStats is table')
-		for k,v in pairs(g_currentMission.missionStats.financeStats) do
-			print(tostring(k)..': '..tostring(v))
-		end
-	end
-	
-1: Neue Fahrzeuge
- [UPK] DEBUG 2: Tierkosten
- [UPK] DEBUG 3: Baukosten
- [UPK] DEBUG 4: Betriebskosten Fahrzeuge
- [UPK] DEBUG 5: Betriebskosten Gebäude
- [UPK] DEBUG 6: Lohnzahlungen
- [UPK] DEBUG 7: Einnahmen Ernte
- [UPK] DEBUG 8: Einnahmen Missionen
- [UPK] DEBUG 9: Sonstiges
- [UPK] DEBUG 10: Kreditzinsen
-
- [UPK] DEBUG other: 0
- [UPK] DEBUG vehicleRunningCost: 0
- [UPK] DEBUG missionIncome: 0
- [UPK] DEBUG newAnimalsCost: 0
- [UPK] DEBUG statNamesI18n: table: 0x7fd0353aeb80
- [UPK] DEBUG constructionCost: 0
- [UPK] DEBUG wagePayment: 0
- [UPK] DEBUG harvestIncome: 0
- [UPK] DEBUG newVehiclesCost: 0
- [UPK] DEBUG propertyMaintenance: 0
- [UPK] DEBUG loanInterest: 0
-
-	]]--
 end
 
 function UniversalProcessKitListener.deleteMap(name)
@@ -95,6 +63,17 @@ function UniversalProcessKitListener:update(dt)
 		UniversalProcessKitListener.dtsum = UniversalProcessKitListener.dtsum-1000
 		UniversalProcessKitListener.secondChanged()
 	end
+	
+	-- running post load
+	
+	for i=#UniversalProcessKitListener.postLoadObjects,1,-1 do
+		if type(UniversalProcessKitListener.postLoadObjects[i])=="table" and UniversalProcessKitListener.postLoadObjects[i].postLoad~=nil then
+			UniversalProcessKitListener.postLoadObjects[i]:postLoad()
+		end
+		table.remove(UniversalProcessKitListener.postLoadObjects,i)
+	end
+	
+	-- running updates
 	
 	for obj,v in pairs(UniversalProcessKitListener.updateables) do
 		if v then
@@ -173,6 +152,13 @@ function UniversalProcessKitListener.secondChanged()
 			obj:secondChanged(dt)
 		end
 	end
+end
+
+-- post load
+
+function UniversalProcessKitListener.registerPostLoadObject(obj)
+	print('UniversalProcessKitListener.postLoadObjects is '..tostring(UniversalProcessKitListener.postLoadObjects))
+	table.insert(UniversalProcessKitListener.postLoadObjects,obj)
 end
 
 local function emptyFunc() end

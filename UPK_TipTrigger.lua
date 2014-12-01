@@ -44,20 +44,6 @@ function UPK_TipTrigger:new(id, parent)
 	}
 	setmetatable(self.revenuesPerLiter,revenues_mt)
 	
-	--[[
-	FinanceStats.statNames = {
-		"newVehiclesCost",
-		"newAnimalsCost",
-		"constructionCost",
-		"vehicleRunningCost",
-		"propertyMaintenance",
-		"wagePayment",
-		"harvestIncome",
-		"missionIncome",
-		"other",
-		"loanInterest"
-	}
-	--]]
 	
 	self.statName=getStringFromUserAttribute(id, "statName")
 	local validStatName=false

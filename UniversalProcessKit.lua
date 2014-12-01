@@ -32,15 +32,6 @@ function UniversalProcessKit:print(string, debug)
 	end
 end;
 
-local p_flbs_mt = {
-	__index=function(t,fillType)
-		if UniversalProcessKit.isSpecialFillType(fillType) then
-			return UniversalProcessKitEnvironment.flbs[fillType]
-		end
-		return nil
-	end
-}
-
 function UniversalProcessKit:new(nodeId, parent, customMt)
 	if nodeId==nil then
 		print('Error: UniversalProcessKit:new() called with id=nil')
@@ -250,6 +241,8 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 		UniversalProcessKit.adjustToTerrainHeight(nodeId)
 	end
 	
+	UniversalProcessKitListener.registerPostLoadObject(self)
+	
 	return self
 end;
 
@@ -366,7 +359,7 @@ end
 function UniversalProcessKit:resetFillLevelIfNeeded()
 end
 
-function UniversalProcessKit:allowFillType(fillType, allowEmptying) -- also check for capcity
+function UniversalProcessKit:allowFillType(fillType, allowEmptying) -- also check for capacity
 	if fillType~=nil then
 		newFillType=self.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN][fillType] or fillType
 		if UniversalProcessKit.isSpecialFillType(newFillType) then
@@ -462,12 +455,9 @@ function UniversalProcessKit:setEnableChildren(isEnabled,alreadySent)
 	end
 end;
 
-function UniversalProcessKit:loadFromAttributesAndNodes(xmlFile, key)
-	self:print('calling UniversalProcessKit:loadFromAttributesAndNodes for id '..tostring(self.nodeId))
-	key=key.."."..self.name
-	
+function UniversalProcessKit:postLoad()
+	self:print('UniversalProcessKit:postLoad()')
 	-- initial fill levels
-	
 	if self.base.timesSaved==0 then
 		local initialFillLevelsArr = getArrayFromUserAttribute(self.nodeId, "initialFillLevels")
 		for i=1,#initialFillLevelsArr,2 do
@@ -479,7 +469,12 @@ function UniversalProcessKit:loadFromAttributesAndNodes(xmlFile, key)
 			end
 		end
 	end
-	
+end;
+
+function UniversalProcessKit:loadFromAttributesAndNodes(xmlFile, key)
+	self:print('calling UniversalProcessKit:loadFromAttributesAndNodes for id '..tostring(self.nodeId))
+	key=key.."."..self.name
+
 	local fillLevelsStr = getXMLString(xmlFile, key .. "#fillLevels")
 	self:print('read save fillLevels '..tostring(fillLevelsStr))
 	local fillLevelsArr = gmatch(fillLevelsStr, "%S+")

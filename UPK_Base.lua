@@ -21,6 +21,8 @@ function UPK_Base:new(id, placeable, builtIn)
 		g_currentMission:addOnCreateLoadedObjectToSave(self)
 	end
 	
+	self.timesSaved = 0
+	
 	local upk=ModsUtil.modNameToMod["AAA_UniversalProcessKit"]
 	if upk==nil then
 		print('ERROR (YOUR FAULT): DO NOT RENAME THE UniversalProcessKit MOD FILE - NOTHING WILL WORK - it has to be "AAA_UniversalProcessKit"')
