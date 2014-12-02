@@ -60,6 +60,7 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 	self.type=nil
 
 	self.onCreates = {}
+	self.onFillLevelChangeFuncs = {}
 	
 	self.x,self.y,self.z = getTranslation(nodeId)
 	self.pos = __c({self.x,self.y,self.z})
@@ -182,7 +183,7 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 			print('capacity of '..tostring(k)..': '..tostring(v))
 		end
 		flb.fillTypesConversionMatrix = self.fillTypesConversionMatrix
-		flb:registerOnFillLevelChangeFunc(self,"onFillLevelChange")
+		flb:registerOnFillLevelChangeFunc(self,"p_onFillLevelChange")
 	end
 	
 	-- addNodeObject
@@ -316,8 +317,47 @@ function UniversalProcessKit:update(dt)
 	-- and UniversalProcessKitListener.removeUpdateable(self)
 end;
 
-function UniversalProcessKit:onFillLevelChange(deltaFillLevel, newFillLevel, fillType)
+function UniversalProcessKit:registerOnFillLevelChangeFunc(obj,func)
+	print('UniversalProcessKit:registerOnFillLevelChangeFunc('..tostring(obj)..', '..tostring(func)..')')
+	if type(obj)=="table" and obj~=self and type(func)=="string" and type(obj[func])=="function" then
+		self.onFillLevelChangeFuncs[obj]=func
+	end
+end
+
+function UniversalProcessKit:unregisterOnFillLevelChangeFunc(obj)
+	if type(obj)=="table" then
+		self.onFillLevelChangeFuncs[obj]=nil
+	end
+end
+
+function UniversalProcessKit:p_onFillLevelChange(deltaFillLevel, newFillLevel, fillType) -- do sth with syncing
+	self:print('UniversalProcessKit:p_onFillLevelChange('..tostring(deltaFillLevel)..', '..tostring(newFillLevel)..', '..tostring(fillType)..')')
+	
+	for obj,func in pairs(self.onFillLevelChangeFuncs) do
+		obj[func](obj, deltaFillLevel, newFillLevel, fillType)
+	end
+	self:onFillLevelChange(deltaFillLevel, newFillLevel, fillType)
+end
+
+function UniversalProcessKit:onFillLevelChange(deltaFillLevel, newFillLevel, fillType) -- to be overwritten
 	self:print('UniversalProcessKit:onFillLevelChange('..tostring(deltaFillLevel)..', '..tostring(newFillLevel)..', '..tostring(fillType)..')')
+end
+
+function UniversalProcessKit:getFillLevelBubbleShellFromFillType(fillType)
+	if self.storageType==UPK_Storage.SEPARATE and fillType~=nil then
+		local newFillType=self.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN][fillType] or fillType
+		local flb=self.p_flbs[newFillType]
+		if flb~=nil then
+			return self
+		else
+			if self.parent~=nil then
+				return self.parent:getFillLevelBubbleShellFromFillType(fillType)
+			end
+		end
+	elseif self.storageType==UPK_Storage.SINGLE or self.storageType==UPK_Storage.FIFO or self.storageType==UPK_Storage.FILO then
+		return self
+	end 
+	return nil
 end
 
 function UniversalProcessKit:getFillLevel(fillType)
@@ -342,7 +382,7 @@ function UniversalProcessKit:getCapacity(fillType)
 		local newFillType=self.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN][fillType] or fillType
 		local flb=self.p_flbs[newFillType]
 		if flb~=nil then
-			return flb.capacity
+			return self.capacities[newFillType]
 		else
 			if self.parent~=nil then
 				return self.parent:getCapacity(fillType)

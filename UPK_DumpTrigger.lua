@@ -67,6 +67,22 @@ function UPK_DumpTrigger:new(id, parent)
 	g_currentMission.nodeToVehicle[id]=self -- combines
 	g_currentMission.objectToTrailer[id]=self -- trailers
 
+	-- check collision mask
+	
+	local collisionMask_old = getCollisionMask(id)
+	local collisionMask_new = collisionMask_old
+	
+	local trigger_fillable = 8388608
+	if bitAND(collisionMask_new,trigger_fillable)==0 then
+		self:print('Warning: the dumptrigger shape has to be have the collision mask of a fillable object (fixed)')
+		collisionMask_new = collisionMask_new + trigger_fillable
+	end
+	
+	if collisionMask_new ~= collisionMask_old then
+		self:print('Warning: set collisionMask to '..tostring(collisionMask_new)..' (you may want to fix that)')
+		setCollisionMask(id,collisionMask_new)
+	end
+	
 	self:print('loaded DumpTrigger successfully')
 
 	return self

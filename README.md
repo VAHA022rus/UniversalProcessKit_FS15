@@ -16,11 +16,35 @@ Bisher enthaltene Module:
 - emptytrigger
 - entitytrigger
 - filltrigger
+- mover
 - processor
 - tiptrigger
 - unspecified
 
 ##Changelog
+
+__V0.7.7__
+
+- Modultyp mover hinzugefügt
+- neu: fillTypes (mover)
+- neu: fillTypeChoice (mover)
+- neu: startMovingAt (mover)
+- neu: stopMovingAt (mover)
+- neu: lowPosition (mover)
+- neu: highPosition (mover)
+- neu: lowerPosition (mover)
+- neu: higherPosition (mover)
+- neu: movingType (mover)
+- neu: startTurningAt (mover)
+- neu: stopTurningAt (mover)
+- neu: lowRotation (mover)
+- neu: highRotation (mover)
+- neu: lowerRotation (mover)
+- neu: higherRotation (mover)
+- neu: turningType (mover)
+- neu: startVisibilityAt (mover)
+- neu: stopVisibilityAt (mover)
+- Beispielmod UPK_MoverTest hinzugefügt
 
 __V0.7.6__
 
