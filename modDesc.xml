@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="no" ?>
 <modDesc descVersion="21">
     <author>mor2000</author>
-    <version>0.7.7</version>
+    <version>0.7.8</version>
     <title>
         <en>AAA UniversalProcessKit</en>
         <de>AAA UniversalProcessKit</de>
@@ -35,7 +35,10 @@
 		<sourceFile filename="UPK_EmptyTrigger.lua"/>
 		<sourceFile filename="UPK_FillTrigger.lua"/>
 		<sourceFile filename="UPK_Mover.lua"/>
+		<sourceFile filename="UPK_ParkTrigger.lua"/>
 		<sourceFile filename="UPK_Processor.lua"/>
+		<sourceFile filename="UPK_SellTarget.lua"/>
+		<sourceFile filename="UPK_Switcher.lua"/>
 		<sourceFile filename="UPK_TipTrigger.lua"/>
 		<sourceFile filename="PlaceableUPK.lua" />
     </extraSourceFiles>

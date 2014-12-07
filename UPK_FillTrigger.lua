@@ -122,14 +122,14 @@ function UPK_FillTrigger:fillTrailer(trailer, deltaFillLevel) -- tippers, shovel
 			end
 			trailer:setFillLevel(trailerFillLevel + deltaFillLevel, self.fillFillType)
 			deltaFillLevel = trailer:getFillLevel(self.fillFillType) - trailerFillLevel
-			if(deltaFillLevel>0 and self.pricePerLiter~=0)then
-				local price = delta * self.pricePerLiter
-				--g_currentMission.missionStats.expensesTotal = g_currentMission.missionStats.expensesTotal + price
-				--g_currentMission.missionStats.expensesSession = g_currentMission.missionStats.expensesSession + price
-				g_currentMission:addSharedMoney(-price, self.statName)
-			end
-			if not self.createFillType then
-				self:addFillLevel(-deltaFillLevel,self.fillFillType)
+			if deltaFillLevel~=0 then
+				if self.pricePerLiter~=0 then
+					local price = delta * self.pricePerLiter
+					g_currentMission:addSharedMoney(-price, self.statName)
+				end
+				if not self.createFillType then
+					self:addFillLevel(-deltaFillLevel,self.fillFillType)
+				end
 			end
 		end
 	end

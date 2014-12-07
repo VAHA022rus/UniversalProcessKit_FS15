@@ -17,11 +17,30 @@ Bisher enthaltene Module:
 - entitytrigger
 - filltrigger
 - mover
+- parktrigger
 - processor
+- selltarget
+- switcher
 - tiptrigger
 - unspecified
 
 ##Changelog
+
+__V0.7.8__
+
+- Modultyp switcher hinzugefügt
+- Modultyp selltarget hinzugefügt
+- Modultyp parktrigger hinzugefügt
+- Fix für mover
+- neu: fillTypes (switcher)
+- neu: fillTypeChoice (switcher)
+- neu: switchFillTypes (switcher)
+- neu: switchFillLevels (switcher)
+- neu: mode (switcher)
+- neu: hidingPosition (switcher)
+- geändert: startVisibilityAt (mover)
+- geändert: stopVisibilityAt (mover)
+- Beispielmod UPK_ParkTriggerTest hinzugefügt
 
 __V0.7.7__
 
