@@ -5,11 +5,14 @@ local UniversalProcessKit_mt = ClassUPK(UniversalProcessKit);
 InitObjectClass(UniversalProcessKit, "UniversalProcessKit");
 
 function UniversalProcessKit:onCreate(id)
-	local object = UPK_Base:new(id, false, true)
-	if object==false or object~=nil then
-		object.builtIn=true
-		g_currentMission:addOnCreateLoadedObject(object)
-		object:findChildren(id)
+	print('UniversalProcessKit:onCreate('..tostring(id)..')')
+	local upkbase = OnCreateUPK:new(g_server ~= nil, g_client ~= nil)
+	if upkbase==false or upkbase~=nil then
+		upkbase:load(id)
+		g_currentMission:addOnCreateLoadedObject(upkbase)
+		upkbase:register(true)
+	else
+		upkbase:detele()
 	end
 end;
 

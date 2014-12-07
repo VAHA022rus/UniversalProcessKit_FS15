@@ -368,6 +368,7 @@ _g.UPK_Switcher={}
 _g.UPK_TipTrigger={}
 _g.UPK_TipTriggerActivatable={}
 _g.PlaceableUPK={}
+_g.OnCreateUPK={}
 
 UPK_Storage.SEPARATE=1
 UPK_Storage.SINGLE=2

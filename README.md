@@ -26,6 +26,11 @@ Bisher enthaltene Module:
 
 ##Changelog
 
+__V0.7.9__
+
+- neu: onCreate (base)
+- geändert: alle UPK-Beispielmods
+
 __V0.7.8__
 
 - Modultyp switcher hinzugefügt
