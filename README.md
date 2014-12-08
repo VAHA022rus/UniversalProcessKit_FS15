@@ -26,6 +26,26 @@ Bisher enthaltene Module:
 
 ##Changelog
 
+__V0.7.10__
+
+- Modultyp animator hinzugefügt
+- neu: moveTo (animator)
+- neu: movementDuration (animator)
+- neu: movementSpeedupPeriod (animator)
+- neu: movementSlowdownPeriod (animator)
+- neu: rewindMovementOnDisable (animator)
+- neu: rotationsPerSecond (animator)
+- neu: rotateTo (animator)
+- neu: rotationDuration (animator)
+- neu: rotationSpeedupPeriod (animator)
+- neu: rotationSlowdownPeriod (animator)
+- neu: rewindRotationOnDisable (animator)
+- neu: animationClip (animator)
+- neu: animationSpeed (animator)
+- neu: animationLoop (animator)
+- neu: rewindAnimationOnDisable (animator)
+- Beispielmod UPK_AnimatorTest hinzugefügt
+
 __V0.7.9__
 
 - neu: onCreate (base)

@@ -23,6 +23,11 @@ function UPK_EntityTrigger:new(nodeId, parent)
 	return self
 end
 
+function UPK_EntityTrigger:postLoad()
+	UPK_EntityTrigger:superClass().postLoad(self)
+	self:triggerUpdate(false,false)
+end
+
 function UPK_EntityTrigger:triggerUpdate(vehicle,isInTrigger)
 	self:print('UPK_EntityTrigger:triggerUpdate')
 	if self.isEnabled then

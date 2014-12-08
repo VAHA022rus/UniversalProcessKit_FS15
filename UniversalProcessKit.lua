@@ -257,7 +257,7 @@ function UniversalProcessKit:findChildrenLoopFunc(childId)
 		childName=Utils.getNoNil(getName(childId),"")
 		self:print('found module '..childName..' of type '..tostring(type)..' and id '..tostring(childId))
 		local module=UniversalProcessKit.ModuleTypes[type]:new(childId,self)
-		if module~=nil then
+		if module~=nil and module~=false then
 			if debugMode then
 				module=debugObject(module)
 			end
