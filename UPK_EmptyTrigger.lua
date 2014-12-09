@@ -14,12 +14,14 @@ function UPK_EmptyTrigger:new(id, parent)
 	self.emptyFillTypes = {}
 	local emptyFillTypesArr = getArrayFromUserAttribute(id, "emptyFillTypes")
 	for _,fillType in pairs(UniversalProcessKit.fillTypeNameToInt(emptyFillTypesArr)) do
+		self:print('fillType from emptyFillTypesArr: '..tostring(fillType))
 		self.emptyFillTypes[fillType] = true
+		self:print('self.emptyFillTypes[fillType]: '..tostring(self.emptyFillTypes[fillType]))
 	end
 	
     self.emptyLitersPerSecond = getNumberFromUserAttribute(id, "emptyLitersPerSecond", 1500, 0)
 	
-	
+	self:print('emptyFillTypes: '..tostring(getStringFromUserAttribute(id, "emptyFillTypes")))
 	
 	-- revenues
 	
@@ -75,20 +77,24 @@ function UPK_EmptyTrigger:new(id, parent)
 	self.allowedVehicles[UniversalProcessKit.VEHICLE_TIPPER] = getBoolFromUserAttribute(self.nodeId, "allowTipper", true)
 	self.allowedVehicles[UniversalProcessKit.VEHICLE_SHOVEL] = getBoolFromUserAttribute(self.nodeId, "allowShovel", true)
 	
-	self.allowedVehicles[UniversalProcessKit.VEHICLE_SOWINGMACHINE] = getBoolFromUserAttribute(self.nodeId, "allowSowingMachine", isInTable(self.emptyFillTypes, Fillable.FILLTYPE_SEEDS))
-	self.allowedVehicles[UniversalProcessKit.VEHICLE_WATERTRAILER] = getBoolFromUserAttribute(self.nodeId, "allowWaterTrailer", isInTable(self.emptyFillTypes, Fillable.FILLTYPE_WATER))
-	self.allowedVehicles[UniversalProcessKit.VEHICLE_MILKTRAILER] = getBoolFromUserAttribute(self.nodeId, "allowMilkTrailer", isInTable(self.emptyFillTypes, Fillable.FILLTYPE_MILK))
-	self.allowedVehicles[UniversalProcessKit.VEHICLE_LIQUIDMANURETRAILER] = getBoolFromUserAttribute(self.nodeId, "allowLiquidManureTrailer", isInTable(self.emptyFillTypes, Fillable.FILLTYPE_LIQUIDMANURE))
-	self.allowedVehicles[UniversalProcessKit.VEHICLE_SPRAYER] = getBoolFromUserAttribute(self.nodeId, "allowSprayer", isInTable(self.emptyFillTypes, Fillable.FILLTYPE_FERTILIZER))
+	self.allowedVehicles[UniversalProcessKit.VEHICLE_SOWINGMACHINE] = getBoolFromUserAttribute(self.nodeId, "allowSowingMachine", self.emptyFillTypes[UniversalProcessKit.FILLTYPE_SEEDS] or false)
+	self.allowedVehicles[UniversalProcessKit.VEHICLE_WATERTRAILER] = getBoolFromUserAttribute(self.nodeId, "allowWaterTrailer", self.emptyFillTypes[UniversalProcessKit.FILLTYPE_WATER] or false)
+	self.allowedVehicles[UniversalProcessKit.VEHICLE_MILKTRAILER] = getBoolFromUserAttribute(self.nodeId, "allowMilkTrailer", self.emptyFillTypes[UniversalProcessKit.FILLTYPE_MILK] or false)
+	self.allowedVehicles[UniversalProcessKit.VEHICLE_LIQUIDMANURETRAILER] = getBoolFromUserAttribute(self.nodeId, "allowLiquidManureTrailer", self.emptyFillTypes[UniversalProcessKit.FILLTYPE_LIQUIDMANURE] or false)
+	self.allowedVehicles[UniversalProcessKit.VEHICLE_SPRAYER] = getBoolFromUserAttribute(self.nodeId, "allowSprayer", self.emptyFillTypes[UniversalProcessKit.FILLTYPE_FERTILIZER] or false)
 	
-	self.allowedVehicles[UniversalProcessKit.VEHICLE_FUELTRAILER] = getBoolFromUserAttribute(self.nodeId, "allowFuelTrailer", isInTable(self.emptyFillTypes, Fillable.FILLTYPE_FUEL))
+	self.allowedVehicles[UniversalProcessKit.VEHICLE_FUELTRAILER] = getBoolFromUserAttribute(self.nodeId, "allowFuelTrailer", self.emptyFillTypes[UniversalProcessKit.FILLTYPE_FUEL] or false)
 	self.allowedVehicles[UniversalProcessKit.VEHICLE_MOTORIZED] = getBoolFromUserAttribute(self.nodeId, "allowMotorized", false)
 	
 	self.allowWalker = getBoolFromUserAttribute(self.nodeId, "allowWalker", false)
 	
 	self:addTrigger()
 	
-	self:print('loaded FillTrigger successfully')
+	--self:print('UniversalProcessKit.FILLTYPE_FUEL: '..tostring(UniversalProcessKit.FILLTYPE_FUEL))
+	--self:print('self.emptyFillTypes[UniversalProcessKit.FILLTYPE_FUEL]: '..tostring(self.emptyFillTypes[UniversalProcessKit.FILLTYPE_FUEL]))
+	--self:print('self.allowedVehicles[UniversalProcessKit.VEHICLE_FUELTRAILER]: '..tostring(self.allowedVehicles[UniversalProcessKit.VEHICLE_FUELTRAILER]))
+	
+	self:print('loaded EmptyTrigger successfully')
 	
     return self
 end
@@ -112,7 +118,6 @@ function UPK_EmptyTrigger:triggerUpdate(vehicle,isInTrigger)
 end
 
 function UPK_EmptyTrigger:update(dt)
-	--self:print('UPK_EmptyTrigger:update('..tostring(dt)..')')
 	if self.isServer and self.isEnabled then
 		for _,vehicle in pairs(self.entities) do
 			local deltaFillLevel = - (self.emptyLitersPerSecond * 0.001 * dt)
@@ -125,7 +130,7 @@ function UPK_EmptyTrigger:update(dt)
 						 vehicleType==UniversalProcessKit.VEHICLE_MILKTRAILER or
 						 vehicleType==UniversalProcessKit.VEHICLE_LIQUIDMANURETRAILER or
 						 vehicleType==UniversalProcessKit.VEHICLE_SPRAYER or
-						 kvehicleType==UniversalProcessKit.VEHICLE_FUELTRAILER) then
+						 vehicleType==UniversalProcessKit.VEHICLE_FUELTRAILER) then
 						self:emptyFillable(vehicle, deltaFillLevel)
 					elseif vehicleType==UniversalProcessKit.VEHICLE_MOTORIZED then
 						self:emptyMotorized(vehicle, deltaFillLevel)
@@ -137,6 +142,7 @@ function UPK_EmptyTrigger:update(dt)
 end
 
 function UPK_EmptyTrigger:emptyFillable(fillable, deltaFillLevel) -- tippers, shovels etc
+	--self:print('UPK_EmptyTrigger:emptyFillable('..tostring(fillable)..', '..tostring(deltaFillLevel)..')')
 	if self.isServer and self.isEnabled then
 		local fillType = nil
 		for k,v in pairs(self.emptyFillTypes) do
@@ -162,11 +168,9 @@ function UPK_EmptyTrigger:emptyFillable(fillable, deltaFillLevel) -- tippers, sh
 	end
 end
 
-
-
 function UPK_EmptyTrigger:emptyMotorized(motorized, deltaFillLevel) -- motorized
-	if self.isServer and self.isEnabled and self.emptyFillTypes[Fillable.FILLTYPE_FUEL] then
-		local fillType = Fillable.FILLTYPE_FUEL
+	if self.isServer and self.isEnabled and self.emptyFillTypes[UniversalProcessKit.FILLTYPE_FUEL] then
+		local fillType = UniversalProcessKit.FILLTYPE_FUEL
 		local fillLevel = self:getFillLevel(fillType)
 		local capacity = self:getCapacity(fillType)
 		local motorizedFillLevel = motorized.fuelFillLevel
@@ -174,8 +178,6 @@ function UPK_EmptyTrigger:emptyMotorized(motorized, deltaFillLevel) -- motorized
 			deltaFillLevel=mathmin(deltaFillLevel, motorizedFillLevel, capacity-fillLevel)
 			motorized:setFuelFillLevel(motorizedFillLevel + deltaFillLevel)
 			local added = self:addFillLevel(-deltaFillLevel, fillType)
-			self:print('added: '..tostring(added))
-			self:print('self.revenuesPerLiter['..tostring(fillType)..']: '..tostring(self.revenuesPerLiter[fillType]))
 			if added~=0 and self.revenuesPerLiter[fillType]~=0 then
 				local revenue = added * self.revenuesPerLiter[fillType]
 				g_currentMission:addSharedMoney(revenue, self.statName)

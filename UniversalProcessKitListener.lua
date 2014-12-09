@@ -66,7 +66,7 @@ function UniversalProcessKitListener:update(dt)
 	
 	-- running post load
 	
-	for i=#UniversalProcessKitListener.postLoadObjects,1,-1 do
+	for i=1,#UniversalProcessKitListener.postLoadObjects do
 		if type(UniversalProcessKitListener.postLoadObjects[i])=="table" and UniversalProcessKitListener.postLoadObjects[i].postLoad~=nil then
 			UniversalProcessKitListener.postLoadObjects[i]:postLoad()
 		end

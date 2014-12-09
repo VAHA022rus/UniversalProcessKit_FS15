@@ -58,7 +58,19 @@ local fillTypeIntToName_mt={
 setmetatable(UniversalProcessKit.fillTypeNameToInt,fillTypeNameToInt_mt)
 setmetatable(UniversalProcessKit.fillTypeIntToName,fillTypeIntToName_mt)
 
-local specialFillTypes = {"money","void","sun","rain","temperature"}
+local specialFillTypes = {"money", -- "other"
+						"newVehiclesCost",
+						"newAnimalsCost",
+						"constructionCost",
+						"vehicleRunningCost",
+						"propertyMaintenance",
+						"wagePayment",
+						"harvestIncome",
+						"missionIncome",
+						"loanInterest",
+						"void","sun","rain","temperature"}
+
+						
 
 function UniversalProcessKit.addFillType(name,index)
 	if type(name)=="table" then
@@ -227,8 +239,7 @@ local upk_fillLevel_money_mt = {
 				return lhs - (-rhs)
 			end
 			if g_server ~= nil then
-				print('adding money 2 '..tostring(rhs))
-				g_currentMission:addSharedMoney(rhs, "other")
+				g_currentMission:addSharedMoney(rhs, t.statName)
 				return rhs
 			end
 			return 0
@@ -240,8 +251,7 @@ local upk_fillLevel_money_mt = {
 				return lhs - {-rhs.fillLevel, rhs.fillType}
 			end
 			if g_server ~= nil then
-				print('adding money 1 '..tostring(rhs.fillLevel))
-				g_currentMission:addSharedMoney(rhs.fillLevel, "other")
+				g_currentMission:addSharedMoney(rhs.fillLevel, t.statName)
 				return rhs.fillLevel
 			end
 			return 0
@@ -254,8 +264,7 @@ local upk_fillLevel_money_mt = {
 				return lhs + (-rhs)
 			end
 			if g_server ~= nil then
-				--print('substr money 2 '..tostring(rhs))
-				g_currentMission:addSharedMoney(-rhs, "other")
+				g_currentMission:addSharedMoney(-rhs, t.statName)
 				return -rhs
 			end
 		elseif type(rhs)=="table" then
@@ -266,8 +275,7 @@ local upk_fillLevel_money_mt = {
 				return lhs + {-rhs.fillLevel, rhs.fillType}
 			end
 			if g_server ~= nil then
-				--print('substr money 1 '..tostring(rhs.fillLevel))
-				g_currentMission:addSharedMoney(-rhs.fillLevel, "other")
+				g_currentMission:addSharedMoney(-rhs.fillLevel, t.statName)
 				return -rhs.fillLevel
 			end
 			return 0
@@ -277,6 +285,7 @@ local upk_fillLevel_money_mt = {
 }
 
 UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_MONEY] = {}
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_MONEY].statName = "other"
 UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_MONEY].isflb = true
 UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_MONEY].fillType = UniversalProcessKit.FILLTYPE_MONEY
 UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_MONEY].capacity = math.huge
@@ -284,8 +293,107 @@ UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_MONEY].onFillLe
 UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_MONEY].onFillLevelChange = FillLevelBubble.onFillLevelChange
 UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_MONEY].registerOnFillLevelChangeFunc = FillLevelBubble.registerOnFillLevelChangeFunc
 UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_MONEY].unregisterOnFillLevelChangeFunc = FillLevelBubble.unregisterOnFillLevelChangeFunc
-
 setmetatable(UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_MONEY], upk_fillLevel_money_mt)
+
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_NEWVEHICLESCOST] = {}
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_NEWVEHICLESCOST].statName = "newVehiclesCost"
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_NEWVEHICLESCOST].isflb = true
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_NEWVEHICLESCOST].fillType = UniversalProcessKit.FILLTYPE_NEWVEHICLESCOST
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_NEWVEHICLESCOST].capacity = math.huge
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_NEWVEHICLESCOST].onFillLevelChangeFuncs = {}
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_NEWVEHICLESCOST].onFillLevelChange = FillLevelBubble.onFillLevelChange
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_NEWVEHICLESCOST].registerOnFillLevelChangeFunc = FillLevelBubble.registerOnFillLevelChangeFunc
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_NEWVEHICLESCOST].unregisterOnFillLevelChangeFunc = FillLevelBubble.unregisterOnFillLevelChangeFunc
+setmetatable(UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_NEWVEHICLESCOST], upk_fillLevel_money_mt)
+
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_NEWANIMALSCOST] = {}
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_NEWANIMALSCOST].statName = "newAnimalsCost"
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_NEWANIMALSCOST].isflb = true
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_NEWANIMALSCOST].fillType = UniversalProcessKit.FILLTYPE_NEWANIMALSCOST
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_NEWANIMALSCOST].capacity = math.huge
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_NEWANIMALSCOST].onFillLevelChangeFuncs = {}
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_NEWANIMALSCOST].onFillLevelChange = FillLevelBubble.onFillLevelChange
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_NEWANIMALSCOST].registerOnFillLevelChangeFunc = FillLevelBubble.registerOnFillLevelChangeFunc
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_NEWANIMALSCOST].unregisterOnFillLevelChangeFunc = FillLevelBubble.unregisterOnFillLevelChangeFunc
+setmetatable(UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_NEWANIMALSCOST], upk_fillLevel_money_mt)
+
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_CONSTRUCTIONCOST] = {}
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_CONSTRUCTIONCOST].statName = "constructionCost"
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_CONSTRUCTIONCOST].isflb = true
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_CONSTRUCTIONCOST].fillType = UniversalProcessKit.FILLTYPE_CONSTRUCTIONCOST
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_CONSTRUCTIONCOST].capacity = math.huge
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_CONSTRUCTIONCOST].onFillLevelChangeFuncs = {}
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_CONSTRUCTIONCOST].onFillLevelChange = FillLevelBubble.onFillLevelChange
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_CONSTRUCTIONCOST].registerOnFillLevelChangeFunc = FillLevelBubble.registerOnFillLevelChangeFunc
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_CONSTRUCTIONCOST].unregisterOnFillLevelChangeFunc = FillLevelBubble.unregisterOnFillLevelChangeFunc
+setmetatable(UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_CONSTRUCTIONCOST], upk_fillLevel_money_mt)
+
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_VEHICLERUNNINGCOST] = {}
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_VEHICLERUNNINGCOST].statName = "vehicleRunningCost"
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_VEHICLERUNNINGCOST].isflb = true
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_VEHICLERUNNINGCOST].fillType = UniversalProcessKit.FILLTYPE_VEHICLERUNNINGCOST
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_VEHICLERUNNINGCOST].capacity = math.huge
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_VEHICLERUNNINGCOST].onFillLevelChangeFuncs = {}
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_VEHICLERUNNINGCOST].onFillLevelChange = FillLevelBubble.onFillLevelChange
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_VEHICLERUNNINGCOST].registerOnFillLevelChangeFunc = FillLevelBubble.registerOnFillLevelChangeFunc
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_VEHICLERUNNINGCOST].unregisterOnFillLevelChangeFunc = FillLevelBubble.unregisterOnFillLevelChangeFunc
+setmetatable(UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_VEHICLERUNNINGCOST], upk_fillLevel_money_mt)
+
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_PROPERTYMAINTENANCE] = {}
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_PROPERTYMAINTENANCE].statName = "propertyMaintenance"
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_PROPERTYMAINTENANCE].isflb = true
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_PROPERTYMAINTENANCE].fillType = UniversalProcessKit.FILLTYPE_PROPERTYMAINTENANCE
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_PROPERTYMAINTENANCE].capacity = math.huge
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_PROPERTYMAINTENANCE].onFillLevelChangeFuncs = {}
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_PROPERTYMAINTENANCE].onFillLevelChange = FillLevelBubble.onFillLevelChange
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_PROPERTYMAINTENANCE].registerOnFillLevelChangeFunc = FillLevelBubble.registerOnFillLevelChangeFunc
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_PROPERTYMAINTENANCE].unregisterOnFillLevelChangeFunc = FillLevelBubble.unregisterOnFillLevelChangeFunc
+setmetatable(UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_PROPERTYMAINTENANCE], upk_fillLevel_money_mt)
+
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_WAGEPAYMENT] = {}
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_WAGEPAYMENT].statName = "wagePayment"
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_WAGEPAYMENT].isflb = true
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_WAGEPAYMENT].fillType = UniversalProcessKit.FILLTYPE_WAGEPAYMENT
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_WAGEPAYMENT].capacity = math.huge
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_WAGEPAYMENT].onFillLevelChangeFuncs = {}
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_WAGEPAYMENT].onFillLevelChange = FillLevelBubble.onFillLevelChange
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_WAGEPAYMENT].registerOnFillLevelChangeFunc = FillLevelBubble.registerOnFillLevelChangeFunc
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_WAGEPAYMENT].unregisterOnFillLevelChangeFunc = FillLevelBubble.unregisterOnFillLevelChangeFunc
+setmetatable(UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_WAGEPAYMENT], upk_fillLevel_money_mt)
+
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_HARVESTINCOME] = {}
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_HARVESTINCOME].statName = "harvestIncome"
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_HARVESTINCOME].isflb = true
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_HARVESTINCOME].fillType = UniversalProcessKit.FILLTYPE_HARVESTINCOME
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_HARVESTINCOME].capacity = math.huge
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_HARVESTINCOME].onFillLevelChangeFuncs = {}
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_HARVESTINCOME].onFillLevelChange = FillLevelBubble.onFillLevelChange
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_HARVESTINCOME].registerOnFillLevelChangeFunc = FillLevelBubble.registerOnFillLevelChangeFunc
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_HARVESTINCOME].unregisterOnFillLevelChangeFunc = FillLevelBubble.unregisterOnFillLevelChangeFunc
+setmetatable(UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_HARVESTINCOME], upk_fillLevel_money_mt)
+
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_MISSIONINCOME] = {}
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_MISSIONINCOME].statName = "missionIncome"
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_MISSIONINCOME].isflb = true
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_MISSIONINCOME].fillType = UniversalProcessKit.FILLTYPE_MISSIONINCOME
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_MISSIONINCOME].capacity = math.huge
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_MISSIONINCOME].onFillLevelChangeFuncs = {}
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_MISSIONINCOME].onFillLevelChange = FillLevelBubble.onFillLevelChange
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_MISSIONINCOME].registerOnFillLevelChangeFunc = FillLevelBubble.registerOnFillLevelChangeFunc
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_MISSIONINCOME].unregisterOnFillLevelChangeFunc = FillLevelBubble.unregisterOnFillLevelChangeFunc
+setmetatable(UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_MISSIONINCOME], upk_fillLevel_money_mt)
+
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_LOANINTEREST] = {}
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_LOANINTEREST].statName = "loanInterest"
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_LOANINTEREST].isflb = true
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_LOANINTEREST].fillType = UniversalProcessKit.FILLTYPE_LOANINTEREST
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_LOANINTEREST].capacity = math.huge
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_LOANINTEREST].onFillLevelChangeFuncs = {}
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_LOANINTEREST].onFillLevelChange = FillLevelBubble.onFillLevelChange
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_LOANINTEREST].registerOnFillLevelChangeFunc = FillLevelBubble.registerOnFillLevelChangeFunc
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_LOANINTEREST].unregisterOnFillLevelChangeFunc = FillLevelBubble.unregisterOnFillLevelChangeFunc
+setmetatable(UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_LOANINTEREST], upk_fillLevel_money_mt)
+
 
 -- fill level bubble void
 

@@ -346,6 +346,7 @@ _g.UPK_ActivatorTrigger={}
 _g.UPK_Animator={}
 _g.UPK_BaleSpawner={}
 _g.UPK_BaleTrigger={}
+_g.UPK_BalerTrigger={}
 _g.UPK_Base={}
 _g.UPK_BuyTrigger={}
 _g.UPK_Conveyor={}
@@ -354,7 +355,7 @@ _g.UPK_DumpTrigger={}
 _g.UPK_EmptyTrigger={}
 _g.UPK_EntityTrigger={}
 _g.UPK_FillTrigger={}
-_g.UPK_BalerTrigger={}
+_g.UPK_GasStationTrigger={}
 _g.UPK_Mover={}
 _g.UPK_PalettSpawner={}
 _g.UPK_PalettTrigger={}
@@ -362,7 +363,7 @@ _g.UPK_ParkTrigger={}
 _g.UPK_Processor={}
 _g.UPK_Scaler={}
 _g.UPK_SellTarget={}
-_g.UPK_Shower={}
+_g.UPK_SprayerFillTrigger={}
 _g.UPK_Storage={}
 _g.UPK_Switcher={}
 _g.UPK_TipTrigger={}
@@ -670,6 +671,7 @@ function _g.ClassUPK(members, baseClass)
 					end
 					return Fillable.FILLTYPE_UNKNOWN
 				end
+				--print('asked for '..tostring(k))
 			elseif t.storageType==UPK_Storage.SINGLE then
 				if k=="capacity" then
 					return t.p_capacity

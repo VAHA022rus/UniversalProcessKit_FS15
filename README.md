@@ -11,20 +11,44 @@ __Beispiel-Mods -> 00\_examples__
 Bisher enthaltene Module:
 
 - base
+- animator
+- balertrigger
 - displaytrigger
 - dumptrigger
 - emptytrigger
 - entitytrigger
 - filltrigger
+- gasstationtrigger
 - mover
 - parktrigger
 - processor
 - selltarget
+- sprayerfilltrigger
 - switcher
 - tiptrigger
 - unspecified
 
 ##Changelog
+
+__V0.7.11__
+
+- Modultyp balertrigger hinzugefügt
+- Modultyp sprayerfilltrigger hinzugefügt
+- Modultyp gasstationtrigger hinzugefügt
+- neu: fillType (balertrigger)
+- neu: fillLitersPerSecond (balertrigger)
+- neu: createFillType (balertrigger)
+- neu: pricePerLiter (balertrigger)
+- neu: statName (balertrigger)
+- neu: createFillType (sprayerfilltrigger)
+- neu: pricePerLiter (sprayerfilltrigger)
+- neu: statName (sprayerfilltrigger)
+- neu: createFillType (gasstationtrigger)
+- neu: pricePerLiter (gasstationtrigger)
+- neu: statName (gasstationtrigger)
+- Fix für emptytrigger
+- neu: spezielle Fülltypen "newVehiclesCost", "newAnimalsCost", "constructionCost", "vehicleRunningCost", "propertyMaintenance", "wagePayment", "harvestIncome", "missionIncome" und "loanInterest" hinzugefügt
+- Beispielmod UPK_FertilizerTest und UPK_FuelTest hinzugefügt
 
 __V0.7.10__
 

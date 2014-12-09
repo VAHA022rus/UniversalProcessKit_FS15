@@ -72,9 +72,11 @@ function UniversalProcessKit.getVehicleType(vehicle)
 			vehicleType=vehicleType+UniversalProcessKit.VEHICLE_TIPPER
 		end
 		if SpecializationUtil.hasSpecialization(ForageWagon, vehicle.specializations) then
+			print('identified VEHICLE_FORAGEWAGON')
 			vehicleType=vehicleType+UniversalProcessKit.VEHICLE_FORAGEWAGON
 		end
 		if SpecializationUtil.hasSpecialization(Baler, vehicle.specializations) then
+			print('identified VEHICLE_BALER')
 			vehicleType=vehicleType+UniversalProcessKit.VEHICLE_BALER
 		end
 		if SpecializationUtil.hasSpecialization(Combine, vehicle.specializations) then -- doenst seem to recognize combines

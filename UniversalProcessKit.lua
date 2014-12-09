@@ -293,6 +293,8 @@ end;
 function UniversalProcessKit:delete()
 	print('delete module '..tostring(self.name)..' with id '..tostring(self.id))
 
+	self:removeTrigger()
+	
 	for _,v in pairs(self.kids) do
 		v:removeTrigger()
 		v:delete()

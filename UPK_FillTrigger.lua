@@ -68,6 +68,11 @@ function UPK_FillTrigger:new(id, parent)
     return self
 end
 
+function UPK_FillTrigger:delete()
+	UniversalProcessKitListener.removeUpdateable(self)
+	UPK_FillTrigger:superClass().delete(self)
+end
+
 function UPK_FillTrigger:triggerUpdate(vehicle,isInTrigger)
 	if self.isEnabled and self.isServer then
 		for k,v in pairs(self.allowedVehicles) do
@@ -90,9 +95,12 @@ function UPK_FillTrigger:update(dt)
 	--self:print('UPK_FillTrigger:update('..tostring(dt)..')')
 	if self.isServer and self.isEnabled then
 		for _,trailer in pairs(self.entities) do
+			--self:print('vehicle is '..tostring(trailer.upk_vehicleType))
 			local deltaFillLevel = self.fillLitersPerSecond * 0.001 * dt
 			for k,v in pairs(self.allowedVehicles) do
+				--self:print('checking for '..tostring(k)..': '..tostring(v))
 				if v and UniversalProcessKit.isVehicleType(trailer, k) then
+					--self:print('vehicle allowed')
 					if (k==UniversalProcessKit.VEHICLE_TIPPER or
 						 k==UniversalProcessKit.VEHICLE_SHOVEL or
 						 k==UniversalProcessKit.VEHICLE_SOWINGMACHINE or
@@ -112,9 +120,13 @@ function UPK_FillTrigger:update(dt)
 end
 
 function UPK_FillTrigger:fillTrailer(trailer, deltaFillLevel) -- tippers, shovels etc
+	--self:print('UPK_FillTrigger:fillTrailer('..tostring(trailer)..', '..tostring(deltaFillLevel)..')')
 	if self.isServer and self.isEnabled then
 		local trailerFillLevel = trailer:getFillLevel(self.fillFillType)
 		local fillLevel = self:getFillLevel(self.fillFillType)
+		--self:print('fillLevel '..tostring(fillLevel))
+		--self:print('trailer:allowFillType(self.fillFillType, false) '..tostring(trailer:allowFillType(self.fillFillType, false)))
+		--self:print('trailerFillLevel<trailer.capacity '..tostring(trailerFillLevel<trailer.capacity))
 		if (fillLevel>0 or self.createFillType) and trailer:allowFillType(self.fillFillType, false) and trailerFillLevel<trailer.capacity then
 			trailer:resetFillLevelIfNeeded(self.fillFillType)
 			if not self.createFillType then
@@ -136,6 +148,7 @@ function UPK_FillTrigger:fillTrailer(trailer, deltaFillLevel) -- tippers, shovel
 end
 
 function UPK_FillTrigger:fillMotorized(trailer, deltaFillLevel) -- motorized
+	--self:print('UPK_FillTrigger:fillMotorized('..tostring(trailer)..', '..tostring(deltaFillLevel)..')')
 	if self.isServer and self.isEnabled and self.fillFillType==Fillable.FILLTYPE_FUEL then
 		local trailerFillLevel = trailer.fuelFillLevel
 		local fillLevel = self:getFillLevel(self.fillFillType)
@@ -147,8 +160,6 @@ function UPK_FillTrigger:fillMotorized(trailer, deltaFillLevel) -- motorized
 			deltaFillLevel = trailer.fuelFillLevel - trailerFillLevel
 			if(deltaFillLevel>0 and self.pricePerLiter~=0)then
 				local price = delta * self.pricePerLiter
-				--g_currentMission.missionStats.expensesTotal = g_currentMission.missionStats.expensesTotal + price
-				--g_currentMission.missionStats.expensesSession = g_currentMission.missionStats.expensesSession + price
 				g_currentMission:addSharedMoney(-price, self.statName)
 			end
 			if not self.createFillType then

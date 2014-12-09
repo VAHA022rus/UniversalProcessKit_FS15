@@ -33,11 +33,11 @@ function UPK_Base:new(id, placeable, builtIn)
 	if UPKversion~=nil then
 		local reqversion={}
 		for _,v in pairs(gmatch(UPKversion,"[0-9]+")) do
-			table.insert(reqversion,v)
+			table.insert(reqversion,tonumber(v))
 		end;
 		local upk_version={}
 		for _,v in pairs(gmatch(upk.version,"[0-9]+")) do
-			table.insert(upk_version,v)
+			table.insert(upk_version,tonumber(v))
 		end;
 		for k,v in pairs(upk_version) do
 			if v>(reqversion[k] or 0) then

@@ -20,6 +20,8 @@ function PlaceableUPK:load(xmlFilename, x, y, z, rx, ry, rz, moveMode, initRando
 		self.base=UPK_Base:new(self.nodeId,true)
 		if self.base~=false then
 			self.base:findChildren(self.nodeId)
+		else
+			return false
 		end
 	end -- not moveMode
 
@@ -27,7 +29,7 @@ function PlaceableUPK:load(xmlFilename, x, y, z, rx, ry, rz, moveMode, initRando
 end
 
 function PlaceableUPK:delete()
-	if self.base~=nil then
+	if self.base~=nil and self.base~=false then
 		self.base:delete()
 	end
 	PlaceableUPK:superClass().delete(self)

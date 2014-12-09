@@ -22,9 +22,6 @@ end
 function UniversalProcessKit:removeTrigger()
 	if self.triggerId~=nil and self.triggerId~=0 then
 		removeTrigger(self.triggerId)
-		for _,vehicle in pairs(self.entities) do
-			self.entities:triggerUpdate(vehicle,false)
-		end
 		self.triggerId = 0
 		self.allowedVehicles=nil
 		self.entities={}
@@ -64,6 +61,12 @@ function UniversalProcessKit:getAllowedVehicles()
 	self.allowedVehicles[UniversalProcessKit.VEHICLE_MILKTRUCK] = getBoolFromUserAttribute(self.nodeId, "allowMilktruck", self.allowedVehicles[UniversalProcessKit.VEHICLE_MILKTRUCK])
 	
 	self.allowWalker = self.allowWalker or getBoolFromUserAttribute(self.nodeId, "allowWalker", true)
+	
+	for k,v in pairs(self.allowedVehicles) do
+		if not v then
+			self.allowedVehicles[k]=nil
+		end
+	end
 end
 
 function UniversalProcessKit:fitCollisionMaskToAllowedVehicles()
@@ -241,6 +244,9 @@ function UniversalProcessKit:getShowInfo()
 		end
 	end
 	return false
+end
+
+function UniversalProcessKit:onVehicleDeleted(vehicle)
 end
 
 --[[ TRIGGER FUNCTIONS END ]]--
