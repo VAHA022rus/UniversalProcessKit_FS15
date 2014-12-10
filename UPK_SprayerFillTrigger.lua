@@ -70,48 +70,7 @@ function UPK_SprayerFillTrigger:triggerUpdate(vehicle,isInTrigger)
 	end
 end
 
-function UPK_SprayerFillTrigger:getFillLevel(fillType)
-	--self:print('UPK_SprayerFillTrigger:getFillLevel('..tostring(fillType)..')')
-	return UPK_SprayerFillTrigger:superClass().getFillLevel(self, fillType or UniversalProcessKit.FILLTYPE_FERTILIZER) or 0
-end
-
-function UPK_SprayerFillTrigger:fill(trailer, deltaFillLevel) -- tippers, shovels etc
-	--self:print('UPK_SprayerFillTrigger:fill('..tostring(trailer)..', '..tostring(deltaFillLevel)..')')
-	if self.isServer and self.isEnabled then
-		local trailerFillLevel = trailer:getFillLevel(self.fillFillType)
-		local fillLevel = self:getFillLevel(self.fillFillType)
-		--self:print('fillLevel '..tostring(fillLevel))
-		--self:print('trailer:allowFillType(self.fillFillType, false) '..tostring(trailer:allowFillType(self.fillFillType, false)))
-		--self:print('trailerFillLevel<trailer.capacity '..tostring(trailerFillLevel<trailer.capacity))
-		if (fillLevel>0 or self.createFillType) and trailer:allowFillType(self.fillFillType, false) then
-			trailer:resetFillLevelIfNeeded(self.fillFillType)
-			if not self.createFillType then
-				deltaFillLevel=math.min(deltaFillLevel, fillLevel)
-			end
-			trailer:setFillLevel(trailerFillLevel + deltaFillLevel, self.fillFillType)
-			deltaFillLevel = trailer:getFillLevel(self.fillFillType) - trailerFillLevel
-			if deltaFillLevel~=0 then
-				if self.pricePerLiter~=0 then
-					local price = delta * self.pricePerLiter
-					g_currentMission:addSharedMoney(-price, self.statName)
-				end
-				if not self.createFillType then
-					return -self:addFillLevel(-deltaFillLevel,self.fillFillType)
-				end
-				return deltaFillLevel
-			end
-		end
-	end
-	return 0
-end
-
-function UPK_SprayerFillTrigger:getIsActivatable(trailer)
-	--self:print('trailer:allowFillType(self.fillFillType, false) '..tostring(trailer:allowFillType(self.fillFillType, false)))
-	--self:print('self:getFillLevel(self.fillFillType) '..tostring(self:getFillLevel(self.fillFillType)))
-	if trailer:allowFillType(self.fillFillType, false) and
-		(self:getFillLevel(self.fillFillType)>0 or self.createFillType) then
-		return true
-	end
-	return false
-end
+UPK_SprayerFillTrigger.getFillLevel = UPK_FillTrigger.getFillLevel
+UPK_SprayerFillTrigger.fill = UPK_FillTrigger.fillTrailer
+UPK_SprayerFillTrigger.getIsActivatable = UPK_FillTrigger.getIsActivatable
 

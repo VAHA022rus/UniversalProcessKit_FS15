@@ -30,6 +30,19 @@ Bisher enthaltene Module:
 
 ##Changelog
 
+__V0.7.12__
+
+- Modultyp waterfilltrigger hinzugefügt
+- Modultyp liquidmanurefilltrigger hinzugefügt
+- neu: createFillType (waterfilltrigger)
+- neu: pricePerLiter (waterfilltrigger)
+- neu: statName (waterfilltrigger)
+- neu: createFillType (liquidmanurefilltrigger)
+- neu: pricePerLiter (liquidmanurefilltrigger)
+- neu: statName (liquidmanurefilltrigger)
+- Beispielmod UPK_WaterTest, UPK_LiquidManureTest und UPK_MilkTest hinzugefügt
+
+
 __V0.7.11__
 
 - Modultyp balertrigger hinzugefügt

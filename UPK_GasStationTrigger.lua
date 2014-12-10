@@ -69,64 +69,15 @@ function UPK_GasStationTrigger:triggerUpdate(vehicle,isInTrigger)
 	end
 end
 
-function UPK_GasStationTrigger:getFillLevel(fillType)
-	--self:print('UPK_GasStationTrigger:getFillLevel('..tostring(fillType)..')')
-	return UPK_GasStationTrigger:superClass().getFillLevel(self, fillType or UniversalProcessKit.FILLTYPE_FUEL) or 0
-end
+UPK_GasStationTrigger.getFillLevel = UPK_FillTrigger.getFillLevel
 
 function UPK_GasStationTrigger:fillFuel(trailer, deltaFillLevel) -- tippers, shovels etc
 	--self:print('UPK_GasStationTrigger:fillFuel('..tostring(trailer)..', '..tostring(deltaFillLevel)..')')
 	if self.isServer and self.isEnabled then
 		if UniversalProcessKit.isVehicleType(trailer, UniversalProcessKit.VEHICLE_MOTORIZED) then
-			return self:fillMotorized(trailer, deltaFillLevel)
+			return UPK_FillTrigger.fillMotorized(self, trailer, deltaFillLevel)
 		end
-		local trailerFillLevel = trailer:getFillLevel(self.fillFillType)
-		local fillLevel = self:getFillLevel(self.fillFillType)
-		--self:print('fillLevel '..tostring(fillLevel))
-		--self:print('trailer:allowFillType(self.fillFillType, false) '..tostring(trailer:allowFillType(self.fillFillType, false)))
-		--self:print('trailerFillLevel<trailer.capacity '..tostring(trailerFillLevel<trailer.capacity))
-		if (fillLevel>0 or self.createFillType) and trailer:allowFillType(self.fillFillType, false) then
-			trailer:resetFillLevelIfNeeded(self.fillFillType)
-			if not self.createFillType then
-				deltaFillLevel=math.min(deltaFillLevel, fillLevel)
-			end
-			trailer:setFillLevel(trailerFillLevel + deltaFillLevel, self.fillFillType)
-			deltaFillLevel = trailer:getFillLevel(self.fillFillType) - trailerFillLevel
-			if deltaFillLevel~=0 then
-				if self.pricePerLiter~=0 then
-					local price = delta * self.pricePerLiter
-					g_currentMission:addSharedMoney(-price, self.statName)
-				end
-				if not self.createFillType then
-					return -self:addFillLevel(-deltaFillLevel,self.fillFillType)
-				end
-				return deltaFillLevel
-			end
-		end
-	end
-	return 0
-end
-
-function UPK_GasStationTrigger:fillMotorized(trailer, deltaFillLevel) -- motorized
-	--self:print('UPK_GasStationTrigger:fillMotorized('..tostring(trailer)..', '..tostring(deltaFillLevel)..')')
-	if self.isServer and self.isEnabled and self.fillFillType==UniversalProcessKit.FILLTYPE_FUEL then
-		local trailerFillLevel = trailer.fuelFillLevel
-		local fillLevel = self:getFillLevel(self.fillFillType)
-		if (fillLevel>0 or self.createFillType) and trailerFillLevel<trailer.fuelCapacity then
-			if not self.createFillType then
-				deltaFillLevel=math.min(deltaFillLevel, fillLevel)
-			end
-			trailer:setFuelFillLevel(trailerFillLevel + deltaFillLevel)
-			deltaFillLevel = trailer.fuelFillLevel - trailerFillLevel
-			if(deltaFillLevel>0 and self.pricePerLiter~=0)then
-				local price = delta * self.pricePerLiter
-				g_currentMission:addSharedMoney(-price, self.statName)
-			end
-			if not self.createFillType then
-				return -self:addFillLevel(-deltaFillLevel,self.fillFillType)
-			end
-			return deltaFillLevel
-		end
+		return UPK_FillTrigger.fillTrailer(self, trailer, deltaFillLevel)
 	end
 	return 0
 end
@@ -137,10 +88,6 @@ function UPK_GasStationTrigger:getIsActivatable(trailer)
 	if UniversalProcessKit.isVehicleType(trailer, UniversalProcessKit.VEHICLE_MOTORIZED) then
 		return (self:getFillLevel(self.fillFillType)>0 or self.createFillType)
 	end
-	if trailer:allowFillType(self.fillFillType, false) and
-		(self:getFillLevel(self.fillFillType)>0 or self.createFillType) then
-		return true
-	end
-	return false
+	return UPK_FillTrigger.getIsActivatable(self, trailer)
 end
 

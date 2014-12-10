@@ -356,6 +356,7 @@ _g.UPK_EmptyTrigger={}
 _g.UPK_EntityTrigger={}
 _g.UPK_FillTrigger={}
 _g.UPK_GasStationTrigger={}
+_g.UPK_LiquidManureFillTrigger={}
 _g.UPK_Mover={}
 _g.UPK_PalettSpawner={}
 _g.UPK_PalettTrigger={}
@@ -368,6 +369,7 @@ _g.UPK_Storage={}
 _g.UPK_Switcher={}
 _g.UPK_TipTrigger={}
 _g.UPK_TipTriggerActivatable={}
+_g.UPK_WaterFillTrigger={}
 _g.PlaceableUPK={}
 _g.OnCreateUPK={}
 
