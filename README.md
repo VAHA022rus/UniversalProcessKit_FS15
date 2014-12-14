@@ -19,6 +19,7 @@ Bisher enthaltene Module:
 - entitytrigger
 - filltrigger
 - gasstationtrigger
+- liquidmanurefilltrigger
 - mover
 - parktrigger
 - processor
@@ -27,8 +28,13 @@ Bisher enthaltene Module:
 - switcher
 - tiptrigger
 - unspecified
+- waterfilltrigger
 
 ##Changelog
+
+__V0.8.0__
+
+- Multiplayer-Support hinzugefügt
 
 __V0.7.12__
 

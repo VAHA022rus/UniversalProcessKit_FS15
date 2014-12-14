@@ -1,6 +1,5 @@
 -- by mor2000
 
-UniversalProcessKit=_g.UniversalProcessKit
 local UniversalProcessKit_mt = ClassUPK(UniversalProcessKit);
 InitObjectClass(UniversalProcessKit, "UniversalProcessKit");
 
@@ -134,6 +133,14 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 
 	setmetatable(self, customMt or UniversalProcessKit_mt)
 
+	-- network
+	
+	self.fillLevelsToSync = {}
+	self.nextDirtyFlag = 1
+	self.dirtyMask = 0
+	self.syncAllDirtyFlag = self:getNextDirtyFlag()
+	self.fillLevelDirtyFlag = self:getNextDirtyFlag()
+	
 	-- fill level bubbles
 
 	self.p_flbs = {}
@@ -233,11 +240,12 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 	-- placeable object
 	
 	if self.type~="base" and self.parent~=nil then
-		self.placeable=self.parent.placeable
+		self.placeable = self.parent.placeable
+		self.builtIn = self.parent.builtIn
+		self.syncObj = self.parent.syncObj
+		self.syncObj:registerObjectToSync(self) -- invokes to call read and writeStream
 	end
 	
-	-- loading kids (according to known types of modules)
-	-- kids are loading their kids and so on..
 	
 	print('loaded module '..tostring(self.name)..' with id '..tostring(nodeId))
 	
@@ -337,6 +345,11 @@ end
 
 function UniversalProcessKit:p_onFillLevelChange(deltaFillLevel, newFillLevel, fillType) -- do sth with syncing
 	self:print('UniversalProcessKit:p_onFillLevelChange('..tostring(deltaFillLevel)..', '..tostring(newFillLevel)..', '..tostring(fillType)..')')
+	
+	if self.isServer then
+		table.insert(self.fillLevelsToSync,{fillLevel=newFillLevel,fillType=fillType})
+		self:raiseDirtyFlags(self.fillLevelDirtyFlag)
+	end
 	
 	for obj,func in pairs(self.onFillLevelChangeFuncs) do
 		obj[func](obj, deltaFillLevel, newFillLevel, fillType)
@@ -503,7 +516,7 @@ end;
 function UniversalProcessKit:postLoad()
 	self:print('UniversalProcessKit:postLoad()')
 	-- initial fill levels
-	if self.base.timesSaved==0 then
+	if self.isServer and self.base.timesSaved==0 then
 		local initialFillLevelsArr = getArrayFromUserAttribute(self.nodeId, "initialFillLevels")
 		for i=1,#initialFillLevelsArr,2 do
 			local fillLevel=tonumber(initialFillLevelsArr[i])

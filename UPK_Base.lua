@@ -8,7 +8,7 @@ local UPK_Base_mt = ClassUPK(UPK_Base,UniversalProcessKit)
 InitObjectClass(UPK_Base, "UPK_Base")
 UniversalProcessKit.addModule("base",UPK_Base)
 
-function UPK_Base:new(id, placeable, builtIn)
+function UPK_Base:new(id, placeable, builtIn, syncObj)
 	print('UPK_Base:new')
 	
 	local self = UniversalProcessKit:new(id, nil, UPK_Base_mt)
@@ -16,6 +16,8 @@ function UPK_Base:new(id, placeable, builtIn)
 	
 	self.placeable = placeable or false
 	self.builtIn = builtIn or false
+	self.syncObj = syncObj
+	self.syncObj:registerObjectToSync(self) -- invokes to call read and writeStream
 	
 	if self.builtIn then
 		g_currentMission:addOnCreateLoadedObjectToSave(self)

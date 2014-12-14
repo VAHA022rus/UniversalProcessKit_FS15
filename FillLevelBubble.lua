@@ -33,7 +33,7 @@ _g.fillLevelBubble_mt = {
 				return lhs - (-rhs)
 			end
 			local oldFillLevel = lhs.fillLevel
-			local newFillLevel = math.max(math.min(oldFillLevel + rhs, lhs.capacity), 0)
+			local newFillLevel = mathmax(mathmin(oldFillLevel + rhs, lhs.capacity), 0)
 			local diff = newFillLevel - oldFillLevel
 			lhs:onFillLevelChange(diff,newFillLevel,lhs.fillType)
 			lhs.fillLevel = newFillLevel
@@ -49,9 +49,9 @@ _g.fillLevelBubble_mt = {
 			if newFillType~=nil then
 				lhs.p_fillType = newFillType
 				local diff = lhs + rhs.fillLevel
-				local newFillLevel = rhs.fillLevel - diff
-				rhs:onFillLevelChange(-diff,newFillLevel,rhs.fillType)
-				rhs.fillLevel = newFillLevel
+				if rhs.isflb then
+					_ = rhs - diff
+				end
 				return diff
 			end
 		end
@@ -63,7 +63,7 @@ _g.fillLevelBubble_mt = {
 				return lhs + (-rhs)
 			end
 			local oldFillLevel = lhs.fillLevel
-			local newFillLevel = math.min(math.max(oldFillLevel - rhs, 0), lhs.capacity)
+			local newFillLevel = mathmin(mathmax(oldFillLevel - rhs, 0), lhs.capacity)
 			local diff = newFillLevel - oldFillLevel
 			lhs:onFillLevelChange(diff,newFillLevel,lhs.fillType)
 			lhs.fillLevel = newFillLevel
@@ -79,9 +79,9 @@ _g.fillLevelBubble_mt = {
 			if newFillType~=nil then
 				lhs.p_fillType = newFillType
 				local diff = lhs - rhs.fillLevel
-				local newFillLevel = rhs.fillLevel + diff
-				rhs:onFillLevelChange(-diff,newFillLevel,rhs.fillType)
-				rhs.fillLevel = newFillLevel
+				if rhs.isflb then
+					_ = rhs + diff
+				end
 				return diff
 			end
 		end

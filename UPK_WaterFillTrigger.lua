@@ -49,7 +49,7 @@ end
 
 function UPK_WaterFillTrigger:triggerUpdate(vehicle,isInTrigger)
 	--self:print('UPK_WaterFillTrigger:triggerUpdate('..tostring(vehicle)..', '..tostring(isInTrigger)..')')
-	if self.isEnabled and self.isServer then
+	if self.isEnabled and self.isClient then
 		if self.allowedVehicles[UniversalProcessKit.VEHICLE_WATERTRAILER] and UniversalProcessKit.isVehicleType(vehicle, UniversalProcessKit.VEHICLE_WATERTRAILER) then
 			--self:print('recognized water trailer')
 			if isInTrigger then

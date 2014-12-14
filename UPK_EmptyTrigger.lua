@@ -156,16 +156,18 @@ function UPK_EmptyTrigger:emptyFillable(fillable, deltaFillLevel) -- tippers, sh
 			local capacity = self:getCapacity(fillType)
 			local fillableFillLevel = fillable:getFillLevel(fillType)
 			if fillableFillLevel>0 and capacity-fillLevel>0 then
-				deltaFillLevel=mathmin(deltaFillLevel, fillableFillLevel, capacity-fillLevel)
+				deltaFillLevel=-mathmin(-deltaFillLevel, fillableFillLevel, capacity-fillLevel)
 				fillable:setFillLevel(fillableFillLevel + deltaFillLevel, fillType)
 				local added = self:addFillLevel(-deltaFillLevel, fillType)
 				if added~=0 and self.revenuesPerLiter[fillType]~=0 then
 					local revenue = added * self.revenuesPerLiter[fillType]
 					g_currentMission:addSharedMoney(revenue, self.statName)
+					return added
 				end
 			end
 		end
 	end
+	return 0
 end
 
 function UPK_EmptyTrigger:emptyMotorized(motorized, deltaFillLevel) -- motorized
@@ -175,14 +177,16 @@ function UPK_EmptyTrigger:emptyMotorized(motorized, deltaFillLevel) -- motorized
 		local capacity = self:getCapacity(fillType)
 		local motorizedFillLevel = motorized.fuelFillLevel
 		if motorizedFillLevel>0 and capacity-fillLevel>0 then
-			deltaFillLevel=mathmin(deltaFillLevel, motorizedFillLevel, capacity-fillLevel)
+			deltaFillLevel=-mathmin(-deltaFillLevel, motorizedFillLevel, capacity-fillLevel)
 			motorized:setFuelFillLevel(motorizedFillLevel + deltaFillLevel)
 			local added = self:addFillLevel(-deltaFillLevel, fillType)
 			if added~=0 and self.revenuesPerLiter[fillType]~=0 then
 				local revenue = added * self.revenuesPerLiter[fillType]
 				g_currentMission:addSharedMoney(revenue, self.statName)
+				return added
 			end
 		end
 	end
+	return 0
 end
 

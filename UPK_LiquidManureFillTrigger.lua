@@ -49,7 +49,7 @@ end
 
 function UPK_LiquidManureFillTrigger:triggerUpdate(vehicle,isInTrigger)
 	--self:print('UPK_LiquidManureFillTrigger:triggerUpdate('..tostring(vehicle)..', '..tostring(isInTrigger)..')')
-	if self.isEnabled and self.isServer then
+	if self.isEnabled and self.isClient then
 		if self.allowedVehicles[UniversalProcessKit.VEHICLE_LIQUIDMANURETRAILER] and UniversalProcessKit.isVehicleType(vehicle, UniversalProcessKit.VEHICLE_LIQUIDMANURETRAILER) then
 			--self:print('recognized liquid manure trailer')
 			if isInTrigger then
