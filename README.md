@@ -32,6 +32,11 @@ Bisher enthaltene Module:
 
 ##Changelog
 
+__V0.8.1__
+
+- Fix für div. Trigger für pricePerLiter und revenuePerLiter
+- Fix für switcher
+
 __V0.8.0__
 
 - Multiplayer-Support hinzugefügt

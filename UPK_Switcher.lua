@@ -76,7 +76,7 @@ function UPK_Switcher:new(id,parent)
 			end
 		end
 		table.insert(self.maxfillLevelPerShape,math.huge)
-		local numChildren = getNumOfChildren(self.nodeId)
+		local numChildren = mathmin(getNumOfChildren(self.nodeId),#self.maxfillLevelPerShape)
 		for i=1,numChildren do
 			local childId = getChildAt(self.nodeId, i-1)
 			setVisibility(childId,false)
@@ -100,8 +100,6 @@ function UPK_Switcher:new(id,parent)
 		self.mode="switch"
 	end
 	
-	self.oldFillType=nil
-
 	self:print('loaded Switcher successfully')
     
 	return self
@@ -125,7 +123,7 @@ function UPK_Switcher:onFillLevelChange(deltaFillLevel, newFillLevel, fillType) 
 	
 	self:print('UPK_Switcher:onFillLevelChange('..tostring(deltaFillLevel)..', '..tostring(newFillLevel)..', '..tostring(fillType)..')')
 	
-	if self.switchAtFillTypes[fillType]==true and self.isClient and self.isEnabled then		
+	if self.switchAtFillTypes[fillType]==true and self.isEnabled then		
 		if self.useFillTypes then
 			local fillType=self.fillType
 			local shapeToShow=nil
@@ -155,66 +153,61 @@ function UPK_Switcher:onFillLevelChange(deltaFillLevel, newFillLevel, fillType) 
 				fillLevel = min(self.fillLevelsCopy) or 0
 			end
 			if fillLevel ~= self.currentFillLevel then
-				self:print("fillLevel ~= self.currentFillLevel")
-				for i=1,#self.maxfillLevelPerShape do
-					if self.maxfillLevelPerShape[i]>=fillLevel then
-						shapeToShow=self.switchFillLevels[i]
-						shapeToShowIndex=i
-						break
-					end
-				end
-			end
-			self:print("shapeToShowIndex="..tostring(shapeToShowIndex))
-			self:print("shapeToShow="..tostring(shapeToShow))
-			self:print("self.oldShapeToShow="..tostring(self.oldShapeToShow))
-			if shapeToShow~=nil and shapeToShow~=self.oldShapeToShow then
-				self:print("self.oldShapeToShowIndex="..tostring(self.oldShapeToShowIndex))
-				if self.mode=="stack" then
-					self:print("mode=stack")
-					local oldShapeToShowIndex = self.oldShapeToShowIndex or 0
-					if oldShapeToShowIndex>shapeToShowIndex then
-						for i=(shapeToShowIndex+1),oldShapeToShowIndex do
-							self:print('hiding node '..tostring(self.switchFillLevels[i]))
-							setVisibility(self.switchFillLevels[i],false)
-							UniversalProcessKit.setTranslation(self.switchFillLevels[i],unpack((self.shapePositions[self.switchFillLevels[i]]+self.hidingPosition) or {}))
-						end
-					else
-						for i=(oldShapeToShowIndex+1),shapeToShowIndex do
-							self:print('showing node '..tostring(self.switchFillLevels[i]))
-							setVisibility(self.switchFillLevels[i],true)
-							UniversalProcessKit.setTranslation(self.switchFillLevels[i],unpack(self.shapePositions[self.switchFillLevels[i]] or {}))
-						end
-					end
-				elseif self.mode=="stackReverse" then --wrecked
-					self:print("mode=stackReverse")
-					local oldShapeToShowIndex = self.oldShapeToShowIndex or #self.switchFillLevels
-					if oldShapeToShowIndex>shapeToShowIndex then
-						for i=shapeToShowIndex,(oldShapeToShowIndex-1) do
-							self:print('showing node '..tostring(self.switchFillLevels[i]))
-							setVisibility(self.switchFillLevels[i],true)
-							UniversalProcessKit.setTranslation(self.switchFillLevels[i],unpack(self.shapePositions[self.switchFillLevels[i]] or {}))
-							
-						end
-					else
-						for i=oldShapeToShowIndex,(shapeToShowIndex-1) do
-							self:print('hiding node '..tostring(self.switchFillLevels[i]))
-							setVisibility(self.switchFillLevels[i],false)
-							UniversalProcessKit.setTranslation(self.switchFillLevels[i],unpack((self.shapePositions[self.switchFillLevels[i]]+self.hidingPosition) or {}))
-						end
-					end
-				else
+				local newShapeToShow=self:getShapeFromFillLevel(fillLevel)
+				if newShapeToShow~=nil and newShapeToShow~=self.oldShapeToShow then
+					local newShapeId=self.switchFillLevels[newShapeToShow]
+					setVisibility(newShapeId,true)
+					UniversalProcessKit.setTranslation(newShapeId,unpack((self.shapePositions[newShapeId]) or {}))
 					if self.oldShapeToShow~=nil then
-						setVisibility(self.oldShapeToShow,false)
-						UniversalProcessKit.setTranslation(self.oldShapeToShow,unpack((self.shapePositions[self.oldShapeToShow]+self.hidingPosition) or {}))
-					end
-					setVisibility(shapeToShow,true)
-					UniversalProcessKit.setTranslation(shapeToShow,unpack(self.shapePositions[shapeToShow] or {}))
+						if self.mode=="switch" then
+							local shapeId=self.switchFillLevels[self.oldShapeToShow]
+							setVisibility(shapeId,false)
+							UniversalProcessKit.setTranslation(shapeId,unpack((self.shapePositions[shapeId]+self.hidingPosition) or {}))
+						elseif self.mode=="stack" then
+							if newShapeToShow<self.oldShapeToShow then
+								for i=self.oldShapeToShow,(newShapeToShow+1),-1 do
+									local shapeId=self.switchFillLevels[i]
+									setVisibility(shapeId,false)
+									UniversalProcessKit.setTranslation(shapeId,unpack((self.shapePositions[shapeId]+self.hidingPosition) or {}))
+								end
+							end
+						elseif self.mode=="stackReverse" then
+							if newShapeToShow>self.oldShapeToShow then
+								for i=self.oldShapeToShow,(newShapeToShow-1) do
+									local shapeId=self.switchFillLevels[i]
+									setVisibility(shapeId,false)
+									UniversalProcessKit.setTranslation(shapeId,unpack((self.shapePositions[shapeId]+self.hidingPosition) or {}))
+								end
+							end
+						end
+					else
+						if self.mode=="stack" then
+							for i=1,(newShapeToShow-1) do
+								local shapeId=self.switchFillLevels[i]
+								setVisibility(shapeId,true)
+								UniversalProcessKit.setTranslation(shapeId,unpack((self.shapePositions[shapeId]) or {}))
+							end
+						elseif self.mode=="stackReverse" then
+							for i=getShapeFromFillLevel(math.huge),(newShapeToShow+1),-1 do
+								local shapeId=self.switchFillLevels[i]
+								setVisibility(shapeId,true)
+								UniversalProcessKit.setTranslation(shapeId,unpack((self.shapePositions[shapeId]) or {}))
+							end
+						end
+					end			
+					self.oldShapeToShow=newShapeToShow
 				end
-				
-				self.oldShapeToShow=shapeToShow
-				self.oldShapeToShowIndex=shapeToShowIndex
 				self.currentFillLevel=fillLevel
-			end
+			end			
 		end
 	end
+end
+
+function UPK_Switcher:getShapeFromFillLevel(fillLevel)
+	for i=1,#self.maxfillLevelPerShape do
+		if fillLevel<self.maxfillLevelPerShape[i] then
+			return i
+		end
+	end
+	return nil
 end

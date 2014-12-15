@@ -141,12 +141,12 @@ function UPK_FillTrigger:fillTrailer(trailer, deltaFillLevel) -- tippers, shovel
 				trailer:setFillLevel(trailerFillLevel + deltaFillLevel, fillFillType)
 				deltaFillLevel = trailer:getFillLevel(fillFillType) - trailerFillLevel
 				if deltaFillLevel~=0 then
-					if self.pricePerLiter~=0 then
-						local price = delta * self.pricePerLiter
-						g_currentMission:addSharedMoney(-price, self.statName)
-					end
 					if not self.createFillType then
-						return -self:addFillLevel(-deltaFillLevel,fillFillType)
+						deltaFillLevel=-self:addFillLevel(-deltaFillLevel,fillFillType)
+					end
+					if self.pricePerLiter~=0 then
+						local price = deltaFillLevel * self.pricePerLiter
+						g_currentMission:addSharedMoney(-price, self.statName)
 					end
 					return deltaFillLevel
 				end
@@ -172,12 +172,14 @@ function UPK_FillTrigger:fillMotorized(trailer, deltaFillLevel) -- motorized
 				end
 				trailer:setFuelFillLevel(trailerFillLevel + deltaFillLevel)
 				deltaFillLevel = trailer.fuelFillLevel - trailerFillLevel
-				if(deltaFillLevel>0 and self.pricePerLiter~=0)then
-					local price = delta * self.pricePerLiter
-					g_currentMission:addSharedMoney(-price, self.statName)
-				end
-				if not self.createFillType then
-					return -self:addFillLevel(-deltaFillLevel,self.fillFillType)
+				if deltaFillLevel~=0 then
+					if not self.createFillType then
+						deltaFillLevel=-self:addFillLevel(-deltaFillLevel,self.fillFillType)
+					end
+					if self.pricePerLiter~=0 then
+						local price = deltaFillLevel * self.pricePerLiter
+						g_currentMission:addSharedMoney(-price, self.statName)
+					end
 				end
 				return deltaFillLevel
 			end
