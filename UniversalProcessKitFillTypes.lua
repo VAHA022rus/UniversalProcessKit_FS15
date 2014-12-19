@@ -58,7 +58,7 @@ local fillTypeIntToName_mt={
 setmetatable(UniversalProcessKit.fillTypeNameToInt,fillTypeNameToInt_mt)
 setmetatable(UniversalProcessKit.fillTypeIntToName,fillTypeIntToName_mt)
 
-local specialFillTypes = {"money", -- "other"
+UniversalProcessKit.specialFillTypes = {"money", -- "other"
 						"newVehiclesCost",
 						"newAnimalsCost",
 						"constructionCost",
@@ -121,7 +121,7 @@ local isSpecialFillType_mt = {
 UniversalProcessKit.isSpecialFillType = {}
 setmetatable(UniversalProcessKit.isSpecialFillType,isSpecialFillType_mt)
 
-for _,name in pairs(specialFillTypes) do
+for _,name in pairs(UniversalProcessKit.specialFillTypes) do
 	local index = UniversalProcessKit.addFillType(name)
 	UniversalProcessKit.isSpecialFillType[index] = true
 end
@@ -239,7 +239,7 @@ local upk_fillLevel_money_mt = {
 				return lhs - (-rhs)
 			end
 			if g_server ~= nil then
-				g_currentMission:addSharedMoney(rhs, t.statName)
+				g_currentMission:addSharedMoney(rhs, lhs.statName)
 				return rhs
 			end
 			return 0
@@ -251,7 +251,7 @@ local upk_fillLevel_money_mt = {
 				return lhs - {-rhs.fillLevel, rhs.fillType}
 			end
 			if g_server ~= nil then
-				g_currentMission:addSharedMoney(rhs.fillLevel, t.statName)
+				g_currentMission:addSharedMoney(rhs.fillLevel, lhs.statName)
 				return rhs.fillLevel
 			end
 			return 0
@@ -264,7 +264,7 @@ local upk_fillLevel_money_mt = {
 				return lhs + (-rhs)
 			end
 			if g_server ~= nil then
-				g_currentMission:addSharedMoney(-rhs, t.statName)
+				g_currentMission:addSharedMoney(-rhs, lhs.statName)
 				return -rhs
 			end
 		elseif type(rhs)=="table" then
@@ -275,7 +275,7 @@ local upk_fillLevel_money_mt = {
 				return lhs + {-rhs.fillLevel, rhs.fillType}
 			end
 			if g_server ~= nil then
-				g_currentMission:addSharedMoney(-rhs.fillLevel, t.statName)
+				g_currentMission:addSharedMoney(-rhs.fillLevel, lhs.statName)
 				return -rhs.fillLevel
 			end
 			return 0

@@ -13,6 +13,8 @@ function UPK_SellTarget:new(id, parent)
 	
 	self:print('loaded SellTarget successfully')
 	
+	UniversalProcessKitListener.addUpdateable(self)
+	
 	return self
 end
 
@@ -24,7 +26,7 @@ function UPK_SellTarget:update(dt)
 	if self.placeable~=nil and g_gui.currentGuiName=="PlacementScreen" then
 		local diffx,diffy,diffz = unpack(self.wpos - {getWorldTranslation(g_placementScreen.camera)})
 		if diffx<200 and diffy<200 and diffz<200 then
-			local _,wy,_=getRotation(self.placeable.nodeId)
+			local _,wy,_=getRotation(self.base.nodeId)
 			local tmpy=Utils.getYRotationFromDirection(diffx, diffz)
 			local rx=Utils.getYRotationFromDirection(math.sqrt(diffx*diffx+diffz*diffz), diffy)
 			setRotation(self.nodeId,rx,-(wy-tmpy),0)

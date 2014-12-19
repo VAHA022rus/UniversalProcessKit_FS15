@@ -187,6 +187,18 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 		end
 	end
 	
+	if self.storageType==UPK_Storage.SINGLE or self.storageType==UPK_Storage.FIFO or self.storageType==UPK_Storage.FILO then
+		local convertFromUnknown_mt = {
+			__index = function(t,k)
+				rawset(t,k,k)
+				return k
+			end
+		}
+		local convertFromUnknown={}
+		setmetatable(convertFromUnknown, convertFromUnknown_mt)
+		self.fillTypesConversionMatrix[UniversalProcessKit.FILLTYPE_UNKNOWN] = convertFromUnknown
+	end
+	
 	for _,flb in pairs(self.p_flbs) do
 		flb.capacities = self.capacities
 		for k,v in pairs(flb.capacities) do
@@ -243,6 +255,7 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 		self.placeable = self.parent.placeable
 		self.builtIn = self.parent.builtIn
 		self.syncObj = self.parent.syncObj
+		self.base = self.parent.base
 		self.syncObj:registerObjectToSync(self) -- invokes to call read and writeStream
 	end
 	
@@ -254,6 +267,8 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 	end
 	
 	UniversalProcessKitListener.registerPostLoadObject(self)
+	
+	--g_currentMission:addNodeObject(self.nodeId, self)
 	
 	return self
 end;
@@ -300,6 +315,8 @@ end;
 
 function UniversalProcessKit:delete()
 	print('delete module '..tostring(self.name)..' with id '..tostring(self.id))
+
+	self.isEnabled = false
 
 	self:removeTrigger()
 	
@@ -380,17 +397,27 @@ end
 
 function UniversalProcessKit:getFillLevel(fillType)
 	--self:print('UniversalProcessKit:getFillLevel('..tostring(fillType)..')')
-	if self.storageType==UPK_Storage.SEPARATE and fillType~=nil then
-		local newFillType=self.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN][fillType] or fillType
-		local flb=self.p_flbs[newFillType]
-		if flb~=nil then
-			return flb.fillLevel
-		else
-			if self.parent~=nil then
-				return self.parent:getFillLevel(fillType)
+	if fillType~=nil then
+		if self.storageType==UPK_Storage.SEPARATE then
+			local newFillType=self.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN][fillType] or fillType
+			local flb=self.p_flbs[newFillType]
+			if flb~=nil then
+				return flb.fillLevel
+			else
+				if self.parent~=nil then
+					return self.parent:getFillLevel(fillType)
+				end
+			end
+		elseif self.storageType==UPK_Storage.SINGLE or self.storageType==UPK_Storage.FIFO or self.storageType==UPK_Storage.FILO then
+			--self:print('self.p_flbs[1].fillType: '..tostring(self.p_flbs[1].fillType))
+			if self.p_flbs[1].fillType==fillType then
+				return self.p_flbs[1].fillLevel
+			else
+				return 0
 			end
 		end
 	end
+		
 	return self.fillLevel
 end
 
@@ -419,7 +446,7 @@ end
 
 function UniversalProcessKit:allowFillType(fillType, allowEmptying) -- also check for capacity
 	if fillType~=nil then
-		newFillType=self.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN][fillType] or fillType
+		newFillType=self.fillTypesConversionMatrix[UniversalProcessKit.FILLTYPE_UNKNOWN][fillType] or fillType
 		if UniversalProcessKit.isSpecialFillType(newFillType) then
 			return true
 		elseif self.storageType==UPK_Storage.SEPARATE then
@@ -431,7 +458,12 @@ function UniversalProcessKit:allowFillType(fillType, allowEmptying) -- also chec
 					return self.parent:allowFillType(fillType, allowEmptying)
 				end
 			end
-		elseif self.storageType==UPK_Storage.SINGLE or self.storageType==UPK_Storage.FIFO or self.storageType==UPK_Storage.FILO then
+		elseif self.storageType==UPK_Storage.SINGLE then
+			newFillType=self.fillTypesConversionMatrix[self.fillType][fillType]
+			if newFillType~=nil then
+				return self.fillLevel < self.capacity
+			end
+		elseif self.storageType==UPK_Storage.FIFO or self.storageType==UPK_Storage.FILO then
 			return self.fillLevel < self.capacity
 		end
 	end

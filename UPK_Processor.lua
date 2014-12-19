@@ -181,32 +181,37 @@ function UPK_Processor:new(id, parent)
 		self.statName="other"
 	end
 	
-	--[[
-	FinanceStats.statNames = {
-		"newVehiclesCost",
-		"newAnimalsCost",
-		"constructionCost",
-		"vehicleRunningCost",
-		"propertyMaintenance",
-		"wagePayment",
-		"harvestIncome",
-		"missionIncome",
-		"other",
-		"loanInterest"
-	}
-	--]]
+	if self.product==UniversalProcessKit.FILLTYPE_MONEY and self.statName~="other" then
+		if self.statName=="newVehiclesCost" then	
+			self.product=UniversalProcessKit.FILLTYPE_NEWVEHICLESCOST
+		elseif self.statName=="newAnimalsCost" then	
+			self.product=UniversalProcessKit.FILLTYPE_NEWANIMALSCOST
+		elseif self.statName=="constructionCost" then	
+			self.product=UniversalProcessKit.FILLTYPE_CONSTRUCTIONCOST
+		elseif self.statName=="vehicleRunningCost" then	
+			self.product=UniversalProcessKit.FILLTYPE_VEHICLERUNNINGCOST
+		elseif self.statName=="propertyMaintenance" then	
+			self.product=UniversalProcessKit.FILLTYPE_PROPERTYMAINTANCE
+		elseif self.statName=="wagePayment" then	
+			self.product=UniversalProcessKit.FILLTYPE_WAGEPAYMENT
+		elseif self.statName=="harvestIncome" then	
+			self.product=UniversalProcessKit.FILLTYPE_HARVESTINCOME
+		elseif self.statName=="missionIncome" then	
+			self.product=UniversalProcessKit.FILLTYPE_MISSIONINCOME
+		elseif self.statName=="loanInterest" then	
+			self.product=UniversalProcessKit.FILLTYPE_LOANINTEREST
+		end	
+	end
 
-	if not moveMode then -- moveMode here?
-		if self.isServer then
-			if self.product~=nil and self.productsPerMinute>0 then
-				UniversalProcessKitListener.addMinuteChangeListener(self)
-			elseif self.product~=nil and self.productsPerHour>0 then
-				UniversalProcessKitListener.addHourChangeListener(self)
-			elseif self.product~=nil and self.productsPerDay>0 then
-				UniversalProcessKitListener.addDayChangeListener(self)
-			elseif self.product~=nil and self.productsPerSecond>0 then
-				UniversalProcessKitListener.addSecondChangeListener(self)
-			end
+	if self.isServer then
+		if self.product~=nil and self.productsPerMinute>0 then
+			UniversalProcessKitListener.addMinuteChangeListener(self)
+		elseif self.product~=nil and self.productsPerHour>0 then
+			UniversalProcessKitListener.addHourChangeListener(self)
+		elseif self.product~=nil and self.productsPerDay>0 then
+			UniversalProcessKitListener.addDayChangeListener(self)
+		elseif self.product~=nil and self.productsPerSecond>0 then
+			UniversalProcessKitListener.addSecondChangeListener(self)
 		end
 	end
 	
@@ -218,6 +223,7 @@ function UPK_Processor:new(id, parent)
 end
 
 function UPK_Processor:delete()
+	print('UPK_Processor:delete()')
 	if self.isServer then
 		if self.product~=nil and self.productsPerMinute>0 then
 			UniversalProcessKitListener.removeMinuteChangeListener(self)
@@ -304,9 +310,7 @@ function UPK_Processor:produce(processed)
 					end
 				end
 			end
-			if self.product~=UniversalProcessKit.FILLTYPE_MONEY then
-				processed=mathmin(processed,self:getCapacity(self.product)-self:getFillLevel(self.product))
-			end
+			processed=mathmin(processed,self:getCapacity(self.product)-self:getFillLevel(self.product))
 			if round(processed,8)>0 then
 				if self.hasRecipe then
 					for k,v in pairs(self.recipe) do
@@ -336,7 +340,8 @@ function UPK_Processor:produce(processed)
 				end
 				finalProducts=round(finalProducts,8)
 				if finalProducts>0 then
-					_= self + {finalProducts,self.product}
+					local added = self + {finalProducts,self.product}
+					self:print('finalProducts: '..tostring(finalProducts)..', added: '..tostring(added))
 					if self.hasByproducts then
 						for k,v in pairs(self.byproducts) do
 							if type(v)=="number" and v>0 then

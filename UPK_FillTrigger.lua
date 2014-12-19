@@ -131,8 +131,8 @@ function UPK_FillTrigger:fillTrailer(trailer, deltaFillLevel) -- tippers, shovel
 		if fillFillType~=UniversalProcessKit.FILLTYPE_UNKNOWN then
 			local trailerFillLevel = trailer:getFillLevel(fillFillType)
 			local fillLevel = self:getFillLevel(fillFillType)
-			--self:print('fillLevel '..tostring(fillLevel))
-			--self:print('trailer:allowFillType(fillFillType, false) '..tostring(trailer:allowFillType(fillFillType, false)))
+			self:print('fillLevel '..tostring(fillLevel))
+			self:print('trailer:allowFillType(fillFillType, false) '..tostring(trailer:allowFillType(fillFillType, false)))
 			if (fillLevel>0 or self.createFillType) and trailer:allowFillType(fillFillType, false) then
 				trailer:resetFillLevelIfNeeded(fillFillType)
 				if not self.createFillType then

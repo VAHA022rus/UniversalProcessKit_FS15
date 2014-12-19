@@ -16,21 +16,29 @@ function PlaceableUPK:new(isServer, isClient, customMt)
 	return self
 end
 
-function PlaceableUPK:load(xmlFilename, x, y, z, rx, ry, rz, moveMode, initRandom)
-    if not PlaceableUPK:superClass().load(self, xmlFilename, x, y, z, rx, ry, rz, moveMode, initRandom) then
+function PlaceableUPK:load(xmlFilename, x, y, z, rx, ry, rz, ...)
+    if not PlaceableUPK:superClass().load(self, xmlFilename, x, y, z, rx, ry, rz, ...) then
 		return false
     end
+	return true
+end
 
-	if not moveMode and self.nodeId~=nil then
+function PlaceableUPK:finalizePlacement(...)
+	--print('PlaceableUPK:finalizePlacement(...)')
+    PlaceableUPK:superClass().finalizePlacement(self, ...)
+	
+	--[[
+	for k,v in pairs({...}) do
+		print(tostring(k)..': '..tostring(v))
+	end
+	]]--
+	
+	if self.nodeId~=nil then
 		self.base=UPK_Base:new(self.nodeId,true,false,self)
 		if self.base~=false then
 			self.base:findChildren(self.nodeId)
-		else
-			return false
 		end
-	end -- not moveMode
-
-	return true
+	end
 end
 
 function PlaceableUPK:delete()

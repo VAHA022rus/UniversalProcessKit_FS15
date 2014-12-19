@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="no" ?>
 <modDesc descVersion="21">
     <author>mor2000</author>
-    <version>0.8.1</version>
+    <version>0.8.2</version>
     <title>
         <en>AAA UniversalProcessKit</en>
         <de>AAA UniversalProcessKit</de>
@@ -114,7 +114,9 @@
 		<text name="woodChips"> <en>woodchips</en> <de>Hackschnitzel</de> </text>
 		
 		<text name="pig"> <en>pigs</en> <de>Schweine</de> </text>
+		<text name="pigs"> <en>pigs</en> <de>Schweine</de> </text>
 		<text name="cow"> <en>cows</en> <de><![CDATA[Kühe]]></de> </text>
+		<text name="cows"> <en>cows</en> <de><![CDATA[Kühe]]></de> </text>
 		<text name="chicken"> <en>chicken</en> <de><![CDATA[Hühner]]></de> </text>
 		<text name="sheep"> <en>sheep</en> <de>Schafe</de> </text>
 		<text name="beef"> <en>cattle</en> <de>Rinder</de> </text>

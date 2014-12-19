@@ -12,7 +12,7 @@ _g.fillLevelBubble_mt = {
 			--print(tostring(t)..' fillLevel is '..tostring(t.p_fillLevel))
 			return t.p_fillLevel or 0
 		elseif k=="fillType" then
-			return t.p_fillType or Fillable.FILLTYPE_UNKNOWN
+			return t.p_fillType or UniversalProcessKit.FILLTYPE_UNKNOWN
 		elseif k=="capacity" then
 			return t.capacities[t.p_fillType] or math.huge
 		end
@@ -21,7 +21,7 @@ _g.fillLevelBubble_mt = {
 	__newindex = function(t,k,v)
 		if k=="fillLevel" then
 			if v==0 then
-				t.p_fillType = Fillable.FILLTYPE_UNKNOWN
+				t.p_fillType = UniversalProcessKit.FILLTYPE_UNKNOWN
 			end
 			--print(tostring(t)..' fillLevel set to '..tostring(v))
 			t.p_fillLevel = v
@@ -46,6 +46,7 @@ _g.fillLevelBubble_mt = {
 				return lhs - {-rhs.fillLevel, rhs.fillType}
 			end
 			local newFillType = lhs.fillTypesConversionMatrix[lhs.fillType][rhs.fillType]
+			print('lhs.fillType='..tostring(lhs.fillType)..', rhs.fillType='..tostring(rhs.fillType)..', newfilltype='..tostring(newFillType))
 			if newFillType~=nil then
 				lhs.p_fillType = newFillType
 				local diff = lhs + rhs.fillLevel
@@ -98,7 +99,7 @@ function FillLevelBubble:new(...)
 	local self={}
 	self.isflb = true
 	self.p_fillLevel = arr['fillLevel'] or arr[1] or 0
-	self.p_fillType = arr['fillType'] or arr[2] or Fillable.FILLTYPE_UNKNOWN
+	self.p_fillType = arr['fillType'] or arr[2] or UniversalProcessKit.FILLTYPE_UNKNOWN
 	
 	self.capacities = arr['capacities'] or FillLevelBubbleCapacities:new()
 	self.fillTypesConversionMatrix = arr['fillTypesConversionMatrix'] or FillTypesConversionMatrix:new(self.p_fillType)
@@ -162,7 +163,7 @@ _g.fillTypesConversionMatrix_mt = {
 		end
 		for k,v in pairs(rhs) do
 			for l,_ in pairs(v) do
-				if k~=Fillable.FILLTYPE_UNKNOWN and l~=Fillable.FILLTYPE_UNKNOWN then
+				if k~=UniversalProcessKit.FILLTYPE_UNKNOWN and l~=UniversalProcessKit.FILLTYPE_UNKNOWN then
 					lhs[k][l] = nil
 				end
 			end
@@ -180,14 +181,19 @@ function FillTypesConversionMatrix:new(...)
 	local self={}
 	setmetatable(self, fillTypesConversionMatrix_mt)
 	
-	self[Fillable.FILLTYPE_UNKNOWN][Fillable.FILLTYPE_UNKNOWN] = Fillable.FILLTYPE_UNKNOWN
+	for _,name in pairs(UniversalProcessKit.specialFillTypes) do
+		local index = UniversalProcessKit.fillTypeNameToInt[name]
+		self[UniversalProcessKit.FILLTYPE_UNKNOWN][index] = index
+	end
+	
+	self[UniversalProcessKit.FILLTYPE_UNKNOWN][UniversalProcessKit.FILLTYPE_UNKNOWN] = UniversalProcessKit.FILLTYPE_UNKNOWN
 	if #arr>=1 then
 		for i=1,#arr do
 			-- print('setting filltype '..tostring(arr[1])..' equal to '..tostring(arr[i]))
 			self[arr[1]][arr[i]] = arr[1]
-			self[Fillable.FILLTYPE_UNKNOWN][arr[i]] = arr[1]
+			self[UniversalProcessKit.FILLTYPE_UNKNOWN][arr[i]] = arr[1]
 		end
-		self[arr[1]][Fillable.FILLTYPE_UNKNOWN] = arr[1]
+		self[arr[1]][UniversalProcessKit.FILLTYPE_UNKNOWN] = arr[1]
 	end
 
 	return self
@@ -229,7 +235,7 @@ _g.fillLevelBubbleShell_mt = {
 			elseif k=="fillLevel" then
 				return 0
 			elseif k=="fillType" then
-				return Fillable.FILLTYPE_UNKNOWN
+				return UniversalProcessKit.FILLTYPE_UNKNOWN
 			end
 		elseif t.storageType==UPK_Storage.SINGLE then
 			if k=="capacity" then
@@ -263,7 +269,7 @@ _g.fillLevelBubbleShell_mt = {
 			if UniversalProcessKit.isSpecialFillType(rhs.fillType) then
 				added = UniversalProcessKitEnvironment.flbs[rhs.fillType] + rhs
 			elseif lhs.storageType==UPK_Storage.SEPARATE then
-				added = (lhs.p_flbs[lhs.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN][rhs.fillType]] or lhs.parent or FillLevelBubble:new()) + rhs
+				added = (lhs.p_flbs[lhs.fillTypesConversionMatrix[UniversalProcessKit.FILLTYPE_UNKNOWN][rhs.fillType]] or lhs.parent or FillLevelBubble:new()) + rhs
 			elseif lhs.storageType==UPK_Storage.SINGLE then
 				added = lhs.p_flbs[1] + rhs
 			elseif lhs.storageType==UPK_Storage.FIFO then
@@ -330,7 +336,7 @@ _g.fillLevelBubbleShell_mt = {
 			if UniversalProcessKit.isSpecialFillType(rhs.fillType) then
 				added = UniversalProcessKitEnvironment.flbs[rhs.fillType] - rhs
 			elseif lhs.storageType==UPK_Storage.SEPARATE then
-				added = (lhs.p_flbs[lhs.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN][rhs.fillType]] or lhs.parent or FillLevelBubble:new()) - rhs
+				added = (lhs.p_flbs[lhs.fillTypesConversionMatrix[UniversalProcessKit.FILLTYPE_UNKNOWN][rhs.fillType]] or lhs.parent or FillLevelBubble:new()) - rhs
 			elseif lhs.storageType==UPK_Storage.SINGLE then
 				added = lhs.p_flbs[1] - rhs
 			elseif lhs.storageType==UPK_Storage.FIFO then

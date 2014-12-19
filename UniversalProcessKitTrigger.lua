@@ -16,7 +16,8 @@ function UniversalProcessKit:addTrigger()
 	self.playerInRange=false
 
 	addTrigger(self.triggerId, "triggerCallback", self)
-	self:triggerUpdate(nil,nil)
+	self:triggerUpdate(nil,true)
+	self:triggerUpdate(nil,false)
 end
 
 function UniversalProcessKit:removeTrigger()

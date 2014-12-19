@@ -17,6 +17,7 @@ function UPK_Base:new(id, placeable, builtIn, syncObj)
 	self.placeable = placeable or false
 	self.builtIn = builtIn or false
 	self.syncObj = syncObj
+	self.base = self
 	self.syncObj:registerObjectToSync(self) -- invokes to call read and writeStream
 	
 	if self.builtIn then

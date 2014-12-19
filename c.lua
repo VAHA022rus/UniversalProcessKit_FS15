@@ -368,6 +368,7 @@ _g.UPK_SprayerFillTrigger={}
 _g.UPK_Storage={}
 _g.UPK_Switcher={}
 _g.UPK_TipTrigger={}
+_g.UPK_TipTriggerObject={}
 _g.UPK_TipTriggerActivatable={}
 _g.UPK_WaterFillTrigger={}
 _g.PlaceableUPK={}
@@ -714,6 +715,7 @@ function _g.ClassUPK(members, baseClass)
 						added = lhs.parent + rhs
 					end
 				elseif lhs.storageType==UPK_Storage.SINGLE then
+					print('shelf: adding to single')
 					added = lhs.p_flbs[1] + rhs
 				elseif lhs.storageType==UPK_Storage.FIFO then
 					newFillType = lhs.p_flbs[lhs.p_flbs_fifo_lastkey].fillTypesConversionMatrix[lhs.p_flbs[lhs.p_flbs_fifo_lastkey].fillType][rhs.fillType]

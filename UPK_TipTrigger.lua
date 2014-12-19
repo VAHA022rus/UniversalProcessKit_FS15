@@ -3,6 +3,31 @@
 --------------------
 -- TipTrigger (that trailers can tip specific fillTypes)
 
+local UPK_TipTriggerObject_mt = Class(UPK_TipTriggerObject, Object)
+InitObjectClass(UPK_TipTriggerObject, "UPK_TipTriggerObject")
+
+function UPK_TipTriggerObject:new(isServer, isClient)
+	local self = Object:new(isServer, isClient, UPK_TipTriggerObject_mt)
+	return self
+end
+function UPK_TipTriggerObject:load(tipTrigger)
+	self.tipTrigger = tipTrigger
+end
+function UPK_TipTriggerObject:getTipInfoForTrailer(trailer, tipReferencePointIndex)
+	print('UPK_TipTriggerObject:getTipInfoForTrailer()')
+	local isAllowed, distance = self.tipTrigger:getTipInfoForTrailer(trailer, tipReferencePointIndex)
+	print('isAllowed: '..tostring(isAllowed)..', distance: '..tostring(distance))
+	return isAllowed, distance
+end
+function UPK_TipTriggerObject:updateTrailerTipping(trailer, fillDelta, fillType)
+	self.tipTrigger:updateTrailerTipping(trailer, fillDelta, fillType)
+end
+function UPK_TipTriggerObject:getTipDistanceFromTrailer(trailer, tipReferencePointIndex)
+	print('UPK_TipTriggerObject:getTipDistanceFromTrailer()')
+	local isAllowed, minDistance, bestPoint= self.tipTrigger:getTipDistanceFromTrailer(trailer, tipReferencePointIndex)
+	print('isAllowed: '..tostring(isAllowed)..', minDistance: '..tostring(minDistance)..', bestPoint: '..tostring(bestPoint))
+	return isAllowed, minDistance, bestPoint
+end
 
 local UPK_TipTrigger_mt = ClassUPK(UPK_TipTrigger,UniversalProcessKit)
 InitObjectClass(UPK_TipTrigger, "UPK_TipTrigger")
@@ -81,6 +106,20 @@ function UPK_TipTrigger:new(id, parent)
 	
 	self:addTrigger()
 	self:registerUpkTipTrigger()
+	
+	-- for tip event syncing
+	
+	self.syncObject = UPK_TipTriggerObject:new(self.isServer, self.isClient)
+	self.syncObject:load(self)
+	self.syncObject:register(true)
+	self.id = self.syncObject.id
+	if g_server ~= nil then
+		g_server.objects[self.syncObject.id]=self.syncObject
+		g_server.objectIds[self] = self.id
+	else
+		g_client.objects[self.syncObject.id]=self.syncObject
+		g_client.objectIds[self] = self.id
+	end
 
 	self:print('loaded TipTrigger successfully')
 	
@@ -88,6 +127,17 @@ function UPK_TipTrigger:new(id, parent)
 end
 
 function UPK_TipTrigger:delete()
+	self.syncObject:unregister()
+	if g_server ~= nil then
+		g_server.objects[self.syncObject.id]=nil
+		g_server.objectIds[self] = nil
+	else
+		g_client.objects[self.syncObject.id]=nil
+		g_client.objectIds[self] = nil
+	end
+	self.syncObject:delete()
+	self.id=nil
+	
 	self:unregisterUpkTipTrigger()
 	self:removeTrigger()
 	UPK_TipTrigger:superClass().delete(self)
@@ -102,21 +152,24 @@ function UPK_TipTrigger:unregisterUpkTipTrigger()
 end
 
 function UPK_TipTrigger:updateTrailerTipping(trailer, fillDelta, fillType)
+	self:print('UPK_TipTrigger:updateTrailerTipping')
 	if self.isServer then
 		if type(trailer)=="table" and fillDelta~=nil then
 			local toomuch=0
 			if fillDelta < 0 and fillType~=nil then
-				--self:print('fillDelta: '..tostring(fillDelta))
+				self:print('fillDelta: '..tostring(fillDelta))
 				local fill = self:addFillLevel(-fillDelta,fillType)
+				self:print('fill: '..tostring(fill))
 				if fill~=0 and self.revenuesPerLiter[fillType]~=0 then
 					local revenue = fill * self.revenuesPerLiter[fillType]
 					g_currentMission:addSharedMoney(revenue, self.statName)
 				end
-				--self:print('fill: '..tostring(fill))
+				self:print('fill: '..tostring(fill))
 				toomuch = fillDelta + fill -- max 0
 			end
+			self:print('toomuch: '..tostring(toomuch))
 			if round(toomuch,8)<0 then
-				--self:print('end tipping')
+				self:print('end tipping')
 				trailer:onEndTip()
 				trailer:setFillLevel(trailer:getFillLevel(fillType)-toomuch, fillType) -- put sth back
 			end
@@ -125,7 +178,7 @@ function UPK_TipTrigger:updateTrailerTipping(trailer, fillDelta, fillType)
 end
 
 function UPK_TipTrigger:getTipInfoForTrailer(trailer, tipReferencePointIndex)
-	--self:print('UPK_TipTrigger:getTipInfoForTrailer')
+	self:print('UPK_TipTrigger:getTipInfoForTrailer')
 	if trailer.upk_currentTipTrigger==self then
 		local minDistance, bestPoint = self:getTipDistanceFromTrailer(trailer, tipReferencePointIndex)
 		trailerFillType = trailer.currentFillType
@@ -191,10 +244,21 @@ function UPK_TipTrigger:getNoAllowedText(trailer)
 	local trailerFillType = trailer.currentFillType
 	local fillTypeName = self.i18n[UniversalProcessKit.fillTypeIntToName[trailerFillType]]
 	local fillType = self:getFillType()
-	--local fillLevel = self:getFillLevel(fillType)
-	--local capcity = self:getCapacity(fillType)
+	
 	local newFillType = self.fillTypesConversionMatrix[fillType][trailerFillType]
 	
+	if newFillType~=nil and newFillType~=Fillable.FILLTYPE_UNKNOWN and self.showCapacityReachedWarning then
+		local fillLevel = self:getFillLevel(newFillType)
+		local capacity = self:getCapacity(newFillType)
+		
+		if fillLevel==capacity then
+			if string.find(self.i18n["capacityReached"], "%%s")~=nil then
+				return string.format(self.i18n["capacityReached"], fillTypeName)
+			else
+				return self.i18n["capacityReached"] -- use no specific filltype name
+			end
+		end
+	end
 	
 	if newFillType==nil and trailerFillType~=Fillable.FILLTYPE_UNKNOWN and self.showNotAcceptedWarning then
 		if string.find(self.i18n["notAcceptedHere"], "%%s")~=nil then
@@ -203,22 +267,15 @@ function UPK_TipTrigger:getNoAllowedText(trailer)
 			return fillTypeName..' '..self.i18n["notAcceptedHere"] -- standard: use filltype name in front
 		end
 	end
-	
-	if newFillType~=nil and newFillType~=Fillable.FILLTYPE_UNKNOWN and self.showCapacityReachedWarning then
-		if string.find(self.i18n["capacityReached"], "%%s")~=nil then
-			return string.format(self.i18n["capacityReached"], fillTypeName)
-		else
-			return self.i18n["capacityReached"] -- use no specific filltype name
-		end
-	end
-	
+
 	return nil
 end
 
 function UPK_TipTrigger:triggerUpdate(vehicle,isInTrigger)
-	self:print('UPK_TipTrigger:triggerUpdate('..tostring(vehicle)..','..tostring(isInTrigger)..')')
-	if self.isEnabled and self.isServer then
+	--self:print('UPK_TipTrigger:triggerUpdate('..tostring(vehicle)..','..tostring(isInTrigger)..')')
+	if self.isEnabled then
 		if UniversalProcessKit.isVehicleType(vehicle, UniversalProcessKit.VEHICLE_TIPPER) then
+			--self:print('vehicle is tipper')
 			if isInTrigger then
 				vehicle.upk_currentTipTrigger=self
 				if g_currentMission.trailerTipTriggers[vehicle] == nil then

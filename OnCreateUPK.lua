@@ -31,8 +31,8 @@ function OnCreateUPK:load(id)
 		self.base:findChildren(self.nodeId)
 	end
 	
-	g_currentMission:addNodeObject(self.nodeId, self);
-	g_currentMission:addOnCreateLoadedObjectToSave(self);
+	g_currentMission:addNodeObject(self.nodeId, self)
+	--g_currentMission:addOnCreateLoadedObjectToSave(self)
 	
 	return true
 end

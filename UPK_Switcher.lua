@@ -54,9 +54,15 @@ function UPK_Switcher:new(id,parent)
 			self.shapePositions[childId]=__c({getTranslation(childId)})
 			UniversalProcessKit.setTranslation(childId,unpack(self.shapePositions[childId]+self.hidingPosition))
 			local fillTypesInShape=gmatch(fillTypesPerShape[i], "%S+")
-			for _,v in pairs(UniversalProcessKit.fillTypeNameToInt(fillTypesInShape)) do
-				self:print("assigning "..tostring(UniversalProcessKit.fillTypeIntToName[v])..' ('..tostring(v)..") to ".."\""..tostring(getName(childId)).."\" ("..tostring(childId)..")")
-				self.switchFillTypeShapes[v]=childId
+			for _,fillType in pairs(UniversalProcessKit.fillTypeNameToInt(fillTypesInShape)) do
+				local flbs = self:getFillLevelBubbleShellFromFillType(fillType)
+				if flbs~=nil and flbs~=self then
+					flbs:registerOnFillLevelChangeFunc(self,"onFillLevelChange")
+				end
+				self:print("assigning "..tostring(UniversalProcessKit.fillTypeIntToName[fillType])..' ('..tostring(v)..") to ".."\""..tostring(getName(childId)).."\" ("..tostring(childId)..")")
+				self.fillLevelsCopy[fillType] = self:getFillLevel(fillType)
+				self.switchAtFillTypes[fillType] = true
+				self.switchFillTypeShapes[fillType]=childId
 				self.useFillTypes=true
 			end
 		end
@@ -105,9 +111,11 @@ function UPK_Switcher:new(id,parent)
 	return self
 end
 
+--[[
 function UPK_Switcher:delete()
 	UPK_Switcher:superClass().delete(self)
 end
+]]--
 
 function UPK_Switcher:postLoad()
 	self:print('UPK_Switcher:postLoad()')
@@ -125,24 +133,57 @@ function UPK_Switcher:onFillLevelChange(deltaFillLevel, newFillLevel, fillType) 
 	
 	if self.switchAtFillTypes[fillType]==true and self.isEnabled then		
 		if self.useFillTypes then
-			local fillType=self.fillType
-			local shapeToShow=nil
-			if fillType~=nil and fillType~=Fillable.FILLTYPE_UNKNOWN and fillType~=self.oldFillType then
-				shapeToShow=self.switchFillTypeShapes[fillType]
+			
+			self.fillLevelsCopy[fillType] = newFillLevel -- self:getFillLevel(fillType) -- may not be newFillLevel in fifo or filo
+			local useFillType=nil
+			local tmpminfillLevel = math.huge
+			local tmpmaxfillLevel = 0
+			for k,v in pairs(self.switchAtFillTypes) do
+				if v then
+					local fillLevel = self.fillLevelsCopy[k]
+					if self.fillTypeChoiceMax then
+						if fillLevel>tmpmaxfillLevel then
+							self:print('new max fill level: '..tostring(fillLevel))
+							tmpmaxfillLevel=fillLevel
+							useFillType = k
+						 end
+					else
+						if fillLevel<tmpminfillLevel then
+							tmpminfillLevel=fillLevel
+							useFillType = k
+						end
+					end
+				end
 			end
-			if shapeToShow~=nil and shapeToShow~=self.oldShapeToShow then
+			self:print('usefilltype is '..tostring(useFillType))
+			if useFillType~=nil then
+				local shapeToShow=nil
+				if fillType~=nil and fillType~=UniversalProcessKit.FILLTYPE_UNKNOWN and useFillType~=self.oldFillType then
+					shapeToShow=self.switchFillTypeShapes[useFillType]
+					self:print('shapeToShow is '..tostring(shapeToShow))
+				end
+				if shapeToShow~=nil and shapeToShow~=self.oldShapeToShow then
+					if self.oldShapeToShow~=nil then
+						setVisibility(self.oldShapeToShow,false)
+						UniversalProcessKit.setTranslation(self.oldShapeToShow,unpack((self.shapePositions[self.oldShapeToShow]+self.hidingPosition) or {}))
+					end
+					self:print('showing '..tostring(shapeToShow))
+					setVisibility(shapeToShow,true)
+					local x,y,z=unpack(self.shapePositions[shapeToShow] or {})
+					if x~=nil and y~=nil and z~=nil then
+						UniversalProcessKit.setTranslation(shapeToShow,x,y,z)
+					end
+					self.oldShapeToShow=shapeToShow
+				end
+				self.oldFillType=useFillType
+			else
 				if self.oldShapeToShow~=nil then
 					setVisibility(self.oldShapeToShow,false)
 					UniversalProcessKit.setTranslation(self.oldShapeToShow,unpack((self.shapePositions[self.oldShapeToShow]+self.hidingPosition) or {}))
+					self.oldShapeToShow=nil
+					self.oldFillType=nil
 				end
-				setVisibility(shapeToShow,true)
-				local x,y,z=unpack(self.shapePositions[shapeToShow] or {})
-				if x~=nil and y~=nil and z~=nil then
-					UniversalProcessKit.setTranslation(shapeToShow,x,y,z)
-				end
-				self.oldShapeToShow=shapeToShow
 			end
-			self.oldFillType=fillType
 		elseif self.useFillLevels then
 			self.fillLevelsCopy[fillType] = newFillLevel -- self:getFillLevel(fillType) -- may not be newFillLevel in fifo or filo
 			self:print('self.fillLevelsCopy[fillType] '..tostring(self.fillLevelsCopy[fillType]))

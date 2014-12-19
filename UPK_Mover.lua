@@ -113,7 +113,7 @@ function UPK_Mover:onFillLevelChange(deltaFillLevel, newFillLevel, fillType) -- 
 	
 	self:print('UPK_Mover:onFillLevelChange('..tostring(deltaFillLevel)..', '..tostring(newFillLevel)..', '..tostring(fillType)..')')
 	
-	if self.moveAtFillTypes[fillType]==true and self.isClient and self.isEnabled then		
+	if self.moveAtFillTypes[fillType]==true and self.isEnabled then		
 		self.fillLevelsCopy[fillType] = newFillLevel -- self:getFillLevel(fillType) -- may not be newFillLevel in fifo or filo
 		self:print('self.fillLevelsCopy[fillType] '..tostring(self.fillLevelsCopy[fillType]))
 		local fillLevel = 0

@@ -33,25 +33,32 @@ function UPK_DisplayTrigger:delete()
 end
 
 function UPK_DisplayTrigger:triggerUpdate(vehicle,isInTrigger)
-	self:print('UPK_DisplayTrigger:triggerUpdate('..tostring(vehicle)..','..tostring(isInTrigger)..')')
-	if self.isClient then
-		if self.entitiesInTrigger>0 then
-			UniversalProcessKitListener.addUpdateable(self)
-		else
-			UniversalProcessKitListener.removeUpdateable(self)
-		end
+	--self:print('UPK_DisplayTrigger:triggerUpdate('..tostring(vehicle)..','..tostring(isInTrigger)..')')
+	--self:print('entitiesInTrigger = '..tostring(self.entitiesInTrigger))
+	if self.entitiesInTrigger>0 then
+		--self:print('UniversalProcessKitListener.addUpdateable()')
+		UniversalProcessKitListener.addUpdateable(self)
+	else
+		--self:print('UniversalProcessKitListener.removeUpdateable()')
+		UniversalProcessKitListener.removeUpdateable(self)
 	end
 end
 
 function UPK_DisplayTrigger:update(dt)
+	--self:print('UPK_DisplayTrigger:update('..tostring(dt)..')')
 	if self.isEnabled and self:getShowInfo() then
+		--self:print('enable printing')
 		for fillType,display in pairs(self.displayFillTypes) do
+			--self:print('want to display '..tostring(fillType)..': '..tostring(display))
 			if display then
-				local fillLevel=self:getFillLevel(fillType)
+				local fillLevel=self:getFillLevel(fillType) or 0
+				--self:print('fillLevel = '..tostring(fillLevel)..', self.onlyFilled = '..tostring(self.onlyFilled))
 				if fillLevel>0 or not self.onlyFilled then
 					local text=self.i18n[UniversalProcessKit.fillTypeIntToName[fillType]]
 					if text~="" then
 						text=text..": "
+					else
+						text="["..UniversalProcessKit.fillTypeIntToName[fillType].."]: "
 					end
 					if self.showFillLevel then
 						text=text..mathceil(fillLevel) .. "[" .. self.i18n["fluid_unit_short"] .. "]"
