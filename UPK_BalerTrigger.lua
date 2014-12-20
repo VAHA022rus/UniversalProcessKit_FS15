@@ -72,6 +72,7 @@ function UPK_BalerTrigger:triggerUpdate(vehicle,isInTrigger)
 					if self.entitiesInTrigger==0 and self.isAdded then
 						--self:print('UniversalProcessKitListener.removeUpdateable('..tostring(self)..')')
 						UniversalProcessKitListener.removeUpdateable(self)
+						self.isAdded = false
 					end
 				end
 			end
@@ -111,9 +112,14 @@ function UPK_BalerTrigger:fillForageWagon(trailer, deltaFillLevel)
 			raycastAll(x, y+20, z, 0, -1, 0, "findMyNodeRaycastCallback", 21, self)
 			--self:print('self.raycastTriggerFound = '..tostring(self.raycastTriggerFound))
 			if self.raycastTriggerFound then
-				local trailerFillLevel = trailer:getFillLevel(fillFillType)
+				local trailerFillLevel = trailer:getFillLevel(trailer.currentFillType)
 				local fillLevel = self:getFillLevel(fillFillType)
-				if (fillLevel>0 or self.createFillType) and trailer:allowFillType(fillFillType, false) and trailerFillLevel<trailer.capacity then
+				if (fillLevel>0 or self.createFillType) and
+					(fillFillType==trailer.currentFillType or trailer.currentFillType==UniversalProcessKit.FILLTYPE_UNKNOWN or
+					(fillFillType~=trailer.currentFillType and trailerFillLevel<0.0001)) and
+					trailer:allowFillType(fillFillType, false) and
+					trailerFillLevel<trailer.capacity then
+
 					trailer:resetFillLevelIfNeeded(fillFillType)
 					if not self.createFillType then
 						deltaFillLevel=math.min(deltaFillLevel, fillLevel)
@@ -151,10 +157,16 @@ function UPK_BalerTrigger:fillBaler(trailer, deltaFillLevel)
 			raycastAll(x, y+20, z, 0, -1, 0, "findMyNodeRaycastCallback", 21, self)
 			self:print('self.raycastTriggerFound = '..tostring(self.raycastTriggerFound))
 			if self.raycastTriggerFound then
-				local trailerFillLevel = trailer:getFillLevel(fillFillType)
+				local trailerFillLevel = trailer:getFillLevel(trailer.currentFillType)
 				local fillLevel = self:getFillLevel(fillFillType)
+				self:print('trailer:allowPickingUp() = '..tostring(trailer:allowPickingUp()))
 				if trailer:allowPickingUp() then
-					if (fillLevel>0 or self.createFillType) and trailer:allowFillType(fillFillType, false) and trailerFillLevel<trailer.capacity then
+					if (fillLevel>0 or self.createFillType) and
+						(fillFillType==trailer.currentFillType or trailer.currentFillType==UniversalProcessKit.FILLTYPE_UNKNOWN or
+						(fillFillType~=trailer.currentFillType and trailerFillLevel<0.0001)) and
+						trailer:allowFillType(fillFillType, false) and
+						trailerFillLevel<trailer.capacity then
+
 						trailer:resetFillLevelIfNeeded(fillFillType)
 						if not self.createFillType then
 							deltaFillLevel=math.min(deltaFillLevel, fillLevel)

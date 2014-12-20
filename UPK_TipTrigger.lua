@@ -3,31 +3,89 @@
 --------------------
 -- TipTrigger (that trailers can tip specific fillTypes)
 
-local UPK_TipTriggerObject_mt = Class(UPK_TipTriggerObject, Object)
+UPK_TipTriggerObject_mt = Class(UPK_TipTriggerObject, Object)
 InitObjectClass(UPK_TipTriggerObject, "UPK_TipTriggerObject")
 
 function UPK_TipTriggerObject:new(isServer, isClient)
 	local self = Object:new(isServer, isClient, UPK_TipTriggerObject_mt)
+	registerObjectClassName(self, "UPK_TipTriggerObject")
 	return self
 end
-function UPK_TipTriggerObject:load(tipTrigger)
+function UPK_TipTriggerObject:load(tipTrigger, networkNode)
 	self.tipTrigger = tipTrigger
+	if g_server ~= nil then
+		g_server.objectIds[self.tipTrigger] = self.id
+	else
+		print('register as networkNode '..tostring(networkNode))
+		g_client.objectIds[self.tipTrigger] = networkNode or self.id
+	end
 end
 function UPK_TipTriggerObject:getTipInfoForTrailer(trailer, tipReferencePointIndex)
 	print('UPK_TipTriggerObject:getTipInfoForTrailer()')
-	local isAllowed, distance = self.tipTrigger:getTipInfoForTrailer(trailer, tipReferencePointIndex)
-	print('isAllowed: '..tostring(isAllowed)..', distance: '..tostring(distance))
-	return isAllowed, distance
+	local isAllowed, minDistance, bestPoint = self.tipTrigger:getTipInfoForTrailer(trailer, tipReferencePointIndex)
+	print('isAllowed: '..tostring(isAllowed)..', minDistance: '..tostring(minDistance)..', bestPoint: '..tostring(bestPoint))
+	return isAllowed, minDistance, bestPoint
 end
 function UPK_TipTriggerObject:updateTrailerTipping(trailer, fillDelta, fillType)
 	self.tipTrigger:updateTrailerTipping(trailer, fillDelta, fillType)
 end
 function UPK_TipTriggerObject:getTipDistanceFromTrailer(trailer, tipReferencePointIndex)
 	print('UPK_TipTriggerObject:getTipDistanceFromTrailer()')
-	local isAllowed, minDistance, bestPoint= self.tipTrigger:getTipDistanceFromTrailer(trailer, tipReferencePointIndex)
-	print('isAllowed: '..tostring(isAllowed)..', minDistance: '..tostring(minDistance)..', bestPoint: '..tostring(bestPoint))
-	return isAllowed, minDistance, bestPoint
+	local returnDistance, bestPoint = self.tipTrigger:getTipDistanceFromTrailer(trailer, tipReferencePointIndex)
+	print('returnDistance: '..tostring(returnDistance)..', bestPoint: '..tostring(bestPoint))
+	return returnDistance, bestPoint
 end
+function UPK_TipTriggerObject:delete()
+	if g_server ~= nil then
+		g_server.objectIds[self.tipTrigger] = nil
+	else
+		g_client.objectIds[self.tipTrigger] = nil
+	end
+	unregisterObjectClassName(self)
+	UPK_TipTriggerObject:superClass().delete(self)
+end
+function UPK_TipTriggerObject:writeStream(streamId, connection)
+	print('UPK_TipTriggerObject:writeStream')
+	if not connection:getIsServer() then -- in connection with client
+		if self.tipTrigger~=nil then
+			streamWriteBool(streamId, true)
+			streamWriteInt32(streamId, self.id)
+			local syncObj = self.tipTrigger.syncObj
+			local syncObjId = networkGetObjectId(syncObj)
+			print('syncObjId: '..tostring(syncObjId))
+			streamWriteInt32(streamId, syncObjId)
+			local syncId = self.tipTrigger.syncId
+			print('syncId: '..tostring(syncId))
+			streamWriteInt32(streamId, syncId)
+		else
+			streamWriteBool(streamId, false)
+			print('no self.tipTrigger')
+		end
+	end
+end
+function UPK_TipTriggerObject:readStream(streamId, connection)
+	print('UPK_TipTriggerObject:readStream')
+	if connection:getIsServer() then -- in connection with server
+		local hasTipTrigger = streamReadBool(streamId)
+		if hasTipTrigger then
+			local networkNode = streamReadInt32(streamId)
+			local syncObjId = streamReadInt32(streamId)
+			print('syncObjId: '..tostring(syncObjId))
+			local syncObj = networkGetObject(syncObjId)
+			local syncId = streamReadInt32(streamId)
+			print('syncId: '..tostring(syncId))
+			if syncObj~=nil then
+				g_client:addObject(self, networkNode or self.id)
+				local tipTrigger = syncObj:getObjectToSync(syncId)
+				self:load(tipTrigger, networkNode)
+				print('self.tipTrigger: '..tostring(self.tipTrigger))
+			end
+		else
+			print('no self.tipTrigger')
+		end		
+	end
+end
+
 
 local UPK_TipTrigger_mt = ClassUPK(UPK_TipTrigger,UniversalProcessKit)
 InitObjectClass(UPK_TipTrigger, "UPK_TipTrigger")
@@ -109,17 +167,13 @@ function UPK_TipTrigger:new(id, parent)
 	
 	-- for tip event syncing
 	
-	self.syncObject = UPK_TipTriggerObject:new(self.isServer, self.isClient)
-	self.syncObject:load(self)
-	self.syncObject:register(true)
-	self.id = self.syncObject.id
 	if g_server ~= nil then
-		g_server.objects[self.syncObject.id]=self.syncObject
-		g_server.objectIds[self] = self.id
-	else
-		g_client.objects[self.syncObject.id]=self.syncObject
-		g_client.objectIds[self] = self.id
+		self.syncTipTriggerObject = UPK_TipTriggerObject:new(self.isServer, self.isClient)
+		g_server:addObject(self.syncTipTriggerObject, self.syncTipTriggerObject.id)
+		self.syncTipTriggerObject:load(self)
+		self.syncTipTriggerObject:register(false)
 	end
+
 
 	self:print('loaded TipTrigger successfully')
 	
@@ -127,16 +181,18 @@ function UPK_TipTrigger:new(id, parent)
 end
 
 function UPK_TipTrigger:delete()
-	self.syncObject:unregister()
-	if g_server ~= nil then
-		g_server.objects[self.syncObject.id]=nil
-		g_server.objectIds[self] = nil
-	else
-		g_client.objects[self.syncObject.id]=nil
-		g_client.objectIds[self] = nil
+	if self.syncTipTriggerObject~=nil then
+		self.syncTipTriggerObject:unregister()
+		if g_server ~= nil then
+			g_server:removeObject(self.syncTipTriggerObject, self.syncTipTriggerObject.id)
+			self.syncTipTriggerObject.isRegistered = false
+		else
+			g_client:removeObject(self.syncTipTriggerObject, self.syncTipTriggerObject.id)
+			self.syncTipTriggerObject.isRegistered = false
+		end
+		self.syncTipTriggerObject:delete()
+		self.id=nil
 	end
-	self.syncObject:delete()
-	self.id=nil
 	
 	self:unregisterUpkTipTrigger()
 	self:removeTrigger()
@@ -178,7 +234,7 @@ function UPK_TipTrigger:updateTrailerTipping(trailer, fillDelta, fillType)
 end
 
 function UPK_TipTrigger:getTipInfoForTrailer(trailer, tipReferencePointIndex)
-	--self:print('UPK_TipTrigger:getTipInfoForTrailer')
+	self:print('UPK_TipTrigger:getTipInfoForTrailer')
 	if trailer.upk_currentTipTrigger==self then
 		local minDistance, bestPoint = self:getTipDistanceFromTrailer(trailer, tipReferencePointIndex)
 		local trailerFillType = trailer.currentFillType
@@ -194,6 +250,7 @@ function UPK_TipTrigger:getTipInfoForTrailer(trailer, tipReferencePointIndex)
 end
 
 function UPK_TipTrigger:getTipDistanceFromTrailer(trailer, tipReferencePointIndex)
+	self:print('UPK_TipTrigger:getTipDistanceFromTrailer')
 	local minDistance = math.huge
 	local returnDistance = math.huge
 	local bestPoint=tipReferencePointIndex

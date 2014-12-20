@@ -110,7 +110,6 @@ function OnCreateUPK:writeUpdateStream(streamId, connection, dirtyMask)
 		print('want to sync '..tostring(#objectsToSync)..' objects')
 		streamWriteIntN(streamId, #objectsToSync, 12)
 		for i=1,#objectsToSync do
-			print('a')
 			local object = self.upkObjects[objectsToSync[i]]
 			print('want to sync object with syncId '..tostring(object.syncId))
 			streamWriteIntN(streamId, object.syncId, 12)
@@ -131,7 +130,6 @@ function OnCreateUPK:readUpdateStream(streamId, timestamp, connection)
 		print('reading '..tostring(nrObjectsToSync)..' objects')
 		if nrObjectsToSync>0 then
 			for i=1,nrObjectsToSync do
-				print('b')
 				local objectSyncId = streamReadIntN(streamId, 12)
 				print('reading sync object with syncId '..tostring(objectSyncId))
 				local objectDirtyFlag = streamReadIntN(streamId, 12)

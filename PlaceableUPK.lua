@@ -86,6 +86,10 @@ function PlaceableUPK:registerObjectToSync(object)
 	object.syncId=syncId
 end
 
+function PlaceableUPK:getObjectToSync(syncId)
+	return self.upkObjects[syncId]
+end
+
 function PlaceableUPK:writeStream(streamId, connection)
 	print('PlaceableUPK:writeStream('..tostring(streamId)..', '..tostring(connection)..')')
 	PlaceableUPK:superClass().writeStream(self, streamId, connection)
@@ -112,10 +116,9 @@ function PlaceableUPK:writeUpdateStream(streamId, connection, dirtyMask)
 				table.insert(objectsToSync,i)
 			end
 		end
-		print('want to sync '..tostring(#objectsToSync)..' objects')
+		--print('want to sync '..tostring(#objectsToSync)..' objects')
 		streamWriteIntN(streamId, #objectsToSync, 12)
 		for i=1,#objectsToSync do
-			print('a')
 			local object = self.upkObjects[objectsToSync[i]]
 			print('want to sync object with syncId '..tostring(object.syncId))
 			streamWriteIntN(streamId, object.syncId, 12)
@@ -136,7 +139,6 @@ function PlaceableUPK:readUpdateStream(streamId, timestamp, connection)
 		print('reading '..tostring(nrObjectsToSync)..' objects')
 		if nrObjectsToSync>0 then
 			for i=1,nrObjectsToSync do
-				print('b')
 				local objectSyncId = streamReadIntN(streamId, 12)
 				print('reading sync object with syncId '..tostring(objectSyncId))
 				local objectDirtyFlag = streamReadIntN(streamId, 12)

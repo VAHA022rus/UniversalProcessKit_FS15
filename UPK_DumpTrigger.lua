@@ -103,29 +103,6 @@ function UPK_DumpTrigger:getIsAttachedTo(combine)
 	return false
 end
 
-function UPK_DumpTrigger:allowFillType(fillType, allowEmptying) -- also check for capacity
-	self:print('UPK_DumpTrigger:allowFillType('..tostring(fillType)..', '..tostring(allowEmptying)..')')
-	if fillType~=nil then
-		newFillType=self.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN][fillType] or fillType
-		if UniversalProcessKit.isSpecialFillType(newFillType) then
-			return true
-		elseif self.storageType==UPK_Storage.SEPARATE then
-			local flb=self.p_flbs[newFillType]
-			if flb~=nil then
-				return flb.fillLevel < flb.capacity
-			else
-				if self.parent~=nil then
-					self:print('asking parent')
-					return self.parent:allowFillType(fillType, allowEmptying)
-				end
-			end
-		elseif self.storageType==UPK_Storage.SINGLE or self.storageType==UPK_Storage.FIFO or self.storageType==UPK_Storage.FILO then
-			return self.fillLevel < self.capacity
-		end
-	end
-	return false
-end
-
 function UPK_DumpTrigger:getAllowShovelFillType(fillType)
 	return self.isEnabled and self:allowFillType(fillType)
 end
