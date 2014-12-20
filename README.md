@@ -32,12 +32,9 @@ Bisher enthaltene Module:
 
 ##Changelog
 
-__V0.8.2__
+__V0.8.1 - V0.8.3__
 
 - diverse (größere) Bugfixes
-
-__V0.8.1__
-
 - Fix für div. Trigger für pricePerLiter und revenuePerLiter
 - Fix für switcher
 

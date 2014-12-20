@@ -11,7 +11,10 @@ function UPK_BalerTrigger:new(id,parent)
 	local self = UniversalProcessKit:new(id,parent, UPK_BalerTrigger_mt)
 	registerObjectClassName(self, "UPK_BalerTrigger")
 	
-	self.fillFillType = UniversalProcessKit.fillTypeNameToInt[getStringFromUserAttribute(id, "fillType", "unknown")]
+	local fillFillTypeStr = getStringFromUserAttribute(id, "fillType")
+	if fillFillTypeStr~=nil then
+		self.fillFillType = UniversalProcessKit.fillTypeNameToInt[fillFillTypeStr]
+	end
 	
     self.fillLitersPerSecond = getNumberFromUserAttribute(id, "fillLitersPerSecond", 1500, 0)
 	self.createFillType = getBoolFromUserAttribute(id, "createFillType", false)
@@ -102,24 +105,25 @@ function UPK_BalerTrigger:fillForageWagon(trailer, deltaFillLevel)
 		--self:print('trailer.isTurnedOn = '..tostring(trailer.isTurnedOn))
 		--self:print('trailer.upk_pickupNode = '..tostring(trailer.upk_pickupNode))
 		if trailer.isTurnedOn and trailer.upk_pickupNode~=nil and trailer.upk_pickupNode~=0 then
+			local fillFillType = self.fillFillType or self:getFillType() -- for single, fifo and filo
 			local x,y,z=getWorldTranslation(trailer.upk_pickupNode)
 			self.raycastTriggerFound=false
 			raycastAll(x, y+20, z, 0, -1, 0, "findMyNodeRaycastCallback", 21, self)
 			--self:print('self.raycastTriggerFound = '..tostring(self.raycastTriggerFound))
 			if self.raycastTriggerFound then
-				local trailerFillLevel = trailer:getFillLevel(self.fillFillType)
-				local fillLevel = self:getFillLevel(self.fillFillType)
-				if (fillLevel>0 or self.createFillType) and trailer:allowFillType(self.fillFillType, false) and trailerFillLevel<trailer.capacity then
-					trailer:resetFillLevelIfNeeded(self.fillFillType)
+				local trailerFillLevel = trailer:getFillLevel(fillFillType)
+				local fillLevel = self:getFillLevel(fillFillType)
+				if (fillLevel>0 or self.createFillType) and trailer:allowFillType(fillFillType, false) and trailerFillLevel<trailer.capacity then
+					trailer:resetFillLevelIfNeeded(fillFillType)
 					if not self.createFillType then
 						deltaFillLevel=math.min(deltaFillLevel, fillLevel)
 					end
-					trailer:setFillLevel(trailerFillLevel + deltaFillLevel, self.fillFillType)
-					deltaFillLevel = trailer:getFillLevel(self.fillFillType) - trailerFillLevel
+					trailer:setFillLevel(trailerFillLevel + deltaFillLevel, fillFillType)
+					deltaFillLevel = trailer:getFillLevel(fillFillType) - trailerFillLevel
 					if deltaFillLevel~=0 then
 						self:print('deltaFillLevel 1: '..tostring(deltaFillLevel))
 						if not self.createFillType then
-							deltaFillLevel=-self:addFillLevel(-deltaFillLevel,self.fillFillType)
+							deltaFillLevel=-self:addFillLevel(-deltaFillLevel,fillFillType)
 						end
 						self:print('deltaFillLevel 2: '..tostring(deltaFillLevel))
 						if self.pricePerLiter~=0 then
@@ -137,6 +141,7 @@ end
 function UPK_BalerTrigger:fillBaler(trailer, deltaFillLevel)
 	if self.isServer and self.isEnabled then
 		if trailer.isTurnedOn and trailer.upk_pickupNode~=nil and trailer.upk_pickupNode~=0 then
+			local fillFillType = self.fillFillType or self:getFillType() -- for single, fifo and filo
 			self:print('trailer.isTurnedOn = '..tostring(trailer.isTurnedOn))
 			self:print('trailer.upk_pickupNode = '..tostring(trailer.upk_pickupNode))
 			local x,y,z=getWorldTranslation(trailer.upk_pickupNode)
@@ -146,11 +151,11 @@ function UPK_BalerTrigger:fillBaler(trailer, deltaFillLevel)
 			raycastAll(x, y+20, z, 0, -1, 0, "findMyNodeRaycastCallback", 21, self)
 			self:print('self.raycastTriggerFound = '..tostring(self.raycastTriggerFound))
 			if self.raycastTriggerFound then
-				local trailerFillLevel = trailer:getFillLevel(self.fillFillType)
-				local fillLevel = self:getFillLevel(self.fillFillType)
+				local trailerFillLevel = trailer:getFillLevel(fillFillType)
+				local fillLevel = self:getFillLevel(fillFillType)
 				if trailer:allowPickingUp() then
-					if (fillLevel>0 or self.createFillType) and trailer:allowFillType(self.fillFillType, false) and trailerFillLevel<trailer.capacity then
-						trailer:resetFillLevelIfNeeded(self.fillFillType)
+					if (fillLevel>0 or self.createFillType) and trailer:allowFillType(fillFillType, false) and trailerFillLevel<trailer.capacity then
+						trailer:resetFillLevelIfNeeded(fillFillType)
 						if not self.createFillType then
 							deltaFillLevel=math.min(deltaFillLevel, fillLevel)
 						end
@@ -158,13 +163,13 @@ function UPK_BalerTrigger:fillBaler(trailer, deltaFillLevel)
 							local deltaTime = trailer:getTimeFromLevel(deltaFillLevel)
 							trailer:moveBales(deltaTime)
 						end
-						trailer:setFillLevel(trailerFillLevel + deltaFillLevel, self.fillFillType)
-						local newFillLevel = trailer:getFillLevel(self.fillFillType)
+						trailer:setFillLevel(trailerFillLevel + deltaFillLevel, fillFillType)
+						local newFillLevel = trailer:getFillLevel(fillFillType)
 						deltaFillLevel = newFillLevel - trailerFillLevel
 						if deltaFillLevel~=0 then
 							self:print('deltaFillLevel 1: '..tostring(deltaFillLevel))
 							if not self.createFillType then
-								deltaFillLevel=-self:addFillLevel(-deltaFillLevel,self.fillFillType)
+								deltaFillLevel=-self:addFillLevel(-deltaFillLevel,fillFillType)
 							end
 							self:print('deltaFillLevel 2: '..tostring(deltaFillLevel))
 							if self.pricePerLiter~=0 then
@@ -178,16 +183,16 @@ function UPK_BalerTrigger:fillBaler(trailer, deltaFillLevel)
 								if trailer.baleAnimCurve ~= nil then
 									print('try to dump bale')
 									local restDeltaFillLevel=0.000001
-									trailer:setFillLevel(0, self.fillFillType)
-									trailer:createBale(self.fillFillType, trailer.capacity)
+									trailer:setFillLevel(0, fillFillType)
+									trailer:createBale(fillFillType, trailer.capacity)
 									local numBales = length(trailer.bales)
 									local bale = trailer.bales[numBales]
 									trailer:moveBale(numBales, trailer:getTimeFromLevel(restDeltaFillLevel), true)
-									g_server:broadcastEvent(BalerCreateBaleEvent:new(trailer, self.fillFillType, bale.time), nil, nil, trailer)
+									g_server:broadcastEvent(BalerCreateBaleEvent:new(trailer, fillFillType, bale.time), nil, nil, trailer)
 								elseif trailer.baleUnloadAnimationName ~= nil then
 									self:print('create bale')
 									trailer:createBale(fillType, trailer.capacity)
-									g_server:broadcastEvent(BalerCreateBaleEvent:new(trailer, self.fillFillType, 0), nil, nil, trailer)
+									g_server:broadcastEvent(BalerCreateBaleEvent:new(trailer, fillFillType, 0), nil, nil, trailer)
 								end
 							end
 						end

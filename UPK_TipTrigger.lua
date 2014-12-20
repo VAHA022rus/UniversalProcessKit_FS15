@@ -152,7 +152,7 @@ function UPK_TipTrigger:unregisterUpkTipTrigger()
 end
 
 function UPK_TipTrigger:updateTrailerTipping(trailer, fillDelta, fillType)
-	self:print('UPK_TipTrigger:updateTrailerTipping')
+	--self:print('UPK_TipTrigger:updateTrailerTipping')
 	if self.isServer then
 		if type(trailer)=="table" and fillDelta~=nil then
 			local toomuch=0
@@ -178,10 +178,10 @@ function UPK_TipTrigger:updateTrailerTipping(trailer, fillDelta, fillType)
 end
 
 function UPK_TipTrigger:getTipInfoForTrailer(trailer, tipReferencePointIndex)
-	self:print('UPK_TipTrigger:getTipInfoForTrailer')
+	--self:print('UPK_TipTrigger:getTipInfoForTrailer')
 	if trailer.upk_currentTipTrigger==self then
 		local minDistance, bestPoint = self:getTipDistanceFromTrailer(trailer, tipReferencePointIndex)
-		trailerFillType = trailer.currentFillType
+		local trailerFillType = trailer.currentFillType
 		local isAllowed = minDistance<1 and
 			self.acceptedFillTypes[trailerFillType] and
 			self:allowFillType(trailerFillType)

@@ -22,7 +22,9 @@ function UPK_Mover:new(id,parent)
 	
 	local moveAtFillTypesArr = getArrayFromUserAttribute(id, "fillTypes")
 	for _,fillType in pairs(UniversalProcessKit.fillTypeNameToInt(moveAtFillTypesArr)) do
+		self:print('fillType is '..tostring(fillType))
 		local flbs = self:getFillLevelBubbleShellFromFillType(fillType)
+		self:print('flbs is '..tostring(flbs))
 		if flbs~=nil and flbs~=self then
 			flbs:registerOnFillLevelChangeFunc(self,"onFillLevelChange")
 		end

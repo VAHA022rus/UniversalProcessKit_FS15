@@ -11,7 +11,10 @@ function UPK_FillTrigger:new(id, parent)
 	local self = UniversalProcessKit:new(id, parent, UPK_FillTrigger_mt)
 	registerObjectClassName(self, "UPK_FillTrigger")
 	
-	self.fillFillType = UniversalProcessKit.fillTypeNameToInt[getStringFromUserAttribute(id, "fillType")]
+	local fillFillTypeStr = getStringFromUserAttribute(id, "fillType")
+	if fillFillTypeStr~=nil then
+		self.fillFillType = UniversalProcessKit.fillTypeNameToInt[fillFillTypeStr]
+	end
 	
     self.fillLitersPerSecond = getNumberFromUserAttribute(id, "fillLitersPerSecond", 1500, 0)
 	self.createFillType = getBoolFromUserAttribute(id, "createFillType", false)
@@ -46,17 +49,19 @@ function UPK_FillTrigger:new(id, parent)
 		self.statName="other"
 	end
 
+	local fillFillType = self:getFillType()
+
 	self.allowedVehicles={}
 	self.allowedVehicles[UniversalProcessKit.VEHICLE_TIPPER] = getBoolFromUserAttribute(self.nodeId, "allowTipper", true)
 	self.allowedVehicles[UniversalProcessKit.VEHICLE_SHOVEL] = getBoolFromUserAttribute(self.nodeId, "allowShovel", true)
 	
-	self.allowedVehicles[UniversalProcessKit.VEHICLE_SOWINGMACHINE] = getBoolFromUserAttribute(self.nodeId, "allowSowingMachine", self.fillFillType==Fillable.FILLTYPE_SEEDS)
-	self.allowedVehicles[UniversalProcessKit.VEHICLE_WATERTRAILER] = getBoolFromUserAttribute(self.nodeId, "allowWaterTrailer", self.fillFillType==Fillable.FILLTYPE_WATER)
-	self.allowedVehicles[UniversalProcessKit.VEHICLE_MILKTRAILER] = getBoolFromUserAttribute(self.nodeId, "allowMilkTrailer", self.fillFillType==Fillable.FILLTYPE_MILK)
-	self.allowedVehicles[UniversalProcessKit.VEHICLE_LIQUIDMANURETRAILER] = getBoolFromUserAttribute(self.nodeId, "allowLiquidManureTrailer", self.fillFillType==Fillable.FILLTYPE_LIQUIDMANURE)
-	self.allowedVehicles[UniversalProcessKit.VEHICLE_SPRAYER] = getBoolFromUserAttribute(self.nodeId, "allowSprayer", self.fillFillType==Fillable.FILLTYPE_FERTILIZER)
+	self.allowedVehicles[UniversalProcessKit.VEHICLE_SOWINGMACHINE] = getBoolFromUserAttribute(self.nodeId, "allowSowingMachine", (self.fillFillType or fillFillType)==Fillable.FILLTYPE_SEEDS)
+	self.allowedVehicles[UniversalProcessKit.VEHICLE_WATERTRAILER] = getBoolFromUserAttribute(self.nodeId, "allowWaterTrailer", (self.fillFillType or fillFillType)==Fillable.FILLTYPE_WATER)
+	self.allowedVehicles[UniversalProcessKit.VEHICLE_MILKTRAILER] = getBoolFromUserAttribute(self.nodeId, "allowMilkTrailer", (self.fillFillType or fillFillType)==Fillable.FILLTYPE_MILK)
+	self.allowedVehicles[UniversalProcessKit.VEHICLE_LIQUIDMANURETRAILER] = getBoolFromUserAttribute(self.nodeId, "allowLiquidManureTrailer", (self.fillFillType or fillFillType)==Fillable.FILLTYPE_LIQUIDMANURE)
+	self.allowedVehicles[UniversalProcessKit.VEHICLE_SPRAYER] = getBoolFromUserAttribute(self.nodeId, "allowSprayer", (self.fillFillType or fillFillType)==Fillable.FILLTYPE_FERTILIZER)
 	
-	self.allowedVehicles[UniversalProcessKit.VEHICLE_FUELTRAILER] = getBoolFromUserAttribute(self.nodeId, "allowFuelTrailer", self.fillFillType==Fillable.FILLTYPE_FUEL)
+	self.allowedVehicles[UniversalProcessKit.VEHICLE_FUELTRAILER] = getBoolFromUserAttribute(self.nodeId, "allowFuelTrailer", (self.fillFillType or fillFillType)==Fillable.FILLTYPE_FUEL)
 	self.allowedVehicles[UniversalProcessKit.VEHICLE_MOTORIZED] = getBoolFromUserAttribute(self.nodeId, "allowMotorized", false)
 	
 	self.allowWalker = getBoolFromUserAttribute(self.nodeId, "allowWalker", false)
@@ -128,12 +133,19 @@ function UPK_FillTrigger:fillTrailer(trailer, deltaFillLevel) -- tippers, shovel
 	self:print('UPK_FillTrigger:fillTrailer('..tostring(trailer)..', '..tostring(deltaFillLevel)..')')
 	if self.isServer and self.isEnabled then
 		local fillFillType = self.fillFillType or self:getFillType() -- for single, fifo and filo
+		self:print('fillFillType '..tostring(fillFillType))
 		if fillFillType~=UniversalProcessKit.FILLTYPE_UNKNOWN then
-			local trailerFillLevel = trailer:getFillLevel(fillFillType)
+			local trailerFillLevel = trailer:getFillLevel(trailer.currentFillType)
 			local fillLevel = self:getFillLevel(fillFillType)
-			self:print('fillLevel '..tostring(fillLevel))
-			self:print('trailer:allowFillType(fillFillType, false) '..tostring(trailer:allowFillType(fillFillType, false)))
-			if (fillLevel>0 or self.createFillType) and trailer:allowFillType(fillFillType, false) then
+			--self:print('fillLevel '..tostring(fillLevel))
+			--self:print('trailer:allowFillType(fillFillType, false) '..tostring(trailer:allowFillType(fillFillType, false)))
+			
+			if (fillLevel>0 or self.createFillType) and
+				(fillFillType==trailer.currentFillType or trailer.currentFillType==UniversalProcessKit.FILLTYPE_UNKNOWN or
+					(fillFillType~=trailer.currentFillType and trailerFillLevel<0.0001)) and
+				trailer:allowFillType(fillFillType, false) and
+				trailerFillLevel<trailer.capacity then
+				
 				trailer:resetFillLevelIfNeeded(fillFillType)
 				if not self.createFillType then
 					deltaFillLevel=math.min(deltaFillLevel, fillLevel)
@@ -174,7 +186,7 @@ function UPK_FillTrigger:fillMotorized(trailer, deltaFillLevel) -- motorized
 				deltaFillLevel = trailer.fuelFillLevel - trailerFillLevel
 				if deltaFillLevel~=0 then
 					if not self.createFillType then
-						deltaFillLevel=-self:addFillLevel(-deltaFillLevel,self.fillFillType)
+						deltaFillLevel=-self:addFillLevel(-deltaFillLevel, fillFillType)
 					end
 					if self.pricePerLiter~=0 then
 						local price = deltaFillLevel * self.pricePerLiter

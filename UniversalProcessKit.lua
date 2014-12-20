@@ -437,7 +437,12 @@ function UniversalProcessKit:getCapacity(fillType)
 	return self.capacity
 end
 
-function UniversalProcessKit:getFillType()
+function UniversalProcessKit:getFillType() -- for single, fifo and filo
+	if self.storageType==UPK_Storage.SEPARATE then
+		if self.parent~=nil then
+			return self.parent:getFillType()
+		end
+	end
 	return self.fillType
 end
 
@@ -446,7 +451,7 @@ end
 
 function UniversalProcessKit:allowFillType(fillType, allowEmptying) -- also check for capacity
 	if fillType~=nil then
-		newFillType=self.fillTypesConversionMatrix[UniversalProcessKit.FILLTYPE_UNKNOWN][fillType] or fillType
+		local newFillType=self.fillTypesConversionMatrix[UniversalProcessKit.FILLTYPE_UNKNOWN][fillType] or fillType
 		if UniversalProcessKit.isSpecialFillType(newFillType) then
 			return true
 		elseif self.storageType==UPK_Storage.SEPARATE then
@@ -459,9 +464,12 @@ function UniversalProcessKit:allowFillType(fillType, allowEmptying) -- also chec
 				end
 			end
 		elseif self.storageType==UPK_Storage.SINGLE then
-			newFillType=self.fillTypesConversionMatrix[self.fillType][fillType]
-			if newFillType~=nil then
+			local myFillType=self.fillType
+			newFillType=self.fillTypesConversionMatrix[myFillType][fillType]
+			if myFillType==newFillType then
 				return self.fillLevel < self.capacity
+			elseif myFillType==UniversalProcessKit.FILLTYPE_UNKNOWN then
+				return true
 			end
 		elseif self.storageType==UPK_Storage.FIFO or self.storageType==UPK_Storage.FILO then
 			return self.fillLevel < self.capacity
