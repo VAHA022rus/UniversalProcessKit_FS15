@@ -81,6 +81,10 @@ function OnCreateUPK:registerObjectToSync(object)
 	object.syncId=syncId
 end
 
+function OnCreateUPK:getObjectToSync(syncId)
+	return self.upkObjects[syncId]
+end
+
 function OnCreateUPK:writeStream(streamId, connection)
 	print('OnCreateUPK:writeStream('..tostring(streamId)..', '..tostring(connection)..')')
 	OnCreateUPK:superClass().writeStream(self, streamId, connection)
