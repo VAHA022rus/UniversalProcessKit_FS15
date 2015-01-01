@@ -100,14 +100,28 @@ function UPK_FillTrigger:update(dt)
 	--self:print('UPK_FillTrigger:update('..tostring(dt)..')')
 	if self.isServer and self.isEnabled then
 		for _,trailer in pairs(self.entities) do
+			
+			--[[
+			if trailer.upk_scanned~=true then
+				for k,v in pairs(trailer) do
+					self:print('trailer.'..tostring(k)..' = '..tostring(v))
+				end
+				trailer.upk_scanned=true
+			end
+			]]--
+			
 			--self:print('vehicle is '..tostring(trailer.upk_vehicleType))
 			local deltaFillLevel = self.fillLitersPerSecond * 0.001 * dt
 			for k,v in pairs(self.allowedVehicles) do
 				--self:print('checking for '..tostring(k)..': '..tostring(v))
 				if v and UniversalProcessKit.isVehicleType(trailer, k) then
 					--self:print('vehicle allowed')
-					if (k==UniversalProcessKit.VEHICLE_TIPPER or
-						 k==UniversalProcessKit.VEHICLE_SHOVEL or
+					if k==UniversalProcessKit.VEHICLE_MIXERWAGONPICKUP then
+						self:fillMixerWagonPickup(trailer, deltaFillLevel)
+					elseif k==UniversalProcessKit.VEHICLE_MIXERWAGONTRAILER then
+						self:fillMixerWagonTrailer(trailer, deltaFillLevel)
+					elseif ((k==UniversalProcessKit.VEHICLE_TIPPER and not UniversalProcessKit.isVehicleType(trailer, UniversalProcessKit.VEHICLE_MIXERWAGONTRAILER)) or
+						 (k==UniversalProcessKit.VEHICLE_SHOVEL and not UniversalProcessKit.isVehicleType(trailer, UniversalProcessKit.VEHICLE_MIXERWAGONPICKUP)) or
 						 k==UniversalProcessKit.VEHICLE_SOWINGMACHINE or
 						 k==UniversalProcessKit.VEHICLE_WATERTRAILER or
 						 k==UniversalProcessKit.VEHICLE_MILKTRAILER or
@@ -139,7 +153,6 @@ function UPK_FillTrigger:fillTrailer(trailer, deltaFillLevel) -- tippers, shovel
 			local fillLevel = self:getFillLevel(fillFillType)
 			--self:print('fillLevel '..tostring(fillLevel))
 			--self:print('trailer:allowFillType(fillFillType, false) '..tostring(trailer:allowFillType(fillFillType, false)))
-			
 			if (fillLevel>0 or self.createFillType) and
 				(fillFillType==trailer.currentFillType or trailer.currentFillType==UniversalProcessKit.FILLTYPE_UNKNOWN or
 					(fillFillType~=trailer.currentFillType and trailerFillLevel<0.0001)) and
@@ -194,6 +207,83 @@ function UPK_FillTrigger:fillMotorized(trailer, deltaFillLevel) -- motorized
 					end
 				end
 				return deltaFillLevel
+			end
+		end
+	end
+	return 0
+end
+
+function UPK_FillTrigger:fillMixerWagonPickup(trailer, deltaFillLevel) -- mixing wagon pickups etc
+	self:print('UPK_FillTrigger:fillMixerWagonPickup('..tostring(trailer)..', '..tostring(deltaFillLevel)..')')
+	self:print('trailer.isTurnedOn '..tostring(trailer.isTurnedOn))
+	if self.isServer and self.isEnabled and trailer.isTurnedOn==true then
+		local fillFillType = self.fillFillType or self:getFillType() -- for single, fifo and filo
+		self:print('fillFillType '..tostring(fillFillType))
+		if fillFillType~=UniversalProcessKit.FILLTYPE_UNKNOWN then
+			local trailerFillLevel = trailer:getFillLevel(fillFillType)
+			local fillLevel = self:getFillLevel(fillFillType)
+			--self:print('fillLevel '..tostring(fillLevel))
+			--self:print('trailer:allowFillType(fillFillType, false) '..tostring(trailer:allowFillType(fillFillType, false)))
+			
+			if (fillLevel>0 or self.createFillType) and
+				trailer:allowFillType(fillFillType, false) and
+				trailer.fillLevel<trailer.capacity then
+				
+				trailer:resetFillLevelIfNeeded(fillFillType)
+				if not self.createFillType then
+					deltaFillLevel=math.min(deltaFillLevel, fillLevel)
+				end
+				trailer:setFillLevel(trailerFillLevel + deltaFillLevel, fillFillType)
+				deltaFillLevel = trailer:getFillLevel(fillFillType) - trailerFillLevel
+				if deltaFillLevel~=0 then
+					if not self.createFillType then
+						deltaFillLevel=-self:addFillLevel(-deltaFillLevel,fillFillType)
+					end
+					if self.pricePerLiter~=0 then
+						local price = deltaFillLevel * self.pricePerLiter
+						g_currentMission:addSharedMoney(-price, self.statName)
+					end
+					trailer.mixerWagonLastPickupTime = trailer.time
+					return deltaFillLevel
+				end
+			end
+		end
+	end
+	return 0
+end
+
+function UPK_FillTrigger:fillMixerWagonTrailer(trailer, deltaFillLevel) -- mixer wagon itself etc
+	self:print('UPK_FillTrigger:fillMixerWagonTrailer('..tostring(trailer)..', '..tostring(deltaFillLevel)..')')
+	if self.isServer and self.isEnabled then
+		local fillFillType = self.fillFillType or self:getFillType() -- for single, fifo and filo
+		self:print('fillFillType '..tostring(fillFillType))
+		if fillFillType~=UniversalProcessKit.FILLTYPE_UNKNOWN then
+			local trailerFillLevel = trailer:getFillLevel(fillFillType)
+			local fillLevel = self:getFillLevel(fillFillType)
+			--self:print('fillLevel '..tostring(fillLevel))
+			--self:print('trailer:allowFillType(fillFillType, false) '..tostring(trailer:allowFillType(fillFillType, false)))
+			
+			if (fillLevel>0 or self.createFillType) and
+				trailer:allowFillType(fillFillType, false) and
+				trailer.fillLevel<trailer.capacity then
+				
+				trailer:resetFillLevelIfNeeded(fillFillType)
+				if not self.createFillType then
+					deltaFillLevel=math.min(deltaFillLevel, fillLevel)
+				end
+				trailer:setFillLevel(trailerFillLevel + deltaFillLevel, fillFillType)
+				deltaFillLevel = trailer:getFillLevel(fillFillType) - trailerFillLevel
+				if deltaFillLevel~=0 then
+					if not self.createFillType then
+						deltaFillLevel=-self:addFillLevel(-deltaFillLevel,fillFillType)
+					end
+					if self.pricePerLiter~=0 then
+						local price = deltaFillLevel * self.pricePerLiter
+						g_currentMission:addSharedMoney(-price, self.statName)
+					end
+					trailer.mixerWagonLastPickupTime = trailer.time
+					return deltaFillLevel
+				end
 			end
 		end
 	end

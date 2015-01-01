@@ -31,6 +31,9 @@ UniversalProcessKit.VEHICLE_BALER=getNextBit() -- 8192
 UniversalProcessKit.VEHICLE_TRAFFICVEHICLE=getNextBit() -- 16384
 UniversalProcessKit.VEHICLE_MILKTRUCK=getNextBit() -- 32768
 
+UniversalProcessKit.VEHICLE_MIXERWAGONPICKUP=getNextBit() -- 65536
+UniversalProcessKit.VEHICLE_MIXERWAGONTRAILER=getNextBit() -- 131072
+
 
 function UniversalProcessKit.getVehicleType(vehicle)
 	if type(vehicle)~="table" then
@@ -90,6 +93,12 @@ function UniversalProcessKit.getVehicleType(vehicle)
 		end
 		if SpecializationUtil.hasSpecialization(Milktruck, vehicle.specializations) then
 			vehicleType=vehicleType+UniversalProcessKit.VEHICLE_MILKTRUCK
+		end
+		if SpecializationUtil.hasSpecialization(MixerWagon, vehicle.specializations) then
+			vehicleType=vehicleType+UniversalProcessKit.VEHICLE_MIXERWAGONPICKUP
+		end
+		if SpecializationUtil.hasSpecialization(MixerWagon, vehicle.specializations) then
+			vehicleType=vehicleType+UniversalProcessKit.VEHICLE_MIXERWAGONTRAILER
 		end
 		
 		vehicle.upk_vehicleType=vehicleType

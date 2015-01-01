@@ -37,6 +37,7 @@ function UniversalProcessKit:getAllowedVehicles()
 		self.allowedVehicles[UniversalProcessKit.VEHICLE_MOTORIZED]=true
 		self.allowedVehicles[UniversalProcessKit.VEHICLE_FILLABLE]=true
 		self.allowedVehicles[UniversalProcessKit.VEHICLE_COMBINE]=true
+		self.allowedVehicles[UniversalProcessKit.VEHICLE_MIXERWAGONTRAILER]=true
 	end
 	
 	self.allowedVehicles[UniversalProcessKit.VEHICLE_MOTORIZED] = getBoolFromUserAttribute(self.nodeId, "allowMotorized", self.allowedVehicles[UniversalProcessKit.VEHICLE_MOTORIZED])
@@ -60,6 +61,9 @@ function UniversalProcessKit:getAllowedVehicles()
 	
 	self.allowedVehicles[UniversalProcessKit.VEHICLE_TRAFFICVEHICLE] = getBoolFromUserAttribute(self.nodeId, "allowTrafficVehicle", self.allowedVehicles[UniversalProcessKit.VEHICLE_TRAFFICVEHICLE])
 	self.allowedVehicles[UniversalProcessKit.VEHICLE_MILKTRUCK] = getBoolFromUserAttribute(self.nodeId, "allowMilktruck", self.allowedVehicles[UniversalProcessKit.VEHICLE_MILKTRUCK])
+	
+	self.allowedVehicles[UniversalProcessKit.VEHICLE_MIXERWAGONPICKUP] = getBoolFromUserAttribute(self.nodeId, "allowMixerWagonPickup", self.allowedVehicles[UniversalProcessKit.VEHICLE_MIXERWAGONPICKUP])
+	self.allowedVehicles[UniversalProcessKit.VEHICLE_MIXERWAGONTRAILER] = getBoolFromUserAttribute(self.nodeId, "allowMixerWagonTrailer", self.allowedVehicles[UniversalProcessKit.VEHICLE_MIXERWAGONTRAILER])
 	
 	self.allowWalker = self.allowWalker or getBoolFromUserAttribute(self.nodeId, "allowWalker", true)
 	
@@ -119,6 +123,8 @@ function UniversalProcessKit:fitCollisionMaskToAllowedVehicles()
 		self.allowedVehicles[UniversalProcessKit.VEHICLE_SOWINGMACHINE] or
 		self.allowedVehicles[UniversalProcessKit.VEHICLE_SPRAYER] or
 		self.allowedVehicles[UniversalProcessKit.VEHICLE_FORAGEWAGON] or
+		self.allowedVehicles[UniversalProcessKit.VEHICLE_MIXERWAGONTRAILER] or
+		self.allowedVehicles[UniversalProcessKit.VEHICLE_MIXERWAGONPICKUP] or
 		self.allowedVehicles[UniversalProcessKit.VEHICLE_BALER]) and bitAND(collisionMask_new,trigger_fillable)==0 then
 		self:print('Warning: some kind of allowFillable is set to true but collisionMask was not fitting (fixed)')
 		collisionMask_new = collisionMask_new + trigger_fillable
@@ -153,6 +159,8 @@ function UniversalProcessKit:fitCollisionMaskToAllowedVehicles()
 		self.allowedVehicles[UniversalProcessKit.VEHICLE_SOWINGMACHINE] or
 		self.allowedVehicles[UniversalProcessKit.VEHICLE_SPRAYER] or
 		self.allowedVehicles[UniversalProcessKit.VEHICLE_FORAGEWAGON] or
+		self.allowedVehicles[UniversalProcessKit.VEHICLE_MIXERWAGONTRAILER] or
+		self.allowedVehicles[UniversalProcessKit.VEHICLE_MIXERWAGONPICKUP] or
 		self.allowedVehicles[UniversalProcessKit.VEHICLE_BALER]) and bitAND(collisionMask_new,trigger_fillable)==1 then
 		self:print('Warning: some kind of allowFillable is set to false but collisionMask was not fitting (fixed)')
 		collisionMask_new = collisionMask_new - trigger_fillable

@@ -32,6 +32,12 @@ Bisher enthaltene Module:
 
 ##Changelog
 
+__V0.8.6__
+
+- neu: allowMixerWagonPickup (Trigger-UserAttributes)
+- neu: allowMixerWagonTrailer (Trigger-UserAttributes)
+- Beispielmod UPK_MixerWagonTest hinzugefügt
+
 __V0.8.1 - V0.8.5__
 
 - diverse (größere) Bugfixes
