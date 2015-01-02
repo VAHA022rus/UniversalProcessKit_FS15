@@ -21,6 +21,8 @@ function UniversalProcessKit:writeStream(streamId, connection)
 				streamWriteInt16(streamId, fillType)
 			end
 		end
+		streamWriteBool(streamId, self.isEnabled)
+		streamWriteBool(streamId, self.appearsOnMap)
 	end
 end
 
@@ -44,7 +46,13 @@ function UniversalProcessKit:readStream(streamId, connection)
 					_=self.p_flbs[flbIndex]+{toAdd, fillType}
 				end
 			end
-		end		
+		end
+		local isEnabled = streamReadBool(streamId)
+		self:print('streamReadBool: isEnabled = '..tostring(isEnabled))
+		self:setEnable(isEnabled, true)
+		local appearsOnMap = streamReadBool(streamId)
+		self:print('streamReadBool: showMapHotspot = '..tostring(appearsOnMap))
+		self:showMapHotspot(appearsOnMap, true)
 	end
 end
 
@@ -61,6 +69,12 @@ function UniversalProcessKit:writeUpdateStream(streamId, connection, dirtyMask, 
 			end
 			self.fillLevelsToSync = {}
 		end
+		if bitAND(dirtyMask,self.isEnabledDirtyFlag)~=0 or syncall then
+			streamWriteBool(streamId, self.isEnabled)
+		end
+		if bitAND(dirtyMask,self.mapHotspotDirtyFlag)~=0 or syncall then
+			streamWriteBool(streamId, self.appearsOnMap)
+		end
 	end
 end;
 
@@ -76,6 +90,14 @@ function UniversalProcessKit:readUpdateStream(streamId, connection, dirtyMask, s
 				local oldFillLevel = self:getFillLevel(fillType)
 				self:addFillLevel(newFillLevel - oldFillLevel, fillType)
 			end
+		end
+		if bitAND(dirtyMask,self.isEnabledDirtyFlag)~=0 or syncall then
+			local isEnabled = streamReadBool(streamId)
+			self:setEnable(isEnabled, true)
+		end
+		if bitAND(dirtyMask,self.mapHotspotDirtyFlag)~=0 or syncall then
+			local appearsOnMap = streamReadBool(streamId)
+			self:showMapHotspot(appearsOnMap, true)
 		end
 	end
 end;

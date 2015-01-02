@@ -242,18 +242,18 @@ function isInTable(t,e)
 end;
 
 function loopThruChildren(id,loopFunction,obj)
-	print('loopThruChildren nodeId '..tostring(id))
+	--print('loopThruChildren nodeId '..tostring(id))
 	if id==nil or id==0 or type(obj)~="table" or type(loopFunction)~="string" then
 		return false
 	end
 	local numChildren = getNumOfChildren(id)
-	print('number of children of nodeId is '..tostring(numChildren))
+	--print('number of children of nodeId is '..tostring(numChildren))
 	if type(numChildren)=="number" and numChildren>0 then
 		for i=1,numChildren do
 			local childId = getChildAt(id, i-1)
 			if childId~=nil or childId~=0 then
 				if not obj[loopFunction](obj,childId) then
-					print('abort loopThruChildren')
+					--print('abort loopThruChildren')
 					return true
 				end
 			end
@@ -280,6 +280,7 @@ function getChildrenRigidBodyTypeStatic(id)
 end;
 
 function UniversalProcessKit.setTranslation(id,x,y,z)
+	--print('set translation of nodeId '..tostring(id)..' to '..tostring(x)..', '..tostring(x)..', '..tostring(z))
 	local staticShapes=getChildrenRigidBodyTypeStatic(id)
 	for _,v in pairs(staticShapes) do
 		setRigidBodyType(v,"Kinematic")
@@ -715,7 +716,6 @@ function _g.ClassUPK(members, baseClass)
 						added = lhs.parent + rhs
 					end
 				elseif lhs.storageType==UPK_Storage.SINGLE then
-					print('shelf: adding to single')
 					added = lhs.p_flbs[1] + rhs
 				elseif lhs.storageType==UPK_Storage.FIFO then
 					newFillType = lhs.p_flbs[lhs.p_flbs_fifo_lastkey].fillTypesConversionMatrix[lhs.p_flbs[lhs.p_flbs_fifo_lastkey].fillType][rhs.fillType]

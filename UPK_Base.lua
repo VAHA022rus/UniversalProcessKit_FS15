@@ -57,6 +57,9 @@ function UPK_Base:new(id, placeable, builtIn, syncObj)
 	self.i18nNameSpace = getStringFromUserAttribute(id, "modname")
 	local i18n_mt = {
 		__index = function(t,key)
+			if key=="" then
+				return ""
+			end
 			local text=""
 			if type(key)=="string" then
 				if self.i18nNameSpace~=nil and
@@ -68,7 +71,7 @@ function UPK_Base:new(id, placeable, builtIn, syncObj)
 					text=g_i18n:getText(key)
 				end
 				rawset(self.i18n,key,text)
-				print('asked i18n for '..tostring(key)..' returning '..tostring(text))
+				print('asked i18n for \"'..tostring(key)..'\" returning \"'..tostring(text)..'\"')
 			end
 			return text
 		end

@@ -73,7 +73,7 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 	
 	-- misc
 	
-	self.name = getName(self.nodeId)
+	self.name = string.gsub(getName(self.nodeId), "%W", "_")
 	self.type = getStringFromUserAttribute(nodeId, "type")
 	self.isEnabled = getBoolFromUserAttribute(nodeId, "isEnabled", true)
 
@@ -140,6 +140,8 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 	self.dirtyMask = 0
 	self.syncAllDirtyFlag = self:getNextDirtyFlag()
 	self.fillLevelDirtyFlag = self:getNextDirtyFlag()
+	self.isEnabledDirtyFlag = self:getNextDirtyFlag()
+	self.mapHotspotDirtyFlag = self:getNextDirtyFlag()
 	
 	-- fill level bubbles
 
@@ -217,37 +219,42 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 	
 	-- MapHotspot -- nothing done yet
 	
-	self.appearsOnPDA = getBoolFromUserAttribute(nodeId, "appearsOnPDA", false)
+	self.showMapHotSpotIfDisabled = getBoolFromUserAttribute(nodeId, "showMapHotSpotIfDisabled", true)
+	--self.blinkingMapHotspot = getBoolFromUserAttribute(nodeId, "blinkingMapHotspot", false)
+	
 	self.MapHotspotName = getStringFromUserAttribute(nodeId, "MapHotspot")
 	local mapHotspotIcons={
-		Bank="$dataS2/missions/hud_pda_spot_bank.png",
-		Shop="$dataS2/missions/hud_pda_spot_shop.png",
-		Phone="$dataS2/missions/hud_pda_spot_phone.png",
-		Eggs="$dataS/missions/hud_pda_spot_eggs.png",
-		TipPlace="$dataS2/missions/hud_pda_spot_tipPlace.png",
-		Cows="$dataS2/missions/hud_pda_spot_cows.png",
-		Sheep="$dataS2/missions/hud_pda_spot_sheep.png",
-		Chickens="$dataS2/missions/hud_pda_spot_chickens.png"}
+		Bank="$dataS2/menu/hud/hud_pda_spot_bank.png",
+		FuelStation="$dataS2/menu/hud/hud_pda_spot_fuelStation.png",
+		Shop="$dataS2/menu/hud/hud_pda_spot_shop.png",
+		Phone="$dataS2/menu/hud/hud_pda_spot_phone.png",
+		Eggs="$dataS/menu/hud/hud_pda_spot_eggs.png",
+		TipPlace="$dataS2/menu/hud/hud_pda_spot_tipPlace.png",
+		TipPlaceGold="$dataS2/menu/hud/hud_pda_spot_tipPlaceGold.png",
+		Cows="$dataS2/menu/hud/hud_pda_spot_cows.png",
+		Sheep="$dataS2/menu/hud/hud_pda_spot_sheep.png",
+		Chickens="$dataS2/menu/hud/hud_pda_spot_chickens.png",
+		Billboard="$dataS2/menu/hud/hud_pda_spot_billboard.png"}
 	
-	if self.MapHotspotName~=nil then
-		if mapHotspotIcons[self.MapHotspotName]~=nil then
-			self.MapHotspotIcon = Utils.getFilename(mapHotspotIcons[self.MapHotspotName], getAppBasePath())
-		else
-			local iconStr = getStringFromUserAttribute(nodeId, "MapHotspotIcon")
-			if iconStr~=nil then
-				if self.i18nNameSpace==nil then
-					self:print('you need to set the i18nNameSpace to use MapHotspotIcon')
-				else
-					self.MapHotspotIcon = g_modNameToDirectory[self.i18nNameSpace]..iconStr
-					--self:print('using \"'..tostring(self.MapHotspotIcon)..'\" as MapHotspotIcon')
-				end
+	if self.MapHotspotName~=nil and mapHotspotIcons[self.MapHotspotName]~=nil then
+		self.MapHotspotIcon = Utils.getFilename(mapHotspotIcons[self.MapHotspotName], getAppBasePath())
+	else
+		local iconStr = getStringFromUserAttribute(nodeId, "MapHotspotIcon")
+		if iconStr~=nil then
+			if self.i18nNameSpace==nil then
+				self:print('you need to set the modName-UserAttribute to use MapHotspotIcon')
+			else
+				self.MapHotspotIcon = g_modNameToDirectory[self.i18nNameSpace]..iconStr
+				self:print('using \"'..tostring(self.MapHotspotIcon)..'\" as MapHotspotIcon')
 			end
+		else
+			self.MapHotspotIcon = Utils.getFilename(mapHotspotIcons["TipPlace"], getAppBasePath())
 		end
 	end
-
-	if self.MapHotspotName~=nil then
-		self:showMapHotspot(self.appearsOnPDA)
-	end
+	
+	self.useMapHotspot = getUserAttribute(nodeId, "showMapHotspot") ~= nil
+	
+	self:showMapHotspot(getBoolFromUserAttribute(nodeId, "showMapHotspot", false), true)
 	
 	-- placeable object
 	
@@ -522,16 +529,30 @@ function UniversalProcessKit:getAcceptedFillTypes()
 	return r
 end;
 
--- show or hide an icon on the pda map
+-- show or hide an icon on the mini map
 function UniversalProcessKit:showMapHotspot(on,alreadySent)
-	self.appearsOnPDA=on
+	self:print('UniversalProcessKit:showMapHotspot('..tostring(on)..', '..tostring(alreadySent)..')')
+	self.appearsOnMap=on
 	if on==true and self.mapHotspot == nil then
-		local iconSize = g_currentMission.missionPDA.pdaMapWidth / 15
+		
+		--[[
+		if not g_currentMission.ingameMap.upk_tested then
+			for k,v in pairs(g_currentMission.ingameMap) do
+				self:print('g_currentMission.ingameMap.'..tostring(k)..' = '..tostring(v))
+			end
+			g_currentMission.ingameMap.upk_tested=true
+		end
+		]]--
+		
+		local widthHeightRatio = g_currentMission.syncBackgroundOverlay.height
+		self:print('widthHeightRatio = '..tostring(widthHeightRatio))
+		self:print('g_currentMission.ingameMap.mapWidth = '..tostring(g_currentMission.ingameMap.mapWidth))
+		local iconSize = 0.015625 --g_currentMission.ingameMap.mapWidth / 10
 		local x,_,z = unpack(self.wpos)
-		self.mapHotspot = g_currentMission.missionPDA:createMapHotspot(self.MapHotspotName, self.MapHotspotIcon, x, z, iconSize, iconSize * 4 / 3, false, false, false, 0, true)
+		self.mapHotspot = g_currentMission.ingameMap:createMapHotspot(nil, self.MapHotspotIcon, x, z, iconSize, iconSize * widthHeightRatio, false, false, false, 0, true)
 	end
 	if on==false and type(self.mapHotspot)=="table" and self.mapHotspot.delete~=nil then
-		g_currentMission.missionPDA:deleteMapHotspot(self.mapHotspot)
+		g_currentMission.ingameMap:deleteMapHotspot(self.mapHotspot)
 		self.mapHotspot=nil
 	end
 	if not alreadySent then
@@ -540,18 +561,27 @@ function UniversalProcessKit:showMapHotspot(on,alreadySent)
 end;
 
 function UniversalProcessKit:setEnable(isEnabled,alreadySent)
-	self:print('setEnable('..tostring(isEnabled)..')')
-	if self.isEnabled~=isEnabled then
+	self:print('UniversalProcessKit:setEnable('..tostring(isEnabled)..')')
+	if isEnabled~=nil then
 		self.isEnabled=isEnabled
-		if alreadySent==nil or not alreadySent then
-			--self:raiseDirtyFlags(self.enabledDirtyFlag)
+		if not alreadySent then
+			--self:raiseDirtyFlags(self.isEnabledDirtyFlag)
+		end
+	end
+	if self.useMapHotspot then
+		if self.isEnabled or self.showMapHotSpotIfDisabled then
+			self:print('self.isEnabled or self.showMapHotSpotIfDisabled')
+			self:showMapHotspot(true,true)
+		else
+			self:print('not (self.isEnabled or self.showMapHotSpotIfDisabled)')
+			self:showMapHotspot(false,true)
 		end
 	end
 	self:setEnableChildren(isEnabled,alreadySent)
 end;
 
 function UniversalProcessKit:setEnableChildren(isEnabled,alreadySent)
-	self:print('setEnableChildren('..tostring(isEnabled)..')')
+	self:print('UniversalProcessKit:setEnableChildren('..tostring(isEnabled)..')')
 	for _,kid in pairs(self.kids) do
 		kid:setEnable(isEnabled,alreadySent)
 	end
@@ -589,15 +619,21 @@ function UniversalProcessKit:loadFromAttributesAndNodes(xmlFile, key)
 		end
 	end
 	
-	if getXMLFloat(xmlFile, key .. "#isEnabled")=="false" then
-		self:setEnable(false)
-	end
+	local isEnabled = getXMLBool(xmlFile, key .. "#isEnabled")
+	self:print('read from save file: isEnabled = '..tostring(isEnabled)..' ('..type(isEnabled)..')')
+	self:setEnable(Utils.getNoNil(getXMLBool(xmlFile, key .. "#isEnabled"), true), true)
+	
+	local appearsOnMap = getXMLBool(xmlFile, key .. "#showMapHotspot")
+	self:print('read from save file: showMapHotspot = '..tostring(appearsOnMap)..' ('..type(appearsOnMap)..')')
+	self:showMapHotspot(Utils.getNoNil(getXMLBool(xmlFile, key .. "#showMapHotspot"), false), true)
+
+	self:loadExtraNodes(xmlFile, key)
 	
 	for k,v in pairs(self.kids) do
 		v:loadFromAttributesAndNodes(xmlFile, key)
 	end
 	
-	return self:loadExtraNodes(xmlFile, key)
+	return true
 end;
 
 function UniversalProcessKit:getSaveAttributesAndNodes(nodeIdent)
@@ -606,8 +642,16 @@ function UniversalProcessKit:getSaveAttributesAndNodes(nodeIdent)
 		
 	local nodes = "<"..tostring(self.name)
 	
+	local extraNodes=""
+	
 	if not self.isEnabled then
-		nodes=nodes.." isEnabled=\"false\""
+		extraNodes=extraNodes.." isEnabled=\"false\""
+	end
+	
+	self:print('save to file: showMapHotspot = '..tostring(self.appearsOnMap))
+	if self.appearsOnMap then
+		self:print('save showMapHotspot as true')
+		extraNodes=extraNodes.." showMapHotspot=\"true\""
 	end
 	
 	local fillLevels = ""
@@ -634,10 +678,8 @@ function UniversalProcessKit:getSaveAttributesAndNodes(nodeIdent)
 	
 	self:print('fillLevels: '..tostring(fillLevels))
 	
-	local extraNodes=""
-	
 	if fillLevels~="" then
-		extraNodes = " fillLevels=\"" .. tostring(fillLevels) .. "\""
+		extraNodes = extraNodes.." fillLevels=\"" .. tostring(fillLevels) .. "\""
 	end
 	
 	local extraNodesF = self:getSaveExtraNodes(nodeIdent)

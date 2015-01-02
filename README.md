@@ -11,6 +11,7 @@ __Beispiel-Mods -> 00\_examples__
 Bisher enthaltene Module:
 
 - base
+- activatortrigger
 - animator
 - balertrigger
 - displaytrigger
@@ -31,6 +32,19 @@ Bisher enthaltene Module:
 - waterfilltrigger
 
 ##Changelog
+
+__V0.9.0__
+
+- Modultyp activatortrigger hinzugefügt
+- neu: isActive (activatortrigger)
+- neu: activateText (activatortrigger)
+- neu: deactivateText (activatortrigger)
+- neu: showMapHotspot (Standard-UserAttributes)
+- neu: MapHotspot (Standard-UserAttributes)
+- neu: MapHotspotIcon (Standard-UserAttributes)
+- neu: showMapHotspotIfDisabled (Standard-UserAttributes)
+- Fix für animator (Synchronisation, Animation und Speichern)
+- Beispielmod UPK\_ActivatorTriggerTest und UPK\_MapHotspotTest hinzugefügt
 
 __V0.8.6__
 
