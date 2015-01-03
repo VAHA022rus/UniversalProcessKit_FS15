@@ -11,6 +11,9 @@ UniversalProcessKitListener.postLoadObjects = {}
 
 print('UniversalProcessKitListener.postLoadObjects is '..tostring(UniversalProcessKitListener.postLoadObjects))
 
+
+
+
 function UniversalProcessKitListener.loadMap(name)
 	--cleanup at map loaded
 	for k,v in pairs(Fillable.fillTypeNameToInt) do
@@ -35,6 +38,8 @@ function UniversalProcessKitListener.loadMap(name)
 	g_currentMission.environment:addDayChangeListener(UniversalProcessKitListener)
 	g_currentMission.environment:addHourChangeListener(UniversalProcessKitListener)
 	g_currentMission.environment:addMinuteChangeListener(UniversalProcessKitListener)
+
+	
 
 end
 

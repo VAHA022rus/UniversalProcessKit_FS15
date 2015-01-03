@@ -65,11 +65,13 @@ function UPK_DisplayTrigger:update(dt)
 					end
 					if self.showPercentage then
 						local capacity = self:getCapacity(fillType)
-						local ratio = mathceil(fillLevel/capacity*100)
-						if ratio==100 and round(fillLevel,1)<capacity then
-							ratio = 99
+						if capacity<math.huge then
+							local ratio = mathceil(fillLevel/capacity*100)
+							if ratio==100 and round(fillLevel,1)<capacity then
+								ratio = 99
+							end
+							text=text.." "..tostring(ratio) .. "%"
 						end
-						text=text.." "..tostring(ratio) .. "%"
 					end
 	    			g_currentMission:addExtraPrintText(text)
 				end

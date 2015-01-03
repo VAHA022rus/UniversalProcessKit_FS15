@@ -14,6 +14,7 @@ Bisher enthaltene Module:
 - activatortrigger
 - animator
 - balertrigger
+- baletrigger
 - displaytrigger
 - dumptrigger
 - emptytrigger
@@ -32,6 +33,38 @@ Bisher enthaltene Module:
 - waterfilltrigger
 
 ##Changelog
+
+__V0.9.1__
+
+- Modultyp baletrigger hinzugefügt
+- neu: acceptedFillTypes (baletrigger)
+- neu: acceptRoundBales (baletrigger)
+- neu: acceptSquareBales (baletrigger)
+- neu: ignoreBales (baletrigger)
+- neu: useFirstBale (baletrigger)
+- neu: mode (baletrigger)
+- neu: delay (baletrigger)
+- neu: statName (baletrigger)
+- neu: revenueMultiplier (baletrigger)
+- neu: allowBales (Trigger-UserAttributes)
+- neu: preferMapDefaultPrice (filltrigger)
+- neu: pricePerLiterMultiplier (filltrigger)
+- neu: preferMapDefaultPrice (gasstationtrigger)
+- neu: pricePerLiterMultiplier (gasstationtrigger)
+- neu: preferMapDefaultPrice (liquidmanurefilltrigger)
+- neu: pricePerLiterMultiplier (liquidmanurefilltrigger)
+- neu: preferMapDefaultPrice (sprayerfilltrigger)
+- neu: pricePerLiterMultiplier (sprayerfilltrigger)
+- neu: preferMapDefaultPrice (waterfilltrigger)
+- neu: pricePerLiterMultiplier (waterfilltrigger)
+- neu: preferMapDefaultRevenue (tiptrigger)
+- neu: revenuePerLiterMultiplier (tiptrigger)
+- neu: preferMapDefaultRevenue (dumptrigger)
+- neu: revenuePerLiterMultiplier (dumptrigger)
+- neu: preferMapDefaultRevenue (emptytrigger)
+- neu: revenuePerLiterMultiplier (emptytrigger)
+- Schnittstelle für CoursePlay hinzugefügt, dass das UPK erkannt werden kann
+- Beispielmod UPK_BaleTriggerTest und UPK_BaleTriggerTest2 hinzugefügt
 
 __V0.9.0__
 

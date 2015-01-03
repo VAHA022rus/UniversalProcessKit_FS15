@@ -15,7 +15,11 @@ function UPK_LiquidManureFillTrigger:new(id, parent)
 	
     self.createFillType = getBoolFromUserAttribute(id, "createFillType", false)
     self.pricePerLiter = getNumberFromUserAttribute(id, "pricePerLiter", 0)
-	
+
+	self.preferMapDefaultPrice = getBoolFromUserAttribute(id, "preferMapDefaultPrice", false)
+	self.pricePerLiterMultiplier = getVectorFromUserAttribute(id, "pricePerLiterMultiplier", "1 1 1")
+	self.pricesPerLiter = {}
+
 	self.statName=getStringFromUserAttribute(id, "statName")
 	local validStatName=false
 	if self.statName~=nil then
@@ -71,6 +75,7 @@ function UPK_LiquidManureFillTrigger:triggerUpdate(vehicle,isInTrigger)
 end
 
 UPK_LiquidManureFillTrigger.getFillLevel = UPK_FillTrigger.getFillLevel
+UPK_LiquidManureFillTrigger.getPricePerLiter = UPK_FillTrigger.getPricePerLiter
 UPK_LiquidManureFillTrigger.fill = UPK_FillTrigger.fillTrailer
 UPK_LiquidManureFillTrigger.getIsActivatable = UPK_FillTrigger.getIsActivatable
 

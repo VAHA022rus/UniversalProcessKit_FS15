@@ -127,6 +127,9 @@ function UPK_TipTrigger:new(id, parent)
 	}
 	setmetatable(self.revenuesPerLiter,revenues_mt)
 	
+	self.preferMapDefaultRevenue = getBoolFromUserAttribute(id, "preferMapDefaultRevenue", false)
+	self.revenuePerLiterMultiplier = getVectorFromUserAttribute(id, "revenuePerLiterMultiplier", "1 0.5 0.25")
+	self.revenuesPerLiterAdjusted = {}
 	
 	self.statName=getStringFromUserAttribute(id, "statName")
 	local validStatName=false
@@ -207,6 +210,23 @@ function UPK_TipTrigger:unregisterUpkTipTrigger()
 	removeValueFromTable(g_upkTipTrigger,self)
 end
 
+function UPK_TipTrigger:getRevenuePerLiter(fillType)
+	if self.revenuesPerLiterAdjusted[fillType]~=nil then
+		return self.revenuesPerLiterAdjusted[fillType]
+	end
+	local revenuePerLiter = self.revenuesPerLiter[fillType]
+	if self.preferMapDefaultRevenue then
+		revenuePerLiter = Fillable.fillTypeIndexToDesc[fillType].pricePerLiter or revenuePerLiter
+	end
+	local difficulty = g_currentMission.missionStats.difficulty
+	local revenuePerLiterAdjustment = revenuePerLiterMultiplier[difficulty]
+	if revenuePerLiterAdjustment~=nil then
+		revenuePerLiter = revenuePerLiter * revenuePerLiterAdjustment
+	end
+	self.revenuesPerLiterAdjusted[fillType] = revenuePerLiter
+	return revenuePerLiter
+end
+
 function UPK_TipTrigger:updateTrailerTipping(trailer, fillDelta, fillType)
 	--self:print('UPK_TipTrigger:updateTrailerTipping')
 	if self.isServer then
@@ -216,8 +236,9 @@ function UPK_TipTrigger:updateTrailerTipping(trailer, fillDelta, fillType)
 				self:print('fillDelta: '..tostring(fillDelta))
 				local fill = self:addFillLevel(-fillDelta,fillType)
 				self:print('fill: '..tostring(fill))
-				if fill~=0 and self.revenuesPerLiter[fillType]~=0 then
-					local revenue = fill * self.revenuesPerLiter[fillType]
+				local revenuePerLiter = self:getRevenuePerLiter(fillType)
+				if fill~=0 and revenuePerLiter~=0 then
+					local revenue = fill * revenuePerLiter
 					g_currentMission:addSharedMoney(revenue, self.statName)
 				end
 				self:print('fill: '..tostring(fill))
@@ -354,6 +375,7 @@ function UPK_TipTrigger:triggerUpdate(vehicle,isInTrigger)
 		end
 	end
 end
+
 
 
 

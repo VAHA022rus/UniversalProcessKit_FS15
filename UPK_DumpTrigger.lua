@@ -42,6 +42,9 @@ function UPK_DumpTrigger:new(id, parent)
 	}
 	setmetatable(self.revenuesPerLiter,revenues_mt)
 	
+	self.preferMapDefaultRevenue = getBoolFromUserAttribute(id, "preferMapDefaultRevenue", false)
+	self.revenuePerLiterMultiplier = getVectorFromUserAttribute(id, "revenuePerLiterMultiplier", "1 0.5 0.25")
+	self.revenuesPerLiterAdjusted = {}
 	
 	self.statName=getStringFromUserAttribute(id, "statName")
 	local validStatName=false
@@ -111,13 +114,16 @@ function UPK_DumpTrigger:resetFillLevelIfNeeded(fillType)
 	self.interestedInFillType = fillType
 end
 
+UPK_DumpTrigger.getRevenuePerLiter = UPK_TipTrigger.getRevenuePerLiter
+
 function UPK_DumpTrigger:setFillLevel(newFillLevel, fillType)
 	--self:print('UPK_DumpTrigger:setFillLevel('..tostring(newFillLevel)..', '..tostring(fillType)..')')
 	local oldFillLevel = self:getFillLevel(fillType)
 	local deltaFillLevel = newFillLevel - oldFillLevel
 	
-	if deltaFillLevel~=0 and self.revenuesPerLiter[fillType]~=0 then
-		local revenue = deltaFillLevel * self.revenuesPerLiter[fillType]
+	local revenuePerLiter = self:getRevenuePerLiter(fillType)
+	if deltaFillLevel~=0 and revenuePerLiter~=0 then
+		local revenue = deltaFillLevel * revenuePerLiter
 		g_currentMission:addSharedMoney(revenue, self.statName)
 	end
 	
@@ -125,3 +131,5 @@ function UPK_DumpTrigger:setFillLevel(newFillLevel, fillType)
 	self.interestedInFillType = nil
 	return ret
 end
+
+

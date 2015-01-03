@@ -15,7 +15,11 @@ function UPK_SprayerFillTrigger:new(id, parent)
 	
     self.createFillType = getBoolFromUserAttribute(id, "createFillType", false)
     self.pricePerLiter = getNumberFromUserAttribute(id, "pricePerLiter", 0)
-	
+
+	self.preferMapDefaultPrice = getBoolFromUserAttribute(id, "preferMapDefaultPrice", false)
+	self.pricePerLiterMultiplier = getVectorFromUserAttribute(id, "pricePerLiterMultiplier", "1 1 1")
+	self.pricesPerLiter = {}
+
 	self.statName=getStringFromUserAttribute(id, "statName")
 	local validStatName=false
 	if self.statName~=nil then
@@ -71,6 +75,7 @@ function UPK_SprayerFillTrigger:triggerUpdate(vehicle,isInTrigger)
 end
 
 UPK_SprayerFillTrigger.getFillLevel = UPK_FillTrigger.getFillLevel
+UPK_SprayerFillTrigger.getPricePerLiter = UPK_FillTrigger.getPricePerLiter
 UPK_SprayerFillTrigger.fill = UPK_FillTrigger.fillTrailer
 UPK_SprayerFillTrigger.getIsActivatable = UPK_FillTrigger.getIsActivatable
 

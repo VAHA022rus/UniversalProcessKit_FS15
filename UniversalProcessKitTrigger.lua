@@ -16,12 +16,14 @@ function UniversalProcessKit:addTrigger()
 	self.playerInRange=false
 
 	addTrigger(self.triggerId, "triggerCallback", self)
+	table.insert(g_upkTrigger, self)
 	self:triggerUpdate(nil,true)
 	self:triggerUpdate(nil,false)
 end
 
 function UniversalProcessKit:removeTrigger()
 	if self.triggerId~=nil and self.triggerId~=0 then
+		removeValueFromTable(g_upkTrigger, self)
 		removeTrigger(self.triggerId)
 		self.triggerId = 0
 		self.allowedVehicles=nil
@@ -65,7 +67,9 @@ function UniversalProcessKit:getAllowedVehicles()
 	self.allowedVehicles[UniversalProcessKit.VEHICLE_MIXERWAGONPICKUP] = getBoolFromUserAttribute(self.nodeId, "allowMixerWagonPickup", self.allowedVehicles[UniversalProcessKit.VEHICLE_MIXERWAGONPICKUP])
 	self.allowedVehicles[UniversalProcessKit.VEHICLE_MIXERWAGONTRAILER] = getBoolFromUserAttribute(self.nodeId, "allowMixerWagonTrailer", self.allowedVehicles[UniversalProcessKit.VEHICLE_MIXERWAGONTRAILER])
 	
-	self.allowWalker = self.allowWalker or getBoolFromUserAttribute(self.nodeId, "allowWalker", true)
+	self.allowWalker = Utils.getNoNil(self.allowWalker, getBoolFromUserAttribute(self.nodeId, "allowWalker", true))
+	
+	self.allowBales = Utils.getNoNil(self.allowBales, getBoolFromUserAttribute(self.nodeId, "allowBales", false))
 	
 	for k,v in pairs(self.allowedVehicles) do
 		if not v then
@@ -82,8 +86,7 @@ function UniversalProcessKit:fitCollisionMaskToAllowedVehicles()
 	-- combines = 2^22 = 4194304
 	-- fillables = 2^23 = 8388608
 	-- sum is 15728640
-
-	-- dynamic_objects = 2^24 = 16777216  whats that?
+	-- dynamic_objects = 2^24 = 16777216  whats that? bales?
 	-- trafficVehicles = 2^25 = 33554432 
 	-- cutters = 2^26 = 67108864 whats that?
 	
@@ -93,6 +96,7 @@ function UniversalProcessKit:fitCollisionMaskToAllowedVehicles()
 	local trigger_tractor = 2097152
 	local trigger_combine = 4194304
 	local trigger_fillable = 8388608
+	local trigger_bales = 16777216
 	local trigger_trafficVehicle = 33554432 -- doesnt seem to work right
 	
 
@@ -134,6 +138,10 @@ function UniversalProcessKit:fitCollisionMaskToAllowedVehicles()
 		self:print('Warning: allowTrafficVehicle is set to true but collisionMask was not fitting (fixed)')
 		collisionMask_new = collisionMask_new + trigger_trafficVehicle
 	end
+	if self.allowBales and bitAND(collisionMask_new,trigger_bales)==0 then
+		self:print('Warning: allowBales is set to true but collisionMask was not fitting (fixed)')
+		collisionMask_new = collisionMask_new + trigger_bales
+	end
 	
 	-- substract colision mask bits if necessary
 	
@@ -170,6 +178,10 @@ function UniversalProcessKit:fitCollisionMaskToAllowedVehicles()
 		self:print('Warning: allowTrafficVehicle is set to false but collisionMask was not fitting (fixed)')
 		collisionMask_new = collisionMask_new - trigger_trafficVehicle
 	end
+	if not self.allowBales and bitAND(collisionMask_new,trigger_bales)==1 then
+		self:print('Warning: allowBales is set to false but collisionMask was not fitting (fixed)')
+		collisionMask_new = collisionMask_new - trigger_bales
+	end
 	
 	-- result
 	
@@ -185,21 +197,31 @@ function UniversalProcessKit:triggerCallback(triggerId, otherActorId, onEnter, o
 		local vehicle=g_currentMission.objectToTrailer[otherShapeId] or
 						g_currentMission.nodeToVehicle[otherShapeId] or
 						g_currentMission.objectToTrailer[otherActorId] or
-						g_currentMission.nodeToVehicle[otherActorId]
+						g_currentMission.nodeToVehicle[otherActorId] or
+						g_currentMission.nodeObjects[otherShapeId] or
+						g_currentMission.nodeObjects[otherActorId]
 		--self:print('g_currentMission.objectToTrailer[otherShapeId] '..tostring(g_currentMission.objectToTrailer[otherShapeId]))
 		--self:print('g_currentMission.nodeToVehicle[otherShapeId] '..tostring(g_currentMission.nodeToVehicle[otherShapeId]))
 		--self:print('g_currentMission.objectToTrailer[otherActorId] '..tostring(g_currentMission.objectToTrailer[otherActorId]))
 		--self:print('g_currentMission.nodeToVehicle[otherActorId] '..tostring(g_currentMission.nodeToVehicle[otherActorId]))
 		--self:print('vehicle is '..tostring(vehicle))
 		if vehicle~=nil then
-			for k,v in pairs(UniversalProcessKit.getVehicleTypes(vehicle)) do
-				if v and self.allowedVehicles[k] then
-					if onEnter then
-						self:triggerOnEnter(vehicle)
-					else
-						self:triggerOnLeave(vehicle)
+			if not vehicle:isa(Bale) then
+				for k,v in pairs(UniversalProcessKit.getVehicleTypes(vehicle)) do
+					if v and self.allowedVehicles[k] then
+						if onEnter then
+							self:triggerOnEnter(vehicle)
+						else
+							self:triggerOnLeave(vehicle)
+						end
+						break
 					end
-					break
+				end
+			else -- bales
+				if onEnter then
+					self:triggerOnEnter(vehicle)
+				else
+					self:triggerOnLeave(vehicle)
 				end
 			end
 		end

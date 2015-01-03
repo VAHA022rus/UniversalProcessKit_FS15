@@ -44,20 +44,9 @@ function UPK_EmptyTrigger:new(id, parent)
 	}
 	setmetatable(self.revenuesPerLiter,revenues_mt)
 	
-	--[[
-	FinanceStats.statNames = {
-		"newVehiclesCost",
-		"newAnimalsCost",
-		"constructionCost",
-		"vehicleRunningCost",
-		"propertyMaintenance",
-		"wagePayment",
-		"harvestIncome",
-		"missionIncome",
-		"other",
-		"loanInterest"
-	}
-	--]]
+	self.preferMapDefaultRevenue = getBoolFromUserAttribute(id, "preferMapDefaultRevenue", false)
+	self.revenuePerLiterMultiplier = getVectorFromUserAttribute(id, "revenuePerLiterMultiplier", "1 0.5 0.25")
+	self.revenuesPerLiterAdjusted = {}
 	
 	self.statName=getStringFromUserAttribute(id, "statName")
 	local validStatName=false
@@ -141,6 +130,8 @@ function UPK_EmptyTrigger:update(dt)
 	end
 end
 
+UPK_EmptyTrigger.getRevenuePerLiter = UPK_TipTrigger.getRevenuePerLiter
+
 function UPK_EmptyTrigger:emptyFillable(fillable, deltaFillLevel) -- tippers, shovels etc
 	--self:print('UPK_EmptyTrigger:emptyFillable('..tostring(fillable)..', '..tostring(deltaFillLevel)..')')
 	if self.isServer and self.isEnabled then
@@ -159,8 +150,10 @@ function UPK_EmptyTrigger:emptyFillable(fillable, deltaFillLevel) -- tippers, sh
 				deltaFillLevel=-mathmin(-deltaFillLevel, fillableFillLevel, capacity-fillLevel)
 				fillable:setFillLevel(fillableFillLevel + deltaFillLevel, fillType)
 				local added = self:addFillLevel(-deltaFillLevel, fillType)
-				if added~=0 and self.revenuesPerLiter[fillType]~=0 then
-					local revenue = added * self.revenuesPerLiter[fillType]
+				
+				local revenuePerLiter = self:getRevenuePerLiter(fillType)
+				if added~=0 and revenuePerLiter~=0 then
+					local revenue = added * revenuePerLiter
 					g_currentMission:addSharedMoney(revenue, self.statName)
 					return added
 				end

@@ -381,6 +381,7 @@ UPK_Storage.FIFO=3
 UPK_Storage.FILO=4
 
 _g.g_upkTipTrigger={}
+_g.g_upkTrigger={}
 
 ----------------------------------
 -- __c ---------------------------

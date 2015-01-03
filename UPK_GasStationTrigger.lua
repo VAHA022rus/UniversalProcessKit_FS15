@@ -16,6 +16,10 @@ function UPK_GasStationTrigger:new(id, parent)
     self.createFillType = getBoolFromUserAttribute(id, "createFillType", false)
     self.pricePerLiter = getNumberFromUserAttribute(id, "pricePerLiter", 0)
 	
+	self.preferMapDefaultPrice = getBoolFromUserAttribute(id, "preferMapDefaultPrice", false)
+	self.pricePerLiterMultiplier = getVectorFromUserAttribute(id, "pricePerLiterMultiplier", "1 1 1")
+	self.pricesPerLiter = {}
+	
 	self.statName=getStringFromUserAttribute(id, "statName")
 	local validStatName=false
 	if self.statName~=nil then
@@ -70,6 +74,7 @@ function UPK_GasStationTrigger:triggerUpdate(vehicle,isInTrigger)
 end
 
 UPK_GasStationTrigger.getFillLevel = UPK_FillTrigger.getFillLevel
+UPK_GasStationTrigger.getPricePerLiter = UPK_FillTrigger.getPricePerLiter
 
 function UPK_GasStationTrigger:fillFuel(trailer, deltaFillLevel) -- tippers, shovels etc
 	--self:print('UPK_GasStationTrigger:fillFuel('..tostring(trailer)..', '..tostring(deltaFillLevel)..')')

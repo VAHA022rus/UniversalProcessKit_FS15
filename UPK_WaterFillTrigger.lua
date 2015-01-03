@@ -15,7 +15,11 @@ function UPK_WaterFillTrigger:new(id, parent)
 	
     self.createFillType = getBoolFromUserAttribute(id, "createFillType", false)
     self.pricePerLiter = getNumberFromUserAttribute(id, "pricePerLiter", 0)
-	
+
+	self.preferMapDefaultPrice = getBoolFromUserAttribute(id, "preferMapDefaultPrice", false)
+	self.pricePerLiterMultiplier = getVectorFromUserAttribute(id, "pricePerLiterMultiplier", "1 1 1")
+	self.pricesPerLiter = {}
+
 	self.statName=getStringFromUserAttribute(id, "statName")
 	local validStatName=false
 	if self.statName~=nil then
@@ -71,6 +75,7 @@ function UPK_WaterFillTrigger:triggerUpdate(vehicle,isInTrigger)
 end
 
 UPK_WaterFillTrigger.getFillLevel = UPK_FillTrigger.getFillLevel
+UPK_WaterFillTrigger.getPricePerLiter = UPK_FillTrigger.getPricePerLiter
 UPK_WaterFillTrigger.fillWater = UPK_FillTrigger.fillTrailer
 UPK_WaterFillTrigger.getIsActivatable = UPK_FillTrigger.getIsActivatable
 

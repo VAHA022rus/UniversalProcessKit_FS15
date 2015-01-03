@@ -201,7 +201,7 @@ function UPK_Animator:update(dt)
 				UniversalProcessKit.setRotation(self.nodeId,unpack(self.rotationOrigRot))
 				self.rotationShapeMoved=false
 			elseif self.rotationTime==self.rotationDuration and self.rotationShapeMoved then
-				UniversalProcessKit.setRotation(self.nodeId,unpack(self.rotationOrigRot+self.moveTo))
+				UniversalProcessKit.setRotation(self.nodeId,unpack(self.rotationOrigRot+self.rotateTo))
 				self.rotationShapeMoved=false
 			end
 		end
