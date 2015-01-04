@@ -40,7 +40,7 @@ function UPK_BaleTrigger:new(nodeId, parent)
 	
 	self.mode = getStringFromUserAttribute(nodeId, "mode", "sell")
 	
-	self.revenueMultiplier = getVectorFromUserAttribute(id, "revenueMultiplier", "1 1 1")
+	self.revenueMultiplier = getVectorFromUserAttribute(nodeId, "revenueMultiplier", "1 1 1")
 	
 	self.statName=getStringFromUserAttribute(nodeId, "statName")
 	local validStatName=false
@@ -93,6 +93,11 @@ function UPK_BaleTrigger:new(nodeId, parent)
 	return self
 end
 
+function UPK_BaleTrigger:delete()
+	UniversalProcessKitListener.removeUpdateable(self)
+	UPK_BaleTrigger:superClass().delete(self)
+end
+
 function UPK_BaleTrigger:postLoad()
 	UPK_BaleTrigger:superClass().postLoad(self)
 	self:triggerUpdate(false,false)
@@ -105,31 +110,33 @@ function UPK_BaleTrigger:triggerUpdate(vehicle,isInTrigger)
 		if type(vehicle)=="table" and vehicle:isa(Bale) then
 			self:print('isInTrigger is: '..tostring(isInTrigger))
 			if isInTrigger then
-				local fillType = vehicle:getFillType()
-				local isRoundBale = vehicle.isRoundbale
-				if isRoundBale==nil then
-					isRoundBale = Utils.getNoNil(getUserAttribute(vehicle.nodeId, "isRoundbale"), false)
-					vehicle.isRoundbale = isRoundBale
-				end
-				self:print('fillType is: '..tostring(fillType))
-				self:print('self.acceptedFillTypes[fillType] is: '..tostring(self.acceptedFillTypes[fillType]))
-				self:print('isRoundBale is: '..tostring(isRoundBale))
-				self:print('acceptRoundBales is: '..tostring(self.acceptRoundBales))
-				self:print('acceptSquareBales is: '..tostring(self.acceptSquareBales))
-				if self.acceptedFillTypes[fillType] and ((isRoundBale and self.acceptRoundBales) or (not isRoundBale and self.acceptSquareBales)) then
-					self.balesInTrigger[vehicle]=true
-					table.insert(self.balesInLine,vehicle)
-					self.nrBalesInTrigger = self.nrBalesInTrigger +1
-					self:print('self.nrBalesInTrigger is: '..tostring(self.nrBalesInTrigger))
-					if self.nrBalesInTrigger>self.ignoreBales then
-						if not self.runningUpdate then
-							self.runningUpdate = true
-							self.dtsum = 0
-							UniversalProcessKitListener.addUpdateable(self)
-						end
+				if not self.balesInTrigger[vehicle] then
+					local fillType = vehicle:getFillType()
+					local isRoundBale = vehicle.isRoundbale
+					if isRoundBale==nil then
+						isRoundBale = Utils.getNoNil(getUserAttribute(vehicle.nodeId, "isRoundbale"), false)
+						vehicle.isRoundbale = isRoundBale
 					end
-				else
-					self:print('This kind of bale is not accepted')
+					self:print('fillType is: '..tostring(fillType))
+					self:print('self.acceptedFillTypes[fillType] is: '..tostring(self.acceptedFillTypes[fillType]))
+					self:print('isRoundBale is: '..tostring(isRoundBale))
+					self:print('acceptRoundBales is: '..tostring(self.acceptRoundBales))
+					self:print('acceptSquareBales is: '..tostring(self.acceptSquareBales))
+					if self.acceptedFillTypes[fillType] and ((isRoundBale and self.acceptRoundBales) or (not isRoundBale and self.acceptSquareBales)) then
+						self.balesInTrigger[vehicle]=true
+						table.insert(self.balesInLine,vehicle)
+						self.nrBalesInTrigger = self.nrBalesInTrigger +1
+						self:print('self.nrBalesInTrigger is: '..tostring(self.nrBalesInTrigger))
+						if self.nrBalesInTrigger>self.ignoreBales then
+							if not self.runningUpdate then
+								self.runningUpdate = true
+								self.dtsum = 0
+								UniversalProcessKitListener.addUpdateable(self)
+							end
+						end
+					else
+						self:print('This kind of bale is not accepted')
+					end
 				end
 			else
 				self.balesInTrigger[vehicle]=nil

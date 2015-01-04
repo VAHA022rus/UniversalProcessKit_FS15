@@ -71,6 +71,8 @@ function UniversalProcessKit:getAllowedVehicles()
 	
 	self.allowBales = Utils.getNoNil(self.allowBales, getBoolFromUserAttribute(self.nodeId, "allowBales", false))
 	
+	self.allowPallets = Utils.getNoNil(self.allowPallets, getBoolFromUserAttribute(self.nodeId, "allowPallets", false))
+	
 	for k,v in pairs(self.allowedVehicles) do
 		if not v then
 			self.allowedVehicles[k]=nil
@@ -97,6 +99,7 @@ function UniversalProcessKit:fitCollisionMaskToAllowedVehicles()
 	local trigger_combine = 4194304
 	local trigger_fillable = 8388608
 	local trigger_bales = 16777216
+	local trigger_pallets = 16777216
 	local trigger_trafficVehicle = 33554432 -- doesnt seem to work right
 	
 
@@ -142,6 +145,10 @@ function UniversalProcessKit:fitCollisionMaskToAllowedVehicles()
 		self:print('Warning: allowBales is set to true but collisionMask was not fitting (fixed)')
 		collisionMask_new = collisionMask_new + trigger_bales
 	end
+	if self.allowPallets and bitAND(collisionMask_new,trigger_pallets)==0 then
+		self:print('Warning: allowPallets is set to true but collisionMask was not fitting (fixed)')
+		collisionMask_new = collisionMask_new + trigger_pallets
+	end
 	
 	-- substract colision mask bits if necessary
 	
@@ -182,6 +189,10 @@ function UniversalProcessKit:fitCollisionMaskToAllowedVehicles()
 		self:print('Warning: allowBales is set to false but collisionMask was not fitting (fixed)')
 		collisionMask_new = collisionMask_new - trigger_bales
 	end
+	if not self.allowPallets and bitAND(collisionMask_new,trigger_pallets)==1 then
+		self:print('Warning: allowPallets is set to false but collisionMask was not fitting (fixed)')
+		collisionMask_new = collisionMask_new - trigger_pallets
+	end
 	
 	-- result
 	
@@ -206,22 +217,40 @@ function UniversalProcessKit:triggerCallback(triggerId, otherActorId, onEnter, o
 		--self:print('g_currentMission.nodeToVehicle[otherActorId] '..tostring(g_currentMission.nodeToVehicle[otherActorId]))
 		--self:print('vehicle is '..tostring(vehicle))
 		if vehicle~=nil then
-			if not vehicle:isa(Bale) then
-				for k,v in pairs(UniversalProcessKit.getVehicleTypes(vehicle)) do
-					if v and self.allowedVehicles[k] then
-						if onEnter then
-							self:triggerOnEnter(vehicle)
-						else
-							self:triggerOnLeave(vehicle)
-						end
-						break
+			if self.allowPallets then
+				if vehicle.isPallet==nil then
+					local shapeId = otherActorId
+					if shapeId~=nil then
+						vehicle.isPallet = Utils.getNoNil(getUserAttribute(shapeId, "isPallet"), false)
 					end
 				end
-			else -- bales
-				if onEnter then
-					self:triggerOnEnter(vehicle)
-				else
-					self:triggerOnLeave(vehicle)
+				if vehicle:isa(FillablePallet) or vehicle.isPallet then
+					if onEnter then
+						self:triggerOnEnter(vehicle)
+					else
+						self:triggerOnLeave(vehicle)
+					end
+				end
+			end
+			
+			if self.allowBales then
+				if vehicle:isa(Bale) then
+					if onEnter then
+						self:triggerOnEnter(vehicle)
+					else
+						self:triggerOnLeave(vehicle)
+					end
+				end
+			end
+
+			for k,v in pairs(UniversalProcessKit.getVehicleTypes(vehicle)) do
+				if v and self.allowedVehicles[k] then
+					if onEnter then
+						self:triggerOnEnter(vehicle)
+					else
+						self:triggerOnLeave(vehicle)
+					end
+					break
 				end
 			end
 		end

@@ -23,6 +23,7 @@ Bisher enthaltene Module:
 - gasstationtrigger
 - liquidmanurefilltrigger
 - mover
+- pallettrigger
 - parktrigger
 - processor
 - selltarget
@@ -33,6 +34,19 @@ Bisher enthaltene Module:
 - waterfilltrigger
 
 ##Changelog
+
+__V0.9.2__
+
+- Modultyp pallettrigger hinzugefügt
+- neu: acceptedFillTypes (pallettrigger)
+- neu: ignorePallets (pallettrigger)
+- neu: useFirstPallet (pallettrigger)
+- neu: mode (pallettrigger)
+- neu: delay (pallettrigger)
+- neu: statName (pallettrigger)
+- neu: revenueMultiplier (pallettrigger)
+- neu: allowPallets (Trigger-UserAttributes)
+- Beispielmod UPK_PalletTriggerTest und UPK_PalletTriggerTest2 hinzugefügt
 
 __V0.9.1__
 

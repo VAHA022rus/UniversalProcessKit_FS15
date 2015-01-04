@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="no" ?>
 <modDesc descVersion="21">
     <author>mor2000</author>
-    <version>0.9.1</version>
+    <version>0.9.2</version>
     <title>
         <en>AAA UniversalProcessKit</en>
         <de>AAA UniversalProcessKit</de>
@@ -41,6 +41,7 @@
 		<sourceFile filename="UPK_GasStationTrigger.lua"/>
 		<sourceFile filename="UPK_LiquidManureFillTrigger.lua"/>
 		<sourceFile filename="UPK_Mover.lua"/>
+		<sourceFile filename="UPK_PalletTrigger.lua"/>
 		<sourceFile filename="UPK_ParkTrigger.lua"/>
 		<sourceFile filename="UPK_Processor.lua"/>
 		<sourceFile filename="UPK_SellTarget.lua"/>

@@ -160,6 +160,10 @@ function getMinMaxKeys(t)
 end;
 
 function getVectorFromUserAttribute(nodeId, attribute, default)
+	if nodeId==nil then
+		print('Warning from getVectorFromUserAttribute(): nodeId is nil')
+		return default
+	end
 	local str=Utils.getNoNil(getUserAttribute(nodeId, attribute), default)
 	if type(str)=="string" then
 		return __c({Utils.getVectorFromString(str)})
@@ -168,6 +172,10 @@ function getVectorFromUserAttribute(nodeId, attribute, default)
 end;
 
 function getNumberFromUserAttribute(nodeId, attribute, default, lowerBound, upperBound)
+	if nodeId==nil then
+		print('Warning from getNumberFromUserAttribute: nodeId is nil')
+		return default
+	end
 	local nr=tonumber(Utils.getNoNil(getUserAttribute(nodeId, attribute), default))
 	if lowerBound~=nil and nr~=nil then
 		nr=mathmax(nr,lowerBound)
@@ -179,6 +187,10 @@ function getNumberFromUserAttribute(nodeId, attribute, default, lowerBound, uppe
 end;
 
 function getBoolFromUserAttribute(nodeId, attribute, default)
+	if nodeId==nil then
+		print('Warning from getBoolFromUserAttribute: nodeId is nil')
+		return default
+	end
 	local bool=tobool(Utils.getNoNil(getUserAttribute(nodeId, attribute), default))
 	return bool
 end;
@@ -194,6 +206,10 @@ end
 --]]
 
 function getStringFromUserAttribute(nodeId, attribute, default)
+	if nodeId==nil then
+		print('Warning from getStringFromUserAttribute: nodeId is nil')
+		return default
+	end
 	local str=Utils.getNoNil(getUserAttribute(nodeId, attribute), default)
 	if str~=nil then
 		str=tostring(str)
@@ -202,6 +218,10 @@ function getStringFromUserAttribute(nodeId, attribute, default)
 end;
 
 function getArrayFromUserAttribute(nodeId, attribute, default)
+	if nodeId==nil then
+		print('Warning from getArrayFromUserAttribute: nodeId is nil')
+		return default
+	end
 	local str=getStringFromUserAttribute(nodeId, attribute)
 	if str==nil then
 		return default or {}
@@ -360,7 +380,7 @@ _g.UPK_GasStationTrigger={}
 _g.UPK_LiquidManureFillTrigger={}
 _g.UPK_Mover={}
 _g.UPK_PalettSpawner={}
-_g.UPK_PalettTrigger={}
+_g.UPK_PalletTrigger={}
 _g.UPK_ParkTrigger={}
 _g.UPK_Processor={}
 _g.UPK_Scaler={}

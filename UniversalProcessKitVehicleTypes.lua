@@ -39,6 +39,11 @@ function UniversalProcessKit.getVehicleType(vehicle)
 	if type(vehicle)~="table" then
 		return 0
 	end
+	
+	if vehicle.specializations==nil then
+		vehicle.upk_vehicleType = 0
+	end
+	
 	if vehicle.upk_vehicleType==nil then
 		local vehicleType=0
 		
