@@ -246,8 +246,13 @@ function UniversalProcessKit:triggerCallback(triggerId, otherActorId, onEnter, o
 			for k,v in pairs(UniversalProcessKit.getVehicleTypes(vehicle)) do
 				if v and self.allowedVehicles[k] then
 					if onEnter then
+						if vehicle.upkTrigger == nil then
+							vehicle.upkTrigger={}
+						end
+						table.insert(vehicle.upkTrigger,self)
 						self:triggerOnEnter(vehicle)
 					else
+						removeValueFromTable(vehicle.upkTrigger,self)
 						self:triggerOnLeave(vehicle)
 					end
 					break

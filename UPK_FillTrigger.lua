@@ -157,7 +157,7 @@ function UPK_FillTrigger:getPricePerLiter(fillType)
 		pricePerLiter = Fillable.fillTypeIndexToDesc[fillType].pricePerLiter or pricePerLiter
 	end
 	local difficulty = g_currentMission.missionStats.difficulty
-	local pricePerLiterAdjustment = pricePerLiterMultiplier[difficulty]
+	local pricePerLiterAdjustment = self.pricePerLiterMultiplier[difficulty]
 	if pricePerLiterAdjustment~=nil then
 		pricePerLiter = pricePerLiter * pricePerLiterAdjustment
 	end
@@ -191,7 +191,7 @@ function UPK_FillTrigger:fillTrailer(trailer, deltaFillLevel) -- tippers, shovel
 					if not self.createFillType then
 						deltaFillLevel=-self:addFillLevel(-deltaFillLevel,fillFillType)
 					end
-					local pricePerLiter = getPricePerLiter(fillFillType)
+					local pricePerLiter = self:getPricePerLiter(fillFillType)
 					if pricePerLiter~=0 then
 						local price = deltaFillLevel * pricePerLiter
 						g_currentMission:addSharedMoney(-price, self.statName)
@@ -224,7 +224,7 @@ function UPK_FillTrigger:fillMotorized(trailer, deltaFillLevel) -- motorized
 					if not self.createFillType then
 						deltaFillLevel=-self:addFillLevel(-deltaFillLevel, fillFillType)
 					end
-					local pricePerLiter = getPricePerLiter(fillFillType)
+					local pricePerLiter = self:getPricePerLiter(fillFillType)
 					if pricePerLiter~=0 then
 						local price = deltaFillLevel * pricePerLiter
 						g_currentMission:addSharedMoney(-price, self.statName)
@@ -263,7 +263,7 @@ function UPK_FillTrigger:fillMixerWagonPickup(trailer, deltaFillLevel) -- mixing
 					if not self.createFillType then
 						deltaFillLevel=-self:addFillLevel(-deltaFillLevel,fillFillType)
 					end
-					local pricePerLiter = getPricePerLiter(fillFillType)
+					local pricePerLiter = self:getPricePerLiter(fillFillType)
 					if pricePerLiter~=0 then
 						local price = deltaFillLevel * pricePerLiter
 						g_currentMission:addSharedMoney(-price, self.statName)
@@ -302,7 +302,7 @@ function UPK_FillTrigger:fillMixerWagonTrailer(trailer, deltaFillLevel) -- mixer
 					if not self.createFillType then
 						deltaFillLevel=-self:addFillLevel(-deltaFillLevel,fillFillType)
 					end
-					local pricePerLiter = getPricePerLiter(fillFillType)
+					local pricePerLiter = self:getPricePerLiter(fillFillType)
 					if pricePerLiter~=0 then
 						local price = deltaFillLevel * pricePerLiter
 						g_currentMission:addSharedMoney(-price, self.statName)

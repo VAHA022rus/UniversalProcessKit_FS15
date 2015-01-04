@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="no" ?>
 <modDesc descVersion="21">
     <author>mor2000</author>
-    <version>0.9.2</version>
+    <version>0.9.3</version>
     <title>
         <en>AAA UniversalProcessKit</en>
         <de>AAA UniversalProcessKit</de>
@@ -29,6 +29,8 @@
 		<sourceFile filename="UniversalProcessKitFillTypes.lua"/>
 		<sourceFile filename="UniversalProcessKitVehicleTypes.lua"/>
 		<sourceFile filename="UPK_Base.lua"/>
+		<sourceFile filename="UPK_FillTrigger.lua"/>
+		<sourceFile filename="UPK_TipTrigger.lua"/>
 		<sourceFile filename="UPK_ActivatorTrigger.lua"/>
 		<sourceFile filename="UPK_Animator.lua"/>
 		<sourceFile filename="UPK_BalerTrigger.lua"/>
@@ -37,7 +39,6 @@
 		<sourceFile filename="UPK_DumpTrigger.lua"/>
 		<sourceFile filename="UPK_EntityTrigger.lua"/>
 		<sourceFile filename="UPK_EmptyTrigger.lua"/>
-		<sourceFile filename="UPK_FillTrigger.lua"/>
 		<sourceFile filename="UPK_GasStationTrigger.lua"/>
 		<sourceFile filename="UPK_LiquidManureFillTrigger.lua"/>
 		<sourceFile filename="UPK_Mover.lua"/>
@@ -47,7 +48,6 @@
 		<sourceFile filename="UPK_SellTarget.lua"/>
 		<sourceFile filename="UPK_SprayerFillTrigger.lua"/>
 		<sourceFile filename="UPK_Switcher.lua"/>
-		<sourceFile filename="UPK_TipTrigger.lua"/>
 		<sourceFile filename="UPK_WaterFillTrigger.lua"/>
 		<sourceFile filename="PlaceableUPK.lua" />
 		<sourceFile filename="OnCreateUPK.lua" />

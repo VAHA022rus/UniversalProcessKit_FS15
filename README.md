@@ -35,6 +35,11 @@ Bisher enthaltene Module:
 
 ##Changelog
 
+__V0.9.3__
+
+- Multiplayer-Bug gefixt
+- FillTrigger-Bug von 0.9.1 gefixt
+
 __V0.9.2__
 
 - Modultyp pallettrigger hinzugefügt

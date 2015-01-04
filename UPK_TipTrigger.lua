@@ -219,7 +219,7 @@ function UPK_TipTrigger:getRevenuePerLiter(fillType)
 		revenuePerLiter = Fillable.fillTypeIndexToDesc[fillType].pricePerLiter or revenuePerLiter
 	end
 	local difficulty = g_currentMission.missionStats.difficulty
-	local revenuePerLiterAdjustment = revenuePerLiterMultiplier[difficulty]
+	local revenuePerLiterAdjustment = self.revenuePerLiterMultiplier[difficulty]
 	if revenuePerLiterAdjustment~=nil then
 		revenuePerLiter = revenuePerLiter * revenuePerLiterAdjustment
 	end

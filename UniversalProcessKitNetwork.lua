@@ -67,7 +67,6 @@ function UniversalProcessKit:writeUpdateStream(streamId, connection, dirtyMask, 
 				streamWriteFloat32(streamId,self.fillLevelsToSync[i].fillLevel)
 				streamWriteIntN(streamId,self.fillLevelsToSync[i].fillType,12)
 			end
-			self.fillLevelsToSync = {}
 		end
 		if bitAND(dirtyMask,self.isEnabledDirtyFlag)~=0 or syncall then
 			streamWriteBool(streamId, self.isEnabled)
@@ -78,9 +77,17 @@ function UniversalProcessKit:writeUpdateStream(streamId, connection, dirtyMask, 
 	end
 end;
 
+function UniversalProcessKit:doAfterAllClientsAreSynced()
+	self.dirtyMask = 0
+	self.fillLevelsToSync = {}
+end;
+
 function UniversalProcessKit:readUpdateStream(streamId, connection, dirtyMask, syncall)
 	self:print('UniversalProcessKit:readUpdateStream('..tostring(streamId)..', '..tostring(connection)..', '..tostring(dirtyMask)..', '..tostring(syncall)..')')
 	if connection:getIsServer() then
+		self:print('self.fillLevelDirtyFlag '..tostring(self.fillLevelDirtyFlag))
+		self:print('dirtyMask '..tostring(dirtyMask))
+		self:print('bitAND(dirtyMask,self.fillLevelDirtyFlag)~=0 '..tostring(bitAND(dirtyMask,self.fillLevelDirtyFlag)~=0))
 		if bitAND(dirtyMask,self.fillLevelDirtyFlag)~=0 or syncall then
 			nrFillTypesToSync=streamReadIntN(streamId,8) or 0
 			for i=1,nrFillTypesToSync do
