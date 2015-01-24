@@ -6,27 +6,47 @@ local UPK_DumpTrigger_mt = ClassUPK(UPK_DumpTrigger,UniversalProcessKit)
 InitObjectClass(UPK_DumpTrigger, "UPK_DumpTrigger")
 UniversalProcessKit.addModule("dumptrigger",UPK_DumpTrigger)
 
-function UPK_DumpTrigger:new(id, parent)
-	local self = UniversalProcessKit:new(id, parent, UPK_DumpTrigger_mt)
+function UPK_DumpTrigger:new(nodeId, parent)
+	local self = UniversalProcessKit:new(nodeId, parent, UPK_DumpTrigger_mt)
 	registerObjectClassName(self, "UPK_DumpTrigger")
 
 	-- acceptedFillTypes
 	
 	self.acceptedFillTypes = {}
 	
-	local acceptedFillTypesArr = getArrayFromUserAttribute(id, "acceptedFillTypes")
+	local acceptedFillTypesArr = getArrayFromUserAttribute(nodeId, "acceptedFillTypes")
 	for _,fillType in pairs(UniversalProcessKit.fillTypeNameToInt(acceptedFillTypesArr)) do
 		self:print('accepting '..tostring(UniversalProcessKit.fillTypeIntToName[fillType])..' ('..tostring(fillType)..')')
 		self.acceptedFillTypes[fillType] = true
 		--self.fillTypesConversionMatrix = self.fillTypesConversionMatrix + FillTypesConversionMatrix:new(fillType)
 	end
 	
+	-- add/ remove if dumping
+	
+	self.addIfDumping = {}
+	self.useAddIfDumping = false
+	local addIfDumpingArr = getArrayFromUserAttribute(nodeId, "addIfDumping")
+	for _,fillType in pairs(UniversalProcessKit.fillTypeNameToInt(addIfDumpingArr)) do
+		self:print('add if dumping '..tostring(UniversalProcessKit.fillTypeIntToName[fillType])..' ('..tostring(fillType)..')')
+		self.addIfDumping[fillType] = true
+		self.useAddIfDumping = true
+	end
+	
+	self.removeIfDumping = {}
+	self.useRemoveIfDumping = false
+	local removeIfDumpingArr = getArrayFromUserAttribute(nodeId, "removeIfDumping")
+	for _,fillType in pairs(UniversalProcessKit.fillTypeNameToInt(removeIfDumpingArr)) do
+		self:print('remove if dumping '..tostring(UniversalProcessKit.fillTypeIntToName[fillType])..' ('..tostring(fillType)..')')
+		self.removeIfDumping[fillType] = true
+		self.useRemoveIfDumping = true
+	end
+	
 	-- revenues
 	
-	self.revenuePerLiter = getNumberFromUserAttribute(id, "revenuePerLiter", 0)
+	self.revenuePerLiter = getNumberFromUserAttribute(nodeId, "revenuePerLiter", 0)
 	self.revenuesPerLiter = {}
 		
-	local revenuesPerLiterArr = getArrayFromUserAttribute(id, "revenuesPerLiter")
+	local revenuesPerLiterArr = getArrayFromUserAttribute(nodeId, "revenuesPerLiter")
 	for i=1,#revenuesPerLiterArr,2 do
 		local revenue=tonumber(revenuesPerLiterArr[i])
 		local fillType=unpack(UniversalProcessKit.fillTypeNameToInt(revenuesPerLiterArr[i+1]))
@@ -42,11 +62,11 @@ function UPK_DumpTrigger:new(id, parent)
 	}
 	setmetatable(self.revenuesPerLiter,revenues_mt)
 	
-	self.preferMapDefaultRevenue = getBoolFromUserAttribute(id, "preferMapDefaultRevenue", false)
-	self.revenuePerLiterMultiplier = getVectorFromUserAttribute(id, "revenuePerLiterMultiplier", "1 0.5 0.25")
+	self.preferMapDefaultRevenue = getBoolFromUserAttribute(nodeId, "preferMapDefaultRevenue", false)
+	self.revenuePerLiterMultiplier = getVectorFromUserAttribute(nodeId, "revenuePerLiterMultiplier", "1 0.5 0.25")
 	self.revenuesPerLiterAdjusted = {}
 	
-	self.statName=getStringFromUserAttribute(id, "statName")
+	self.statName=getStringFromUserAttribute(nodeId, "statName")
 	local validStatName=false
 	if self.statName~=nil then
 		for _,v in pairs(FinanceStats.statNames) do
@@ -62,17 +82,17 @@ function UPK_DumpTrigger:new(id, parent)
 	
 	-- dummies for combines
 	
-	self.fillRootNode=id
-	self.exactFillRootNode=id
-	self.fillAutoAimTargetNode=id
-	self.exactFillRootNode=id
+	self.fillRootNode = nodeId
+	self.exactFillRootNode = nodeId
+	self.fillAutoAimTargetNode = nodeId
+	self.exactFillRootNode = nodeId
 	self.allowFillFromAir=true
-	g_currentMission.nodeToVehicle[id]=self -- combines
-	g_currentMission.objectToTrailer[id]=self -- trailers
+	g_currentMission.nodeToVehicle[nodeId]=self -- combines
+	g_currentMission.objectToTrailer[nodeId]=self -- trailers
 
 	-- check collision mask
 	
-	local collisionMask_old = getCollisionMask(id)
+	local collisionMask_old = getCollisionMask(nodeId)
 	local collisionMask_new = collisionMask_old
 	
 	local trigger_fillable = 8388608
@@ -83,7 +103,7 @@ function UPK_DumpTrigger:new(id, parent)
 	
 	if collisionMask_new ~= collisionMask_old then
 		self:print('Warning: set collisionMask to '..tostring(collisionMask_new)..' (you may want to fix that)')
-		setCollisionMask(id,collisionMask_new)
+		setCollisionMask(nodeId,collisionMask_new)
 	end
 	
 	self:print('loaded DumpTrigger successfully')
@@ -119,17 +139,32 @@ UPK_DumpTrigger.getRevenuePerLiter = UPK_TipTrigger.getRevenuePerLiter
 function UPK_DumpTrigger:setFillLevel(newFillLevel, fillType)
 	--self:print('UPK_DumpTrigger:setFillLevel('..tostring(newFillLevel)..', '..tostring(fillType)..')')
 	local oldFillLevel = self:getFillLevel(fillType)
-	local deltaFillLevel = newFillLevel - oldFillLevel
+	local deltaFillLevel = self:addFillLevel(newFillLevel - oldFillLevel, fillType)
+	self.interestedInFillType = nil
 	
 	local revenuePerLiter = self:getRevenuePerLiter(fillType)
-	if deltaFillLevel~=0 and revenuePerLiter~=0 then
-		local revenue = deltaFillLevel * revenuePerLiter
-		g_currentMission:addSharedMoney(revenue, self.statName)
+	if deltaFillLevel~=0 then
+		if revenuePerLiter~=0 then
+			local revenue = deltaFillLevel * revenuePerLiter
+			g_currentMission:addSharedMoney(revenue, self.statName)
+		end
+		if self.useAddIfDumping then
+			for fillTypeToAdd,v in pairs(self.addIfDumping) do
+				if v then
+					self:addFillLevel(deltaFillLevel,fillTypeToAdd)
+				end
+			end
+		end
+		if self.useRemoveIfDumping then
+			for fillTypeToRemove,v in pairs(self.removeIfDumping) do
+				if v then
+					self:addFillLevel(-deltaFillLevel,fillTypeToRemove)
+				end
+			end
+		end
 	end
-	
-	local ret = self:addFillLevel(deltaFillLevel, fillType)
-	self.interestedInFillType = nil
-	return ret
+
+	return deltaFillLevel
 end
 
 

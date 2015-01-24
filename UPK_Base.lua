@@ -8,10 +8,10 @@ local UPK_Base_mt = ClassUPK(UPK_Base,UniversalProcessKit)
 InitObjectClass(UPK_Base, "UPK_Base")
 UniversalProcessKit.addModule("base",UPK_Base)
 
-function UPK_Base:new(id, placeable, builtIn, syncObj)
+function UPK_Base:new(nodeId, placeable, builtIn, syncObj)
 	print('UPK_Base:new')
 	
-	local self = UniversalProcessKit:new(id, nil, UPK_Base_mt)
+	local self = UniversalProcessKit:new(nodeId, nil, UPK_Base_mt)
 	registerObjectClassName(self, "UPK_Base")
 	
 	self.placeable = placeable or false
@@ -32,7 +32,7 @@ function UPK_Base:new(id, placeable, builtIn, syncObj)
 		return false
 	end
 	
-	local UPKversion = getUserAttribute(id, "UPKversion")
+	local UPKversion = getUserAttribute(nodeId, "UPKversion")
 	if UPKversion~=nil then
 		local reqversion={}
 		for _,v in pairs(gmatch(UPKversion,"[0-9]+")) do
@@ -54,7 +54,7 @@ function UPK_Base:new(id, placeable, builtIn, syncObj)
 	
 	-- i18nNameSpace
 	
-	self.i18nNameSpace = getStringFromUserAttribute(id, "modname")
+	self.i18nNameSpace = getStringFromUserAttribute(nodeId, "modname")
 	local i18n_mt = {
 		__index = function(t,key)
 			if key=="" then
@@ -71,7 +71,7 @@ function UPK_Base:new(id, placeable, builtIn, syncObj)
 					text=g_i18n:getText(key)
 				end
 				rawset(self.i18n,key,text)
-				print('asked i18n for \"'..tostring(key)..'\" returning \"'..tostring(text)..'\"')
+				--print('asked i18n for \"'..tostring(key)..'\" returning \"'..tostring(text)..'\"')
 			end
 			return text
 		end

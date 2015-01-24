@@ -7,20 +7,20 @@ local UPK_BalerTrigger_mt = ClassUPK(UPK_BalerTrigger,UniversalProcessKit)
 InitObjectClass(UPK_BalerTrigger, "UPK_BalerTrigger")
 UniversalProcessKit.addModule("balertrigger",UPK_BalerTrigger)
 
-function UPK_BalerTrigger:new(id,parent)
-	local self = UniversalProcessKit:new(id,parent, UPK_BalerTrigger_mt)
+function UPK_BalerTrigger:new(nodeId,parent)
+	local self = UniversalProcessKit:new(nodeId,parent, UPK_BalerTrigger_mt)
 	registerObjectClassName(self, "UPK_BalerTrigger")
 	
-	local fillFillTypeStr = getStringFromUserAttribute(id, "fillType")
+	local fillFillTypeStr = getStringFromUserAttribute(nodeId, "fillType")
 	if fillFillTypeStr~=nil then
 		self.fillFillType = UniversalProcessKit.fillTypeNameToInt[fillFillTypeStr]
 	end
 	
-    self.fillLitersPerSecond = getNumberFromUserAttribute(id, "fillLitersPerSecond", 1500, 0)
-	self.createFillType = getBoolFromUserAttribute(id, "createFillType", false)
-    self.pricePerLiter = getNumberFromUserAttribute(id, "pricePerLiter", 0)
+    self.fillLitersPerSecond = getNumberFromUserAttribute(nodeId, "fillLitersPerSecond", 1500, 0)
+	self.createFillType = getBoolFromUserAttribute(nodeId, "createFillType", false)
+    self.pricePerLiter = getNumberFromUserAttribute(nodeId, "pricePerLiter", 0)
 	
-	self.statName=getStringFromUserAttribute(id, "statName")
+	self.statName=getStringFromUserAttribute(nodeId, "statName")
 	local validStatName=false
 	if self.statName~=nil then
 		for _,v in pairs(FinanceStats.statNames) do
@@ -35,10 +35,10 @@ function UPK_BalerTrigger:new(id,parent)
 	end
 
 	self.allowedVehicles={}
-	self.allowedVehicles[UniversalProcessKit.VEHICLE_FORAGEWAGON] = getBoolFromUserAttribute(id, "allowForageWagon", true)
-	self.allowedVehicles[UniversalProcessKit.VEHICLE_BALER] = getBoolFromUserAttribute(id, "allowBaler", true)
+	self.allowedVehicles[UniversalProcessKit.VEHICLE_FORAGEWAGON] = getBoolFromUserAttribute(nodeId, "allowForageWagon", true)
+	self.allowedVehicles[UniversalProcessKit.VEHICLE_BALER] = getBoolFromUserAttribute(nodeId, "allowBaler", true)
 	
-	self.allowWalker = getBoolFromUserAttribute(id, "allowWalker", false)
+	self.allowWalker = getBoolFromUserAttribute(nodeId, "allowWalker", false)
 	
 	self.isAdded = false
 	

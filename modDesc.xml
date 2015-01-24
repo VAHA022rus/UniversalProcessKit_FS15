@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="no" ?>
 <modDesc descVersion="21">
     <author>mor2000</author>
-    <version>0.9.3</version>
+    <version>0.9.4</version>
     <title>
         <en>AAA UniversalProcessKit</en>
         <de>AAA UniversalProcessKit</de>
@@ -73,6 +73,7 @@
 		<text name="water"> <en>water</en> <de>Wasser</de> </text>
 		<text name="fuel"> <en>fuel</en> <de>Treibstoff</de> </text>
 		<text name="milk"> <en>milk</en> <de>Milch</de> </text>
+		<text name="seeds"> <en>seeds</en> <de>Saatgut</de> </text>
 		<text name="grass_windrow"> <en>grass</en> <de>Gras</de> </text>
 		<text name="dryGrass_windrow"> <en>hay</en> <de>Heu</de> </text>
 		<text name="wheat_windrow"> <en>wheat straw</en> <de>Weizenstroh</de> </text>

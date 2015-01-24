@@ -11,7 +11,7 @@ function UPK_ActivatorTrigger:new(nodeId, parent)
 	local self = UniversalProcessKit:new(nodeId, parent, UPK_ActivatorTrigger_mt)
 	registerObjectClassName(self, "UPK_ActivatorTrigger")
 	
-	self:setIsActive(getBoolFromUserAttribute(self.nodeId, "isActive", false), true)
+	self:setIsActive(getBoolFromUserAttribute(nodeId, "isActive", false), true)
 	
 	local function returnNilIfEmptyString(str)
 		if str=="" then
@@ -20,8 +20,8 @@ function UPK_ActivatorTrigger:new(nodeId, parent)
 		return str
 	end
 	
-	self.activateText = returnNilIfEmptyString(self.i18n[getStringFromUserAttribute(self.nodeId, "activateText")]) or "[activateText]"
-	self.deactivateText = returnNilIfEmptyString(self.i18n[getStringFromUserAttribute(self.nodeId, "deactivateText")]) or "[deactivateText]"
+	self.activateText = returnNilIfEmptyString(self.i18n[getStringFromUserAttribute(nodeId, "activateText")]) or "[activateText]"
+	self.deactivateText = returnNilIfEmptyString(self.i18n[getStringFromUserAttribute(nodeId, "deactivateText")]) or "[deactivateText]"
 	
 	self.activatorActivatable = UPK_ActivatorTriggerActivatable:new(self)
 	self.activatorActivatableAdded=false

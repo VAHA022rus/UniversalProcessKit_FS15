@@ -91,15 +91,15 @@ local UPK_TipTrigger_mt = ClassUPK(UPK_TipTrigger,UniversalProcessKit)
 InitObjectClass(UPK_TipTrigger, "UPK_TipTrigger")
 UniversalProcessKit.addModule("tiptrigger",UPK_TipTrigger)
 
-function UPK_TipTrigger:new(id, parent)
-	local self = UniversalProcessKit:new(id, parent, UPK_TipTrigger_mt)
+function UPK_TipTrigger:new(nodeId, parent)
+	local self = UniversalProcessKit:new(nodeId, parent, UPK_TipTrigger_mt)
 	registerObjectClassName(self, "UPK_TipTrigger")
 	
 	-- acceptedFillTypes
 	
 	self.acceptedFillTypes = {}
 	
-	local acceptedFillTypesArr = getArrayFromUserAttribute(id, "acceptedFillTypes")
+	local acceptedFillTypesArr = getArrayFromUserAttribute(nodeId, "acceptedFillTypes")
 	for _,fillType in pairs(UniversalProcessKit.fillTypeNameToInt(acceptedFillTypesArr)) do
 		self:print('accepting '..tostring(UniversalProcessKit.fillTypeIntToName[fillType])..' ('..tostring(fillType)..')')
 		self.acceptedFillTypes[fillType] = true
@@ -108,10 +108,10 @@ function UPK_TipTrigger:new(id, parent)
 	
 	-- revenues
 	
-	self.revenuePerLiter = getNumberFromUserAttribute(id, "revenuePerLiter", 0)
+	self.revenuePerLiter = getNumberFromUserAttribute(nodeId, "revenuePerLiter", 0)
 	self.revenuesPerLiter = {}
 		
-	local revenuesPerLiterArr = getArrayFromUserAttribute(id, "revenuesPerLiter")
+	local revenuesPerLiterArr = getArrayFromUserAttribute(nodeId, "revenuesPerLiter")
 	for i=1,#revenuesPerLiterArr,2 do
 		local revenue=tonumber(revenuesPerLiterArr[i])
 		local fillType=unpack(UniversalProcessKit.fillTypeNameToInt(revenuesPerLiterArr[i+1]))
@@ -127,11 +127,11 @@ function UPK_TipTrigger:new(id, parent)
 	}
 	setmetatable(self.revenuesPerLiter,revenues_mt)
 	
-	self.preferMapDefaultRevenue = getBoolFromUserAttribute(id, "preferMapDefaultRevenue", false)
-	self.revenuePerLiterMultiplier = getVectorFromUserAttribute(id, "revenuePerLiterMultiplier", "1 0.5 0.25")
+	self.preferMapDefaultRevenue = getBoolFromUserAttribute(nodeId, "preferMapDefaultRevenue", false)
+	self.revenuePerLiterMultiplier = getVectorFromUserAttribute(nodeId, "revenuePerLiterMultiplier", "1 0.5 0.25")
 	self.revenuesPerLiterAdjusted = {}
 	
-	self.statName=getStringFromUserAttribute(id, "statName")
+	self.statName=getStringFromUserAttribute(nodeId, "statName")
 	local validStatName=false
 	if self.statName~=nil then
 		for _,v in pairs(FinanceStats.statNames) do
@@ -145,10 +145,30 @@ function UPK_TipTrigger:new(id, parent)
 		self.statName="other"
 	end
 	
+	-- add/ remove if tipping
+	
+	self.addIfTipping = {}
+	self.useAddIfTipping = false
+	local addIfTippingArr = getArrayFromUserAttribute(nodeId, "addIfTipping")
+	for _,fillType in pairs(UniversalProcessKit.fillTypeNameToInt(addIfTippingArr)) do
+		self:print('add if tipping '..tostring(UniversalProcessKit.fillTypeIntToName[fillType])..' ('..tostring(fillType)..')')
+		self.addIfTipping[fillType] = true
+		self.useAddIfTipping = true
+	end
+	
+	self.removeIfTipping = {}
+	self.useRemoveIfTipping = false
+	local removeIfTippingArr = getArrayFromUserAttribute(nodeId, "removeIfTipping")
+	for _,fillType in pairs(UniversalProcessKit.fillTypeNameToInt(removeIfTippingArr)) do
+		self:print('remove if tipping '..tostring(UniversalProcessKit.fillTypeIntToName[fillType])..' ('..tostring(fillType)..')')
+		self.removeIfTipping[fillType] = true
+		self.useRemoveIfTipping = true
+	end
+	
 	-- texts
 
-	self.showNotAcceptedWarning = getBoolFromUserAttribute(self.nodeId, "showNotAcceptedWarning", true)
-	self.showCapacityReachedWarning = getBoolFromUserAttribute(self.nodeId, "showCapacityReachedWarning", true)
+	self.showNotAcceptedWarning = getBoolFromUserAttribute(nodeId, "showNotAcceptedWarning", true)
+	self.showCapacityReachedWarning = getBoolFromUserAttribute(nodeId, "showCapacityReachedWarning", true)
 
 	-- use it in your modDec.xml with these l10n settings if you want to change sth
 	--[[
@@ -161,7 +181,7 @@ function UPK_TipTrigger:new(id, parent)
 	self.allowedVehicles={}
 	self.allowedVehicles[UniversalProcessKit.VEHICLE_TIPPER] = getBoolFromUserAttribute(self.nodeId, "allowTipper", true)
 	
-	self.allowWalker = getBoolFromUserAttribute(self.nodeId, "allowWalker", false)
+	self.allowWalker = getBoolFromUserAttribute(nodeId, "allowWalker", false)
 	
 	-- register trigger
 	
@@ -236,11 +256,29 @@ function UPK_TipTrigger:updateTrailerTipping(trailer, fillDelta, fillType)
 				self:print('fillDelta: '..tostring(fillDelta))
 				local fill = self:addFillLevel(-fillDelta,fillType)
 				self:print('fill: '..tostring(fill))
+				
 				local revenuePerLiter = self:getRevenuePerLiter(fillType)
-				if fill~=0 and revenuePerLiter~=0 then
-					local revenue = fill * revenuePerLiter
-					g_currentMission:addSharedMoney(revenue, self.statName)
+				if fill~=0 then
+					if revenuePerLiter~=0 then
+						local revenue = fill * revenuePerLiter
+						g_currentMission:addSharedMoney(revenue, self.statName)
+					end
+					if self.useAddIfTipping then
+						for fillTypeToAdd,v in pairs(self.addIfTipping) do
+							if v then
+								self:addFillLevel(fill,fillTypeToAdd)
+							end
+						end
+					end
+					if self.useRemoveIfTipping then
+						for fillTypeToRemove,v in pairs(self.removeIfTipping) do
+							if v then
+								self:addFillLevel(-fill,fillTypeToRemove)
+							end
+						end
+					end
 				end
+				
 				self:print('fill: '..tostring(fill))
 				toomuch = fillDelta + fill -- max 0
 			end

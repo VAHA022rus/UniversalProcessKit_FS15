@@ -35,6 +35,48 @@ Bisher enthaltene Module:
 
 ##Changelog
 
+__V0.9.4 *experimentell*__
+
+- filltrigger kann Paletten befüllen *experimentell*
+- emptytrigger kann Paletten entleeren *experimentell*
+- neu: showFillLevelDecimals (displaytrigger)
+- neu: showCapacity (displaytrigger)
+- neu: showCapacityDecimals (displaytrigger)
+- neu: showPercentageDecimals (displaytrigger)
+- neu: useLongUnitNames (displaytrigger)
+- geändert: Reihenfolge von displayFillTypes wird nun beachtet (displaytrigger)
+- neu: startScalingAt (mover)
+- neu: stopScalingAt (mover)
+- neu: lowScale (mover)
+- neu: highScale (mover)
+- neu: lowerScale (mover)
+- neu: higherScale (mover)
+- neu: scalingType (mover)
+- neu: fillOnlyWholeNumbers (filltrigger)
+- neu: addIfFilling (filltrigger)
+- neu: removeIfFilling (filltrigger)
+- neu: fillOnlyWholeNumbers (gasstationtrigger)
+- neu: addIfFilling (gasstationtrigger)
+- neu: removeIfFilling (gasstationtrigger)
+- neu: fillOnlyWholeNumbers (liquidmanurefilltrigger)
+- neu: addIfFilling (liquidmanurefilltrigger)
+- neu: removeIfFilling (liquidmanurefilltrigger)
+- neu: fillOnlyWholeNumbers (sprayerfilltrigger)
+- neu: addIfFilling (sprayerfilltrigger)
+- neu: removeIfFilling (sprayerfilltrigger)
+- neu: fillOnlyWholeNumbers (waterfilltrigger)
+- neu: addIfFilling (waterfilltrigger)
+- neu: removeIfFilling (waterfilltrigger)
+- neu: addIfDumping (dumptrigger)
+- neu: removeIfDumping (dumptrigger)
+- neu: addIfTipping (tiptrigger)
+- neu: removeIfTipping (tiptrigger)
+- neu: emptyOnlyWholeNumbers (emptytrigger)
+- neu: addIfEmptying (emptytrigger)
+- neu: removeIfEmptying (emptytrigger)
+- geändert: adjustToTerrainHeight (Standard-UserAttributes)
+- Beispielmod UPK_MoverTest2, UPK_FillTriggerTest2 hinzugefügt
+
 __V0.9.3__
 
 - Multiplayer-Bug gefixt

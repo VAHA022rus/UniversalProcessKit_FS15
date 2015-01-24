@@ -20,6 +20,31 @@ function UPK_WaterFillTrigger:new(id, parent)
 	self.pricePerLiterMultiplier = getVectorFromUserAttribute(id, "pricePerLiterMultiplier", "1 1 1")
 	self.pricesPerLiter = {}
 
+	self.fillOnlyWholeNumbers = getBoolFromUserAttribute(nodeId, "fillOnlyWholeNumbers", false)
+	self.amountToFillOfVehicle = {}
+	
+	-- add/ remove if filling
+	
+	self.addIfFilling = {}
+	self.useAddIfFilling = false
+	local addIfFillingArr = getArrayFromUserAttribute(nodeId, "addIfFilling")
+	for _,fillType in pairs(UniversalProcessKit.fillTypeNameToInt(addIfFillingArr)) do
+		self:print('add if filling '..tostring(UniversalProcessKit.fillTypeIntToName[fillType])..' ('..tostring(fillType)..')')
+		self.addIfFilling[fillType] = true
+		self.useAddIfFilling = true
+	end
+	
+	self.removeIfFilling = {}
+	self.useRemoveIfFilling = false
+	local removeIfFillingArr = getArrayFromUserAttribute(nodeId, "removeIfFilling")
+	for _,fillType in pairs(UniversalProcessKit.fillTypeNameToInt(removeIfFillingArr)) do
+		self:print('remove if filling '..tostring(UniversalProcessKit.fillTypeIntToName[fillType])..' ('..tostring(fillType)..')')
+		self.removeIfFilling[fillType] = true
+		self.useRemoveIfFilling = true
+	end
+	
+	-- statName
+	
 	self.statName=getStringFromUserAttribute(id, "statName")
 	local validStatName=false
 	if self.statName~=nil then
@@ -59,12 +84,14 @@ function UPK_WaterFillTrigger:triggerUpdate(vehicle,isInTrigger)
 			if isInTrigger then
 				--self:print('is in trigger')
 				if vehicle.addWaterTrailerFillTrigger~=nil and not vehicle.upk_waterFillTriggerAdded then
+					self.amountToFillOfVehicle[vehicle]=0
 					--self:print('adding trigger')
 					vehicle:addWaterTrailerFillTrigger(self)
 					vehicle.upk_waterFillTriggerAdded = true
 				end
 			else
 				if vehicle.removeWaterTrailerFillTrigger~=nil then
+					self.amountToFillOfVehicle[vehicle]=nil
 					--self:print('removing trigger')
 					vehicle:removeWaterTrailerFillTrigger(self)
 					vehicle.upk_waterFillTriggerAdded = false

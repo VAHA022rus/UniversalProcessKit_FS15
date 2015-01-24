@@ -38,6 +38,9 @@ function PlaceableUPK:finalizePlacement(...)
 	if self.nodeId~=nil then
 		self.base=UPK_Base:new(self.nodeId,true,false,self)
 		if self.base~=false then
+			if getBoolFromUserAttribute(self.base.nodeId, "adjustToTerrainHeight", false) then
+				UniversalProcessKit.adjustToTerrainHeight(self.base.nodeId)
+			end
 			self.base:findChildren(self.nodeId)
 		end
 	end

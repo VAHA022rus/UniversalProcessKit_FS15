@@ -261,6 +261,13 @@ function isInTable(t,e)
 	return false
 end;
 
+function returnNilIfEmptyString(str)
+	if str=="" then
+		return nil
+	end
+	return str
+end;
+
 function loopThruChildren(id,loopFunction,obj)
 	--print('loopThruChildren nodeId '..tostring(id))
 	if id==nil or id==0 or type(obj)~="table" or type(loopFunction)~="string" then
@@ -379,7 +386,6 @@ _g.UPK_FillTrigger={}
 _g.UPK_GasStationTrigger={}
 _g.UPK_LiquidManureFillTrigger={}
 _g.UPK_Mover={}
-_g.UPK_PalettSpawner={}
 _g.UPK_PalletTrigger={}
 _g.UPK_ParkTrigger={}
 _g.UPK_Processor={}

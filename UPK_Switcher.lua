@@ -8,12 +8,12 @@ local UPK_Switcher_mt = ClassUPK(UPK_Switcher, UniversalProcessKit)
 InitObjectClass(UPK_Switcher, "UPK_Switcher")
 UniversalProcessKit.addModule("switcher",UPK_Switcher)
 
-function UPK_Switcher:new(id,parent)
-	local self = UniversalProcessKit:new(id,parent, UPK_Switcher_mt)
+function UPK_Switcher:new(nodeId,parent)
+	local self = UniversalProcessKit:new(nodeId,parent, UPK_Switcher_mt)
 	registerObjectClassName(self, "UPK_Switcher")
 
 	
-	self.hidingPosition = getVectorFromUserAttribute(self.nodeId, "hidingPosition", "0 -10 0")
+	self.hidingPosition = getVectorFromUserAttribute(nodeId, "hidingPosition", "0 -10 0")
 	
 	self.maxCapacity = 0
 	self.fillLevelsCopy = {}
@@ -22,7 +22,7 @@ function UPK_Switcher:new(id,parent)
 	
 	self.switchAtFillTypes={}
 	
-	local switchAtFillTypesArr = getArrayFromUserAttribute(id, "fillTypes")
+	local switchAtFillTypesArr = getArrayFromUserAttribute(nodeId, "fillTypes")
 	for _,fillType in pairs(UniversalProcessKit.fillTypeNameToInt(switchAtFillTypesArr)) do
 		local flbs = self:getFillLevelBubbleShellFromFillType(fillType)
 		if flbs~=nil and flbs~=self then
@@ -36,7 +36,7 @@ function UPK_Switcher:new(id,parent)
 		self:print('capacity is '..tostring(self:getCapacity(fillType)))
 	end
 	
-	self.fillTypeChoiceMax = getStringFromUserAttribute(id, "fillTypeChoice", "max")=="max"
+	self.fillTypeChoiceMax = getStringFromUserAttribute(nodeId, "fillTypeChoice", "max")=="max"
 	
 	-- shapes
 	
@@ -44,12 +44,12 @@ function UPK_Switcher:new(id,parent)
 	self.shapePositions={}
 	
 	self.useFillTypes=false
-    local fillTypeString = Utils.getNoNil(getUserAttribute(id, "switchFillTypes"))
+    local fillTypeString = Utils.getNoNil(getUserAttribute(nodeId, "switchFillTypes"))
 	if fillTypeString~=nil then
 		local fillTypesPerShape=Utils.splitString(",",fillTypeString)
 		local numChildren = getNumOfChildren(self.nodeId)
 		for i=1,mathmin(numChildren,#fillTypesPerShape) do
-			local childId = getChildAt(id, i-1)
+			local childId = getChildAt(nodeId, i-1)
 			setVisibility(childId,false)
 			self.shapePositions[childId]=__c({getTranslation(childId)})
 			UniversalProcessKit.setTranslation(childId,unpack(self.shapePositions[childId]+self.hidingPosition))
@@ -71,7 +71,7 @@ function UPK_Switcher:new(id,parent)
 	self.switchFillLevels={}
 	self.maxfillLevelPerShape={}
 	self.useFillLevels=false
-    local fillLevelString = Utils.getNoNil(getUserAttribute(id, "switchFillLevels"))
+    local fillLevelString = Utils.getNoNil(getUserAttribute(nodeId, "switchFillLevels"))
 	if fillLevelString~=nil then
 		for _,v in pairs(Utils.splitString(" ",fillLevelString)) do
 			local maxFillLevel=tonumber(v)
@@ -82,7 +82,7 @@ function UPK_Switcher:new(id,parent)
 			end
 		end
 		table.insert(self.maxfillLevelPerShape,math.huge)
-		local numChildren = mathmin(getNumOfChildren(self.nodeId),#self.maxfillLevelPerShape)
+		local numChildren = mathmin(getNumOfChildren(nodeId),#self.maxfillLevelPerShape)
 		for i=1,numChildren do
 			local childId = getChildAt(self.nodeId, i-1)
 			setVisibility(childId,false)
@@ -99,7 +99,7 @@ function UPK_Switcher:new(id,parent)
 		return false
 	end
 	
-	local modeStr = getStringFromUserAttribute(self.nodeId, "mode", "switch")
+	local modeStr = getStringFromUserAttribute(nodeId, "mode", "switch")
 	if modeStr=="stack" or modeStr=="stackReverse" then
 		self.mode=modeStr
 	else

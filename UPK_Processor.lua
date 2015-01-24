@@ -15,20 +15,20 @@ local UPK_Processor_mt = ClassUPK(UPK_Processor,UniversalProcessKit)
 InitObjectClass(UPK_Processor, "UPK_Processor")
 UniversalProcessKit.addModule("processor",UPK_Processor)
 
-function UPK_Processor:new(id, parent)
-	local self = UniversalProcessKit:new(id, parent, UPK_Processor_mt)
+function UPK_Processor:new(nodeId, parent)
+	local self = UniversalProcessKit:new(nodeId, parent, UPK_Processor_mt)
 	registerObjectClassName(self, "UPK_Processor")
 	
-	self.product = unpack(UniversalProcessKit.fillTypeNameToInt(getStringFromUserAttribute(id, "product")))
+	self.product = unpack(UniversalProcessKit.fillTypeNameToInt(getStringFromUserAttribute(nodeId, "product")))
 	
-	self.onlyWholeProducts = getBoolFromUserAttribute(id, "onlyWholeProducts", false)
+	self.onlyWholeProducts = getBoolFromUserAttribute(nodeId, "onlyWholeProducts", false)
 	
-	self.productsPerSecond = getNumberFromUserAttribute(id, "productsPerSecond", 0)
-	self.productsPerMinute = getNumberFromUserAttribute(id, "productsPerMinute", 0)
-	self.productsPerHour = getNumberFromUserAttribute(id, "productsPerHour", 0)
+	self.productsPerSecond = getNumberFromUserAttribute(nodeId, "productsPerSecond", 0)
+	self.productsPerMinute = getNumberFromUserAttribute(nodeId, "productsPerMinute", 0)
+	self.productsPerHour = getNumberFromUserAttribute(nodeId, "productsPerHour", 0)
 	self.productionHours={}
 	if self.productsPerSecond>0 or self.productsPerMinute>0 or self.productsPerHour>0 then
-		local productionHoursStrings = getStringFromUserAttribute(id, "productionHours", "0-23")
+		local productionHoursStrings = getStringFromUserAttribute(nodeId, "productionHours", "0-23")
 		local productionHoursStringArr = Utils.splitString(",",productionHoursStrings)
 		for _,v in pairs(productionHoursStringArr) do
 			self:print(v)
@@ -43,14 +43,14 @@ function UPK_Processor:new(id, parent)
 			end
 		end
 	end
-	self.productsPerDay = getNumberFromUserAttribute(id, "productsPerDay" ,0)
+	self.productsPerDay = getNumberFromUserAttribute(nodeId, "productsPerDay" ,0)
 	
-	self.productionInterval = getNumberFromUserAttribute(id, "productionInterval", 1, 1)
+	self.productionInterval = getNumberFromUserAttribute(nodeId, "productionInterval", 1, 1)
 	self.currentInterval = self.productionInterval
 
 	self.productionPrerequisite={}
 	self.hasProductionPrerequisite=false
-	local prerequisiteArr=getArrayFromUserAttribute(id, "productionPrerequisite")
+	local prerequisiteArr=getArrayFromUserAttribute(nodeId, "productionPrerequisite")
 	for i=1,#prerequisiteArr,2 do
 		local amount=tonumber(prerequisiteArr[i])
 		local type=unpack(UniversalProcessKit.fillTypeNameToInt(prerequisiteArr[i+1]))
@@ -61,9 +61,9 @@ function UPK_Processor:new(id, parent)
 		end
 	end
 	
-	self.productionProbability = getNumberFromUserAttribute(id, "productionProbability", 1, 0, 1)
+	self.productionProbability = getNumberFromUserAttribute(nodeId, "productionProbability", 1, 0, 1)
 	
-	local outcomeVariation=getNumberFromUserAttribute(id, "outcomeVariation")
+	local outcomeVariation=getNumberFromUserAttribute(nodeId, "outcomeVariation")
 	if outcomeVariation~=nil then
 		if outcomeVariation < 0 then
 			self:print('Error: outcomeVariation cannot be lower than 0',true)
@@ -81,7 +81,7 @@ function UPK_Processor:new(id, parent)
 	self.outcomeVariation = outcomeVariation
 	
 	if self.outcomeVariation>0 then
-		self.outcomeVariationType = getStringFromUserAttribute(id, "outcomeVariationType", "uniform")
+		self.outcomeVariationType = getStringFromUserAttribute(nodeId, "outcomeVariationType", "uniform")
 		if self.outcomeVariationType=="normal" and (self.productsPerSecond>0 or self.productsPerMinute>0) then
 			self:print('Notice: Its not recommended to use normal distributed outcome variation for productsPerSecond and productsPerMinute')
 		end
@@ -91,7 +91,7 @@ function UPK_Processor:new(id, parent)
 	
 	self.hasRecipe=false
 	self.recipe=__c()
-	local recipeArr=getArrayFromUserAttribute(id, "recipe")
+	local recipeArr=getArrayFromUserAttribute(nodeId, "recipe")
 	for i=1,#recipeArr,2 do
 		local amount=tonumber(recipeArr[i])
 		local type=unpack(UniversalProcessKit.fillTypeNameToInt(recipeArr[i+1]))
@@ -103,7 +103,7 @@ function UPK_Processor:new(id, parent)
 	
 	self.hasByproducts=false
 	self.byproducts=__c()
-	local byproductsArr=getArrayFromUserAttribute(id, "byproducts")
+	local byproductsArr=getArrayFromUserAttribute(nodeId, "byproducts")
 	for i=1,#byproductsArr,2 do
 		local amount=tonumber(byproductsArr[i])
 		local type=unpack(UniversalProcessKit.fillTypeNameToInt(byproductsArr[i+1]))
@@ -113,13 +113,13 @@ function UPK_Processor:new(id, parent)
 		end
 	end
 	
-	self.enableChildrenIfProcessing = getBoolFromUserAttribute(id, "enableChildrenIfProcessing", false)
+	self.enableChildrenIfProcessing = getBoolFromUserAttribute(nodeId, "enableChildrenIfProcessing", false)
 	self:print('enableChildrenIfProcessing = '..tostring(self.enableChildrenIfProcessing))
-	self.enableChildrenIfNotProcessing = getBoolFromUserAttribute(id, "enableChildrenIfNotProcessing", false)
+	self.enableChildrenIfNotProcessing = getBoolFromUserAttribute(nodeId, "enableChildrenIfNotProcessing", false)
 	self:print('enableChildrenIfNotProcessing = '..tostring(self.enableChildrenIfNotProcessing))
-	self.disableChildrenIfProcessing = getBoolFromUserAttribute(id, "disableChildrenIfProcessing", false)
+	self.disableChildrenIfProcessing = getBoolFromUserAttribute(nodeId, "disableChildrenIfProcessing", false)
 	self:print('disableChildrenIfProcessing = '..tostring(self.disableChildrenIfProcessing))
-	self.disableChildrenIfNotProcessing = getBoolFromUserAttribute(id, "disableChildrenIfNotProcessing", false)
+	self.disableChildrenIfNotProcessing = getBoolFromUserAttribute(nodeId, "disableChildrenIfNotProcessing", false)
 	self:print('disableChildrenIfNotProcessing = '..tostring(self.disableChildrenIfNotProcessing))
 	
 	if self.enableChildrenIfProcessing then
@@ -130,14 +130,14 @@ function UPK_Processor:new(id, parent)
 	end
 	
 	self.emptyFillTypesIfProcessing={}
-	local emptyFillTypesIfProcessingArr = getArrayFromUserAttribute(self.nodeId, "emptyFillTypesIfProcessing")
+	local emptyFillTypesIfProcessingArr = getArrayFromUserAttribute(nodeId, "emptyFillTypesIfProcessing")
 	for i=1,#emptyFillTypesIfProcessingArr do
 		local fillType=unpack(UniversalProcessKit.fillTypeNameToInt(emptyFillTypesIfProcessingArr[i]))
 		table.insert(self.emptyFillTypesIfProcessing,fillType)
 	end
 	
 	self.emptyFillTypesIfNotProcessing={}
-	local emptyFillTypesIfNotProcessingArr = getArrayFromUserAttribute(self.nodeId, "emptyFillTypesIfNotProcessing")
+	local emptyFillTypesIfNotProcessingArr = getArrayFromUserAttribute(nodeId, "emptyFillTypesIfNotProcessing")
 	for i=1,#emptyFillTypesIfNotProcessingArr do
 		local fillType=unpack(UniversalProcessKit.fillTypeNameToInt(emptyFillTypesIfNotProcessingArr[i]))
 		table.insert(self.emptyFillTypesIfNotProcessing,fillType)
@@ -145,7 +145,7 @@ function UPK_Processor:new(id, parent)
 	
 	self.hasAddIfProcessing=false
 	self.addIfProcessing={}
-	local addIfProcessingArr=getArrayFromUserAttribute(id, "addIfProcessing")
+	local addIfProcessingArr=getArrayFromUserAttribute(nodeId, "addIfProcessing")
 	for i=1,#addIfProcessingArr,2 do
 		local amount=tonumber(addIfProcessingArr[i])
 		local type=unpack(UniversalProcessKit.fillTypeNameToInt(addIfProcessingArr[i+1]))
@@ -157,7 +157,7 @@ function UPK_Processor:new(id, parent)
 	
 	self.hasAddIfNotProcessing=false
 	self.addIfNotProcessing={}
-	local addIfNotProcessingArr=getArrayFromUserAttribute(id, "addIfNotProcessing")
+	local addIfNotProcessingArr=getArrayFromUserAttribute(nodeId, "addIfNotProcessing")
 	for i=1,#addIfNotProcessingArr,2 do
 		local amount=tonumber(addIfNotProcessingArr[i])
 		local type=unpack(UniversalProcessKit.fillTypeNameToInt(addIfNotProcessingArr[i+1]))
@@ -167,7 +167,7 @@ function UPK_Processor:new(id, parent)
 		end
 	end
 	
-	self.statName=getStringFromUserAttribute(id, "statName")
+	self.statName=getStringFromUserAttribute(nodeId, "statName")
 	local validStatName=false
 	if self.statName~=nil then
 		for _,v in pairs(FinanceStats.statNames) do

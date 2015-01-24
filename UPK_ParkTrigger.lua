@@ -13,7 +13,7 @@ function UPK_ParkTrigger:new(nodeId, parent)
 	registerObjectClassName(self, "UPK_ParkTrigger")
 	
 	self.allowedVehicles={}
-	self.allowedVehicles[UniversalProcessKit.VEHICLE_MOTORIZED] = getBoolFromUserAttribute(self.nodeId, "allowMotorized", true)
+	self.allowedVehicles[UniversalProcessKit.VEHICLE_MOTORIZED] = getBoolFromUserAttribute(nodeId, "allowMotorized", true)
 	
 	self.allowWalker = false
 	

@@ -269,7 +269,10 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 	
 	print('loaded module '..tostring(self.name)..' with id '..tostring(nodeId))
 	
-	if getBoolFromUserAttribute(nodeId, "adjustToTerrainHeight", false) then
+	print('self.placeable '..tostring(self.placeable))
+	print('getBoolFromUserAttribute(nodeId, "adjustToTerrainHeight", false) '..tostring(getBoolFromUserAttribute(nodeId, "adjustToTerrainHeight", false)))
+	
+	if getBoolFromUserAttribute(nodeId, "adjustToTerrainHeight", false) and self.placeable then
 		UniversalProcessKit.adjustToTerrainHeight(nodeId)
 	end
 	
@@ -298,7 +301,7 @@ function UniversalProcessKit:findChildrenLoopFunc(childId)
 			self:findChildren(childId)
 		end
 	else
-		if getBoolFromUserAttribute(childId, "adjustToTerrainHeight", false) then
+		if getBoolFromUserAttribute(childId, "adjustToTerrainHeight", false) and self.placeable then
 			UniversalProcessKit.adjustToTerrainHeight(childId)
 		end
 		self:findChildren(childId)
@@ -405,6 +408,10 @@ end
 function UniversalProcessKit:getFillLevel(fillType)
 	--self:print('UniversalProcessKit:getFillLevel('..tostring(fillType)..')')
 	if fillType~=nil then
+		if UniversalProcessKit.isSpecialFillType(fillType) then
+			return UniversalProcessKitEnvironment.flbs[fillType].fillLevel
+		end
+		
 		if self.storageType==UPK_Storage.SEPARATE then
 			local newFillType=self.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN][fillType] or fillType
 			local flb=self.p_flbs[newFillType]
@@ -625,7 +632,7 @@ function UniversalProcessKit:loadFromAttributesAndNodes(xmlFile, key)
 	
 	local appearsOnMap = getXMLBool(xmlFile, key .. "#showMapHotspot")
 	self:print('read from save file: showMapHotspot = '..tostring(appearsOnMap)..' ('..type(appearsOnMap)..')')
-	self:showMapHotspot(Utils.getNoNil(getXMLBool(xmlFile, key .. "#showMapHotspot"), false), true)
+	self:showMapHotspot(Utils.getNoNil(getXMLBool(xmlFile, key .. "#showMapHotspot"), getBoolFromUserAttribute(self.nodeId, "showMapHotspot", false)), true)
 
 	self:loadExtraNodes(xmlFile, key)
 	
@@ -649,10 +656,7 @@ function UniversalProcessKit:getSaveAttributesAndNodes(nodeIdent)
 	end
 	
 	self:print('save to file: showMapHotspot = '..tostring(self.appearsOnMap))
-	if self.appearsOnMap then
-		self:print('save showMapHotspot as true')
-		extraNodes=extraNodes.." showMapHotspot=\"true\""
-	end
+	extraNodes=extraNodes.." showMapHotspot=\""..tostring(self.appearsOnMap).."\""
 	
 	local fillLevels = ""
 	if self.storageType==UPK_Storage.SEPARATE then

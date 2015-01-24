@@ -202,6 +202,88 @@ function UniversalProcessKit:fitCollisionMaskToAllowedVehicles()
 	end
 end
 
+function tableShow(t, name, maxDepth)
+	local cart -- a container
+	local autoref -- for self references
+	maxDepth = maxDepth or 50;
+	local depth = 0;
+
+	--[[ counts the number of elements in a table
+local function tablecount(t)
+   local n = 0
+   for _, _ in pairs(t) do n = n+1 end
+   return n
+end
+]]
+	-- (RiciLake) returns true if the table is empty
+	local function isemptytable(t) return next(t) == nil end
+
+	local function basicSerialize(o)
+		local so = tostring(o)
+		if type(o) == "function" then
+			local info = debug.getinfo(o, "S")
+			-- info.name is nil because o is not a calling level
+			if info.what == "C" then
+				return string.format("%q", so .. ", C function")
+			else
+				-- the information is defined through lines
+				return string.format("%q", so .. ", defined in (" ..
+						info.linedefined .. "-" .. info.lastlinedefined ..
+						")" .. info.source)
+			end
+		elseif type(o) == "number" then
+			return so
+		else
+			return string.format("%q", so)
+		end
+	end
+
+	local function addtocart(value, name, indent, saved, field, curDepth)
+		indent = indent or ""
+		saved = saved or {}
+		field = field or name
+		cart = cart .. indent .. field
+
+		if type(value) ~= "table" then
+			cart = cart .. " = " .. basicSerialize(value) .. ";\n"
+		else
+			if saved[value] then
+				cart = cart .. " = {}; -- " .. saved[value]
+						.. " (self reference)\n"
+				autoref = autoref .. name .. " = " .. saved[value] .. ";\n"
+			else
+				saved[value] = name
+				--if tablecount(value) == 0 then
+				if isemptytable(value) then
+					cart = cart .. " = {};\n"
+				else
+					if curDepth <= maxDepth then
+						cart = cart .. " = {\n"
+						for k, v in pairs(value) do
+							k = basicSerialize(k)
+							local fname = string.format("%s[%s]", name, k)
+							field = string.format("[%s]", k)
+							-- three spaces between levels
+							addtocart(v, fname, indent .. "\t", saved, field, curDepth + 1);
+						end
+						cart = cart .. indent .. "};\n"
+					else
+						cart = cart .. " = { ... };\n";
+					end;
+				end
+			end
+		end;
+	end
+
+	name = name or "__unnamed__"
+	if type(t) ~= "table" then
+		return name .. " = " .. basicSerialize(t)
+	end
+	cart, autoref = "", ""
+	addtocart(t, name, indent, nil, nil, depth + 1)
+	return cart .. autoref
+end;
+
 function UniversalProcessKit:triggerCallback(triggerId, otherActorId, onEnter, onLeave, onStay, otherShapeId)
 	if self.isEnabled then
 		--self:print('otherShapeId: '..tostring(otherShapeId)..', otherActorId: '..tostring(otherActorId))
@@ -211,20 +293,40 @@ function UniversalProcessKit:triggerCallback(triggerId, otherActorId, onEnter, o
 						g_currentMission.nodeToVehicle[otherActorId] or
 						g_currentMission.nodeObjects[otherShapeId] or
 						g_currentMission.nodeObjects[otherActorId]
-		--self:print('g_currentMission.objectToTrailer[otherShapeId] '..tostring(g_currentMission.objectToTrailer[otherShapeId]))
-		--self:print('g_currentMission.nodeToVehicle[otherShapeId] '..tostring(g_currentMission.nodeToVehicle[otherShapeId]))
-		--self:print('g_currentMission.objectToTrailer[otherActorId] '..tostring(g_currentMission.objectToTrailer[otherActorId]))
-		--self:print('g_currentMission.nodeToVehicle[otherActorId] '..tostring(g_currentMission.nodeToVehicle[otherActorId]))
-		--self:print('vehicle is '..tostring(vehicle))
+		self:print('g_currentMission.objectToTrailer[otherShapeId] '..tostring(g_currentMission.objectToTrailer[otherShapeId]))
+		self:print('g_currentMission.nodeToVehicle[otherShapeId] '..tostring(g_currentMission.nodeToVehicle[otherShapeId]))
+		self:print('g_currentMission.objectToTrailer[otherActorId] '..tostring(g_currentMission.objectToTrailer[otherActorId]))
+		self:print('g_currentMission.nodeToVehicle[otherActorId] '..tostring(g_currentMission.nodeToVehicle[otherActorId]))
+		self:print('vehicle is '..tostring(vehicle))
+		
+		
+		local checkStr=""
+		for _,v in pairs(UniversalProcessKit.getVehicleTypes(vehicle)) do
+			checkStr=checkStr..tostring(v)..", "
+		end
+		self:print('vehicle Type is '..tostring(checkStr))
+		
+		--[[
+		self:print("====================")
+		
+		_g.print(tableShow(g_currentMission.plantedTrees.clientTrees))
+		
+		self:print("====================")
+		]]--
+		
 		if vehicle~=nil then
 			if self.allowPallets then
 				if vehicle.isPallet==nil then
-					local shapeId = otherActorId
+					local shapeId = otherActorId or otherShapeId
 					if shapeId~=nil then
-						vehicle.isPallet = Utils.getNoNil(getUserAttribute(shapeId, "isPallet"), false)
+						vehicle.isPallet = getUserAttribute(shapeId, "isPallet")
+					end
+					if vehicle.isPallet==nil then
+						vehicle.isPallet = vehicle:isa(FillablePallet)
 					end
 				end
-				if vehicle:isa(FillablePallet) or vehicle.isPallet then
+				if vehicle.isPallet then
+					self:print('thingy is a pallet 1')
 					if onEnter then
 						self:triggerOnEnter(vehicle)
 					else
@@ -271,6 +373,9 @@ end
 
 function UniversalProcessKit:triggerOnEnter(vehicle, player)
 	if vehicle~=nil then
+		if isInTable(self.entities, vehicle) then
+			return
+		end
 		local networkId=networkGetObjectId(vehicle)
 		if networkId~=nil and networkId~=0 then
 			self.entities[networkId]=vehicle

@@ -77,7 +77,7 @@ function UPK_PalletTrigger:triggerUpdate(vehicle,isInTrigger)
 	self:print('UPK_PalletTrigger:triggerUpdate')
 	if self.isEnabled then
 		self:print('vehicle is: '..tostring(vehicle))
-		if type(vehicle)=="table" and (vehicle:isa(FillablePallet) or vehicle.isPallet) then
+		if type(vehicle)=="table" and vehicle.isPallet then
 			self:print('isInTrigger is: '..tostring(isInTrigger))
 			if isInTrigger then
 				if not self.palletsInTrigger[vehicle] then
@@ -104,6 +104,7 @@ function UPK_PalletTrigger:triggerUpdate(vehicle,isInTrigger)
 				end
 			else
 				self.palletsInTrigger[vehicle]=nil
+				self.nrPalletsInTrigger = self.nrPalletsInTrigger -1
 			end
 		end
 	end
@@ -130,12 +131,18 @@ function UPK_PalletTrigger:update(dt)
 					if added > 0 then
 						self.palletsInTrigger[pallet]=nil
 						table.remove(self.palletsInLine,palletIndex)
-						pallet:delete()
+						self:triggerUpdate(pallet,false)
+						if self.isServer then
+							pallet:delete()
+						end
 					end
 				elseif self.mode=="delete" then
 					self.palletsInTrigger[pallet]=nil
 					table.remove(self.palletsInLine,palletIndex)
-					pallet:delete()
+					self:triggerUpdate(pallet,false)
+					if self.isServer then
+						pallet:delete()
+					end
 				elseif self.mode=="save" then
 					-- nothing yet
 				else
@@ -150,7 +157,10 @@ function UPK_PalletTrigger:update(dt)
 					end
 					self.palletsInTrigger[pallet]=nil
 					table.remove(self.palletsInLine,palletIndex)
-					pallet:delete()
+					self:triggerUpdate(pallet,false)
+					if self.isServer then
+						pallet:delete()
+					end
 				end
 			else
 				self.palletsInTrigger[pallet]=nil

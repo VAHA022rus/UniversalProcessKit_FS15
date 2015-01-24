@@ -7,8 +7,8 @@ local UPK_SellTarget_mt = ClassUPK(UPK_SellTarget,UniversalProcessKit)
 InitObjectClass(UPK_SellTarget, "UPK_SellTarget")
 UniversalProcessKit.addModule("selltarget",UPK_SellTarget)
 
-function UPK_SellTarget:new(id, parent)
-	local self = UniversalProcessKit:new(id, parent, UPK_SellTarget_mt)
+function UPK_SellTarget:new(nodeId, parent)
+	local self = UniversalProcessKit:new(nodeId, parent, UPK_SellTarget_mt)
 	registerObjectClassName(self, "UPK_SellTarget")
 	
 	self:print('loaded SellTarget successfully')

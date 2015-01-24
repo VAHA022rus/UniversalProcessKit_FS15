@@ -7,8 +7,8 @@ local UPK_Animator_mt = ClassUPK(UPK_Animator,UniversalProcessKit)
 InitObjectClass(UPK_Animator, "UPK_Animator")
 UniversalProcessKit.addModule("animator",UPK_Animator)
 
-function UPK_Animator:new(id, parent)
-	local self = UniversalProcessKit:new(id, parent, UPK_Animator_mt)
+function UPK_Animator:new(nodeId, parent)
+	local self = UniversalProcessKit:new(nodeId, parent, UPK_Animator_mt)
 	registerObjectClassName(self, "UPK_Animator")
 	
 	self.tmpSteps={}
@@ -17,11 +17,11 @@ function UPK_Animator:new(id, parent)
 	
 	-- move
 	
-	self.movementSpeedupPeriod = getNumberFromUserAttribute(id, "movementSpeedupPeriod", 0, 0, 1)
-	self.movementSlowdownPeriod = getNumberFromUserAttribute(id, "movementSlowdownPeriod", 0, 0, (1-self.movementSpeedupPeriod))
-	self.moveTo = getVectorFromUserAttribute(id, "moveTo", "0 0 0")
-	self.movementDuration = getNumberFromUserAttribute(id, "movementDuration")
-	self.rewindMovementOnDisable = getBoolFromUserAttribute(id, "rewindMovementOnDisable", true)
+	self.movementSpeedupPeriod = getNumberFromUserAttribute(nodeId, "movementSpeedupPeriod", 0, 0, 1)
+	self.movementSlowdownPeriod = getNumberFromUserAttribute(nodeId, "movementSlowdownPeriod", 0, 0, (1-self.movementSpeedupPeriod))
+	self.moveTo = getVectorFromUserAttribute(nodeId, "moveTo", "0 0 0")
+	self.movementDuration = getNumberFromUserAttribute(nodeId, "movementDuration")
+	self.rewindMovementOnDisable = getBoolFromUserAttribute(nodeId, "rewindMovementOnDisable", true)
 	self.doMovement = self.movementDuration~=nil
 	self.movementTime = 0
 	if self.doMovement then
@@ -48,22 +48,22 @@ function UPK_Animator:new(id, parent)
 	-- rotate per Second
 	
 	self.doRotatePerSecond = false
-	self.rotationsPerSecond = getVectorFromUserAttribute(id, "rotationsPerSecond", "0 0 0")*(2*math.pi)
+	self.rotationsPerSecond = getVectorFromUserAttribute(nodeId, "rotationsPerSecond", "0 0 0")*(2*math.pi)
 	if self.rotationsPerSecond[1]~=0 or self.rotationsPerSecond[2]~=0 or self.rotationsPerSecond[3]~=0 then
 		self.doRotatePerSecond = true
 	end
 	
 	-- rotate
 	
-	self.rotationSpeedupPeriod = getNumberFromUserAttribute(id, "rotationSpeedupPeriod", 0, 0, 1)
-	self.rotationSlowdownPeriod = getNumberFromUserAttribute(id, "rotationSlowdownPeriod", 0, 0, (1-self.rotationSpeedupPeriod))
-	self.rotateTo = getVectorFromUserAttribute(id, "rotateTo", "0 0 0")*(2*mathpi)
-	self.rotationDuration = getNumberFromUserAttribute(id, "rotationDuration")
-	self.rewindRotationOnDisable = getBoolFromUserAttribute(id, "rewindRotationOnDisable", true)
+	self.rotationSpeedupPeriod = getNumberFromUserAttribute(nodeId, "rotationSpeedupPeriod", 0, 0, 1)
+	self.rotationSlowdownPeriod = getNumberFromUserAttribute(nodeId, "rotationSlowdownPeriod", 0, 0, (1-self.rotationSpeedupPeriod))
+	self.rotateTo = getVectorFromUserAttribute(nodeId, "rotateTo", "0 0 0")*(2*mathpi)
+	self.rotationDuration = getNumberFromUserAttribute(nodeId, "rotationDuration")
+	self.rewindRotationOnDisable = getBoolFromUserAttribute(nodeId, "rewindRotationOnDisable", true)
 	self.doRotation = self.rotationDuration~=nil
 	self.rotationTime = 0
 	if self.doRotation then
-		--local x1,y1,z1 = getRotation(id)
+		--local x1,y1,z1 = getRotation(nodeId)
 		local rx,ry,rz = unpack(self.rotateTo)
 		local distance = Utils.vector3Length(rx,ry,rz)
 		local factor=mathpi/(mathpi+(2-mathpi)*self.rotationSpeedupPeriod+(2-mathpi)*self.rotationSlowdownPeriod)
@@ -79,18 +79,18 @@ function UPK_Animator:new(id, parent)
 		self.tmpSteps["rotation"][2] = self.tmpSteps["rotation"][1] + self.rotationMainSpeed * (self.rotationDuration * (1-self.rotationSpeedupPeriod-self.rotationSlowdownPeriod))
 		self.tmpSteps["rotation"][3] = self.rotateTo - self.tmpSteps["rotation"][2]
 	end
-	self.rotationOrigRot = __c(getRotation(self.nodeId))
+	self.rotationOrigRot = __c(getRotation(nodeId))
 	
 	-- animation
 	
 	self.animTime=0
-	self.animationLoop = getBoolFromUserAttribute(id, "animationLoop", false)
-	self.animationSpeed = getNumberFromUserAttribute(id, "animationSpeed", 1)
-	self.rewindAnimationOnDisable = getBoolFromUserAttribute(id, "rewindAnimationOnDisable", false)
-	self.animationClip = getStringFromUserAttribute(id, "animationClip")
+	self.animationLoop = getBoolFromUserAttribute(nodeId, "animationLoop", false)
+	self.animationSpeed = getNumberFromUserAttribute(nodeId, "animationSpeed", 1)
+	self.rewindAnimationOnDisable = getBoolFromUserAttribute(nodeId, "rewindAnimationOnDisable", false)
+	self.animationClip = getStringFromUserAttribute(nodeId, "animationClip")
 	self.doAnimation = self.animationClip~=nil
 	if self.doAnimation then
-		self.animCharacterSet = getAnimCharacterSet(id)
+		self.animCharacterSet = getAnimCharacterSet(nodeId)
 		self:print('self.animCharacterSet='..tostring(self.animCharacterSet))
 		if self.animCharacterSet ~= 0 then
 			self.animClipIndex = getAnimClipIndex(self.animCharacterSet,self.animationClip)

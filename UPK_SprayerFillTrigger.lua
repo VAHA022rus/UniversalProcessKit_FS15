@@ -7,20 +7,45 @@ local UPK_SprayerFillTrigger_mt = ClassUPK(UPK_SprayerFillTrigger,UniversalProce
 InitObjectClass(UPK_SprayerFillTrigger, "UPK_SprayerFillTrigger")
 UniversalProcessKit.addModule("sprayerfilltrigger",UPK_SprayerFillTrigger)
 
-function UPK_SprayerFillTrigger:new(id, parent)
-	local self = UniversalProcessKit:new(id, parent, UPK_SprayerFillTrigger_mt)
+function UPK_SprayerFillTrigger:new(nodeId, parent)
+	local self = UniversalProcessKit:new(nodeId, parent, UPK_SprayerFillTrigger_mt)
 	registerObjectClassName(self, "UPK_SprayerFillTrigger")
 	
 	self.fillFillType = UniversalProcessKit.FILLTYPE_FERTILIZER
 	
-    self.createFillType = getBoolFromUserAttribute(id, "createFillType", false)
-    self.pricePerLiter = getNumberFromUserAttribute(id, "pricePerLiter", 0)
+    self.createFillType = getBoolFromUserAttribute(nodeId, "createFillType", false)
+    self.pricePerLiter = getNumberFromUserAttribute(nodeId, "pricePerLiter", 0)
 
-	self.preferMapDefaultPrice = getBoolFromUserAttribute(id, "preferMapDefaultPrice", false)
-	self.pricePerLiterMultiplier = getVectorFromUserAttribute(id, "pricePerLiterMultiplier", "1 1 1")
+	self.preferMapDefaultPrice = getBoolFromUserAttribute(nodeId, "preferMapDefaultPrice", false)
+	self.pricePerLiterMultiplier = getVectorFromUserAttribute(nodeId, "pricePerLiterMultiplier", "1 1 1")
 	self.pricesPerLiter = {}
+	
+	self.fillOnlyWholeNumbers = getBoolFromUserAttribute(nodeId, "fillOnlyWholeNumbers", false)
+	self.amountToFillOfVehicle = {}
 
-	self.statName=getStringFromUserAttribute(id, "statName")
+	-- add/ remove if filling
+	
+	self.addIfFilling = {}
+	self.useAddIfFilling = false
+	local addIfFillingArr = getArrayFromUserAttribute(nodeId, "addIfFilling")
+	for _,fillType in pairs(UniversalProcessKit.fillTypeNameToInt(addIfFillingArr)) do
+		self:print('add if filling '..tostring(UniversalProcessKit.fillTypeIntToName[fillType])..' ('..tostring(fillType)..')')
+		self.addIfFilling[fillType] = true
+		self.useAddIfFilling = true
+	end
+	
+	self.removeIfFilling = {}
+	self.useRemoveIfFilling = false
+	local removeIfFillingArr = getArrayFromUserAttribute(nodeId, "removeIfFilling")
+	for _,fillType in pairs(UniversalProcessKit.fillTypeNameToInt(removeIfFillingArr)) do
+		self:print('remove if filling '..tostring(UniversalProcessKit.fillTypeIntToName[fillType])..' ('..tostring(fillType)..')')
+		self.removeIfFilling[fillType] = true
+		self.useRemoveIfFilling = true
+	end
+	
+	-- statName
+	
+	self.statName=getStringFromUserAttribute(nodeId, "statName")
 	local validStatName=false
 	if self.statName~=nil then
 		for _,v in pairs(FinanceStats.statNames) do
@@ -36,7 +61,7 @@ function UPK_SprayerFillTrigger:new(id, parent)
 
 	self.allowedVehicles={}
 	
-	self.allowedVehicles[UniversalProcessKit.VEHICLE_SPRAYER] = getBoolFromUserAttribute(self.nodeId, "allowSprayer", true)
+	self.allowedVehicles[UniversalProcessKit.VEHICLE_SPRAYER] = getBoolFromUserAttribute(nodeId, "allowSprayer", true)
 	
 	self.allowWalker = false
 	
@@ -59,12 +84,14 @@ function UPK_SprayerFillTrigger:triggerUpdate(vehicle,isInTrigger)
 			if isInTrigger then
 				--self:print('is in trigger')
 				if vehicle.addFillTrigger~=nil and not vehicle.upk_sprayerFillTriggerAdded then
+					self.amountToFillOfVehicle[vehicle]=0
 					--self:print('adding trigger')
 					vehicle:addFillTrigger(self)
 					vehicle.upk_sprayerFillTriggerAdded = true
 				end
 			else
 				if vehicle.removeFillTrigger~=nil then
+					self.amountToFillOfVehicle[vehicle]=nil
 					--self:print('removing trigger')
 					vehicle:removeFillTrigger(self)
 					vehicle.upk_sprayerFillTriggerAdded = false

@@ -8,8 +8,8 @@ local UPK_Mover_mt = ClassUPK(UPK_Mover, UniversalProcessKit)
 InitObjectClass(UPK_Mover, "UPK_Mover")
 UniversalProcessKit.addModule("mover",UPK_Mover)
 
-function UPK_Mover:new(id,parent)
-	local self = UniversalProcessKit:new(id,parent, UPK_Mover_mt)
+function UPK_Mover:new(nodeId,parent)
+	local self = UniversalProcessKit:new(nodeId,parent, UPK_Mover_mt)
 	registerObjectClassName(self, "UPK_Mover")
 	
 	self.maxCapacity = 0
@@ -20,7 +20,7 @@ function UPK_Mover:new(id,parent)
 	
 	self.moveAtFillTypes={}
 	
-	local moveAtFillTypesArr = getArrayFromUserAttribute(id, "fillTypes")
+	local moveAtFillTypesArr = getArrayFromUserAttribute(nodeId, "fillTypes")
 	for _,fillType in pairs(UniversalProcessKit.fillTypeNameToInt(moveAtFillTypesArr)) do
 		self:print('fillType is '..tostring(fillType))
 		local flbs = self:getFillLevelBubbleShellFromFillType(fillType)
@@ -36,23 +36,23 @@ function UPK_Mover:new(id,parent)
 		self:print('capacity is '..tostring(self:getCapacity(fillType)))
 	end
 	
-	self.fillTypeChoiceMax = getStringFromUserAttribute(id, "fillTypeChoice", "max")=="max"
+	self.fillTypeChoiceMax = getStringFromUserAttribute(nodeId, "fillTypeChoice", "max")=="max"
 	
 	-- move
 	
 	self.useMoving=false
-	self.startMovingAt = getNumberFromUserAttribute(id, "startMovingAt", 0)
-	self.stopMovingAt = getNumberFromUserAttribute(id, "stopMovingAt", self.maxCapacity, self.startMovingAt)
+	self.startMovingAt = getNumberFromUserAttribute(nodeId, "startMovingAt", 0)
+	self.stopMovingAt = getNumberFromUserAttribute(nodeId, "stopMovingAt", self.maxCapacity, self.startMovingAt)
 	
-	local posMin = getVectorFromUserAttribute(id, "lowPosition", "0 0 0")
+	local posMin = getVectorFromUserAttribute(nodeId, "lowPosition", "0 0 0")
 	self.posMin = self.pos + posMin
-	local posMax = getVectorFromUserAttribute(id, "highPosition", posMin)
+	local posMax = getVectorFromUserAttribute(nodeId, "highPosition", posMin)
 	self.posMax = self.pos + posMax
-	local posLower = getVectorFromUserAttribute(id, "lowerPosition", posMin)
-	local posHigher = getVectorFromUserAttribute(id, "higherPosition", posMax)
+	local posLower = getVectorFromUserAttribute(nodeId, "lowerPosition", posMin)
+	local posHigher = getVectorFromUserAttribute(nodeId, "higherPosition", posMax)
 	self.posLower = self.pos + posLower
 	self.posHigher = self.pos + posHigher
-	self.movingType = getStringFromUserAttribute(id, "movingType", "linear")
+	self.movingType = getStringFromUserAttribute(nodeId, "movingType", "linear")
 	
 	if posMin[1]~=0 or posMin[2]~=0 or posMin[3]~=0 or
 		posMax[1]~=0 or posMax[2]~=0 or posMax[3]~=0 or
@@ -61,22 +61,45 @@ function UPK_Mover:new(id,parent)
 		self.useMoving=true
 	end
 	
+	-- scale
+	
+	self.useScaling=false
+	self.startScalingAt = getNumberFromUserAttribute(nodeId, "startScalingAt", 0)
+	self.stopScalingAt = getNumberFromUserAttribute(nodeId, "stopScalingAt", self.maxCapacity, self.startScalingAt)
+	
+	local scaleMin = getVectorFromUserAttribute(nodeId, "lowScale", "0 0 0")
+	self.scaleMin = self.scale + scaleMin
+	local scaleMax = getVectorFromUserAttribute(nodeId, "highScale", scaleMin)
+	self.scaleMax = self.scale + scaleMax
+	local scaleLower = getVectorFromUserAttribute(nodeId, "lowerScale", scaleMin)
+	local scaleHigher = getVectorFromUserAttribute(nodeId, "higherScale", scaleMax)
+	self.scaleLower = self.scale + scaleLower
+	self.scaleHigher = self.scale + scaleHigher
+	self.scalingType = getStringFromUserAttribute(nodeId, "scalingType", "linear")
+	
+	if scaleMin[1]~=0 or scaleMin[2]~=0 or scaleMin[3]~=0 or
+		scaleMax[1]~=0 or scaleMax[2]~=0 or scaleMax[3]~=0 or
+		scaleLower[1]~=0 or scaleLower[2]~=0 or scaleLower[3]~=0 or
+		scaleHigher[1]~=0 or scaleHigher[2]~=0 or scaleHigher[3]~=0 then
+		self.useScaling=true
+	end
+	
 	-- turn
 	
 	self.useRotation=false
 	
-	self.startTurningAt = getNumberFromUserAttribute(id, "startTurningAt", 0)
-	self.stopTurningAt = getNumberFromUserAttribute(id, "stopTurningAt", self.maxCapacity, self.startTurningAt)
+	self.startTurningAt = getNumberFromUserAttribute(nodeId, "startTurningAt", 0)
+	self.stopTurningAt = getNumberFromUserAttribute(nodeId, "stopTurningAt", self.maxCapacity, self.startTurningAt)
 	
-	local rotMin = getVectorFromUserAttribute(self.nodeId, "lowRotation", "0 0 0")
+	local rotMin = getVectorFromUserAttribute(nodeId, "lowRotation", "0 0 0")
 	self.rotMin = rotMin*(2*math.pi)
-	local rotMax = getVectorFromUserAttribute(self.nodeId, "highRotation", rotMin)
+	local rotMax = getVectorFromUserAttribute(nodeId, "highRotation", rotMin)
 	self.rotMax = rotMax*(2*math.pi)
-	local rotLower = getVectorFromUserAttribute(self.nodeId, "lowerRotation", rotMin)
-	local rotHigher = getVectorFromUserAttribute(self.nodeId, "higherRotation", rotMax)
+	local rotLower = getVectorFromUserAttribute(nodeId, "lowerRotation", rotMin)
+	local rotHigher = getVectorFromUserAttribute(nodeId, "higherRotation", rotMax)
 	self.rotLower = rotLower*(2*math.pi)
 	self.rotHigher = rotHigher*(2*math.pi)
-	self.turningType = getStringFromUserAttribute(id, "turningType", "linear")
+	self.turningType = getStringFromUserAttribute(nodeId, "turningType", "linear")
 	
 	if rotMin[1]~=0 or rotMin[2]~=0 or rotMin[3]~=0 or
 		rotMax[1]~=0 or rotMax[2]~=0 or rotMax[3]~=0 or
@@ -87,8 +110,8 @@ function UPK_Mover:new(id,parent)
 	
 	-- visibility
 	
-	self.startVisibilityAt = getNumberFromUserAttribute(id, "startVisibilityAt", -1)
-	self.stopVisibilityAt = getNumberFromUserAttribute(id, "stopVisibilityAt", self.maxCapacity+1)
+	self.startVisibilityAt = getNumberFromUserAttribute(nodeId, "startVisibilityAt", -1)
+	self.stopVisibilityAt = getNumberFromUserAttribute(nodeId, "stopVisibilityAt", self.maxCapacity+1)
 	
 	self.showingType = self.startVisibilityAt<=self.stopVisibilityAt
 	
@@ -142,6 +165,23 @@ function UPK_Mover:onFillLevelChange(deltaFillLevel, newFillLevel, fillType) -- 
 				end
 				self:print('want to move shape to y='..tostring(self.pos[2]))
 				UniversalProcessKit.setTranslation(self.nodeId,unpack(self.pos))
+			end
+			
+			-- scale
+			if self.useScaling then
+				if fillLevel <= self.startScalingAt then -- startScalingAt included in scaleLower
+					self:print('fillLevel <= self.startScalingAt')
+					self.scale=self.scaleLower
+				elseif fillLevel > self.stopScalingAt then
+					self:print('fillLevel > self.stopScalingAt')
+					self.scale=self.scaleHigher
+				else
+					self:print('getRatio()')
+					local ratio=self:getRatio("scale",self.scalingType,fillLevel,self.startScalingAt,self.stopScalingAt)
+					self.scale=self.scaleMin+(self.scaleMax-self.scaleMin)*ratio
+				end
+				self:print('want to scale shape to y='..tostring(self.scale[2]))
+				setScale(self.nodeId,unpack(self.scale))
 			end
 		
 			-- turn
