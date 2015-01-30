@@ -464,7 +464,7 @@ function UPK_FillTrigger:fillMixerWagonTrailer(trailer, deltaFillLevel) -- mixer
 	return 0
 end
 
-function UPK_FillTrigger:fillPallet(trailer, deltaFillLevel) -- tippers, shovels etc
+function UPK_FillTrigger:fillPallet(trailer, deltaFillLevel) -- pallets
 	self:print('UPK_FillTrigger:fillPallet('..tostring(trailer)..', '..tostring(deltaFillLevel)..')')
 	if self.isServer and self.isEnabled then
 		local fillFillType = self.fillFillType or self:getFillType() -- for single, fifo and filo

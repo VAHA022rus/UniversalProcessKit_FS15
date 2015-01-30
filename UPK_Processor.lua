@@ -1,15 +1,7 @@
 -- by mor2000
 
 --------------------
--- Processor (converts and stores stuff)
-
--- convertion rule: what recipe, what recipe
--- ie: brewery
--- convertion: beer 0.05 barley 1.1 water
--- read it like: 1 beer = 0.05 x barley + 1.1 x water
--- processing: water 0, barley 0, beer 5
--- read it like: pass water to parent with 0 liter per second (=store), barley too and beer with 5 liters per second
-
+-- Processor (converts stuff)
 
 local UPK_Processor_mt = ClassUPK(UPK_Processor,UniversalProcessKit)
 InitObjectClass(UPK_Processor, "UPK_Processor")
@@ -113,34 +105,13 @@ function UPK_Processor:new(nodeId, parent)
 		end
 	end
 	
-	self.enableChildrenIfProcessing = getBoolFromUserAttribute(nodeId, "enableChildrenIfProcessing", false)
-	self:print('enableChildrenIfProcessing = '..tostring(self.enableChildrenIfProcessing))
-	self.enableChildrenIfNotProcessing = getBoolFromUserAttribute(nodeId, "enableChildrenIfNotProcessing", false)
-	self:print('enableChildrenIfNotProcessing = '..tostring(self.enableChildrenIfNotProcessing))
-	self.disableChildrenIfProcessing = getBoolFromUserAttribute(nodeId, "disableChildrenIfProcessing", false)
-	self:print('disableChildrenIfProcessing = '..tostring(self.disableChildrenIfProcessing))
-	self.disableChildrenIfNotProcessing = getBoolFromUserAttribute(nodeId, "disableChildrenIfNotProcessing", false)
-	self:print('disableChildrenIfNotProcessing = '..tostring(self.disableChildrenIfNotProcessing))
-	
-	if self.enableChildrenIfProcessing then
-		self.disableChildrenIfProcessing = false
-	end
-	if self.enableChildrenIfNotProcessing then
-		self.disableChildrenIfNotProcessing = false
-	end
+	-- if processing
 	
 	self.emptyFillTypesIfProcessing={}
 	local emptyFillTypesIfProcessingArr = getArrayFromUserAttribute(nodeId, "emptyFillTypesIfProcessing")
 	for i=1,#emptyFillTypesIfProcessingArr do
 		local fillType=unpack(UniversalProcessKit.fillTypeNameToInt(emptyFillTypesIfProcessingArr[i]))
 		table.insert(self.emptyFillTypesIfProcessing,fillType)
-	end
-	
-	self.emptyFillTypesIfNotProcessing={}
-	local emptyFillTypesIfNotProcessingArr = getArrayFromUserAttribute(nodeId, "emptyFillTypesIfNotProcessing")
-	for i=1,#emptyFillTypesIfNotProcessingArr do
-		local fillType=unpack(UniversalProcessKit.fillTypeNameToInt(emptyFillTypesIfNotProcessingArr[i]))
-		table.insert(self.emptyFillTypesIfNotProcessing,fillType)
 	end
 	
 	self.hasAddIfProcessing=false
@@ -155,6 +126,36 @@ function UPK_Processor:new(nodeId, parent)
 		end
 	end
 	
+	self.hasRemoveIfProcessing=false
+	self.removeIfProcessing={}
+	local removeIfProcessingArr=getArrayFromUserAttribute(nodeId, "removeIfProcessing")
+	for i=1,#removeIfProcessingArr,2 do
+		local amount=tonumber(removeIfProcessingArr[i])
+		local type=unpack(UniversalProcessKit.fillTypeNameToInt(removeIfProcessingArr[i+1]))
+		if amount~=nil and type~=nil then
+			self.removeIfProcessing[type]=amount
+			self.hasAddIfProcessing=true
+		end
+	end
+	
+	self.enableChildrenIfProcessing = getBoolFromUserAttribute(nodeId, "enableChildrenIfProcessing", false)
+	self:print('enableChildrenIfProcessing = '..tostring(self.enableChildrenIfProcessing))
+	self.disableChildrenIfProcessing = getBoolFromUserAttribute(nodeId, "disableChildrenIfProcessing", false)
+	self:print('disableChildrenIfProcessing = '..tostring(self.disableChildrenIfProcessing))
+	
+	if self.enableChildrenIfProcessing then
+		self.disableChildrenIfProcessing = false
+	end
+	
+	-- if not processing
+	
+	self.emptyFillTypesIfNotProcessing={}
+	local emptyFillTypesIfNotProcessingArr = getArrayFromUserAttribute(nodeId, "emptyFillTypesIfNotProcessing")
+	for i=1,#emptyFillTypesIfNotProcessingArr do
+		local fillType=unpack(UniversalProcessKit.fillTypeNameToInt(emptyFillTypesIfNotProcessingArr[i]))
+		table.insert(self.emptyFillTypesIfNotProcessing,fillType)
+	end
+	
 	self.hasAddIfNotProcessing=false
 	self.addIfNotProcessing={}
 	local addIfNotProcessingArr=getArrayFromUserAttribute(nodeId, "addIfNotProcessing")
@@ -166,6 +167,71 @@ function UPK_Processor:new(nodeId, parent)
 			self.hasAddIfNotProcessing=true
 		end
 	end
+	
+	self.hasRemoveIfNotProcessing=false
+	self.removeIfNotProcessing={}
+	local removeIfNotProcessingArr=getArrayFromUserAttribute(nodeId, "removeIfNotProcessing")
+	for i=1,#removeIfNotProcessingArr,2 do
+		local amount=tonumber(removeIfNotProcessingArr[i])
+		local type=unpack(UniversalProcessKit.fillTypeNameToInt(removeIfNotProcessingArr[i+1]))
+		if amount~=nil and type~=nil then
+			self.removeIfNotProcessing[type]=amount
+			self.hasAddIfNotProcessing=true
+		end
+	end
+	
+	self.enableChildrenIfNotProcessing = getBoolFromUserAttribute(nodeId, "enableChildrenIfNotProcessing", false)
+	self:print('enableChildrenIfNotProcessing = '..tostring(self.enableChildrenIfNotProcessing))
+	self.disableChildrenIfNotProcessing = getBoolFromUserAttribute(nodeId, "disableChildrenIfNotProcessing", false)
+	self:print('disableChildrenIfNotProcessing = '..tostring(self.disableChildrenIfNotProcessing))
+	
+	if self.enableChildrenIfNotProcessing then
+		self.disableChildrenIfNotProcessing = false
+	end
+	
+	-- if production skipped
+	
+	self.emptyFillTypesIfProductionSkipped={}
+	local emptyFillTypesIfProductionSkippedArr = getArrayFromUserAttribute(nodeId, "emptyFillTypesIfProductionSkipped")
+	for i=1,#emptyFillTypesIfProductionSkippedArr do
+		local fillType=unpack(UniversalProcessKit.fillTypeNameToInt(emptyFillTypesIfProductionSkippedArr[i]))
+		table.insert(self.emptyFillTypesIfProductionSkipped,fillType)
+	end
+	
+	self.hasAddIfProductionSkipped=false
+	self.addIfProductionSkipped={}
+	local addIfProductionSkippedArr=getArrayFromUserAttribute(nodeId, "addIfProductionSkipped")
+	for i=1,#addIfProductionSkippedArr,2 do
+		local amount=tonumber(addIfProductionSkippedArr[i])
+		local type=unpack(UniversalProcessKit.fillTypeNameToInt(addIfProductionSkippedArr[i+1]))
+		if amount~=nil and type~=nil then
+			self.addIfProductionSkipped[type]=amount
+			self.hasAddIfProductionSkipped=true
+		end
+	end
+	
+	self.hasRemoveIfProductionSkipped=false
+	self.removeIfProductionSkipped={}
+	local removeIfProductionSkippedArr=getArrayFromUserAttribute(nodeId, "removeIfProductionSkipped")
+	for i=1,#removeIfProductionSkippedArr,2 do
+		local amount=tonumber(removeIfProductionSkippedArr[i])
+		local type=unpack(UniversalProcessKit.fillTypeNameToInt(removeIfProductionSkippedArr[i+1]))
+		if amount~=nil and type~=nil then
+			self.removeIfProductionSkipped[type]=amount
+			self.hasAddIfProductionSkipped=true
+		end
+	end
+	
+	self.enableChildrenIfProductionSkipped = getBoolFromUserAttribute(nodeId, "enableChildrenIfProductionSkipped", false)
+	self:print('enableChildrenIfProductionSkipped = '..tostring(self.enableChildrenIfProductionSkipped))
+	self.disableChildrenIfProductionSkipped = getBoolFromUserAttribute(nodeId, "disableChildrenIfProductionSkipped", false)
+	self:print('disableChildrenIfProductionSkipped = '..tostring(self.disableChildrenIfProductionSkipped))
+	
+	if self.enableChildrenIfProductionSkipped then
+		self.disableChildrenIfProductionSkipped = false
+	end
+	
+	-- stat name
 	
 	self.statName=getStringFromUserAttribute(nodeId, "statName")
 	local validStatName=false
@@ -256,29 +322,39 @@ function UPK_Processor:getSaveExtraNodes(nodeIdent)
 end
 
 function UPK_Processor:dayChanged()
-	self:produce(self.productsPerDay)
+	if self:canProduce(true) then
+		self:produce(self.productsPerDay)
+	else
+		self:productionSkipped()
+	end
 end
 
 function UPK_Processor:hourChanged()
-	if self.productionHours[g_currentMission.environment.currentHour] then
+	if self:canProduce() then
 		self:produce(self.productsPerHour)
+	else
+		self:productionSkipped()
 	end
 end
 
 function UPK_Processor:minuteChanged()
-	if self.productionHours[g_currentMission.environment.currentHour] then
+	if self:canProduce() then
 		self:produce(self.productsPerMinute)
+	else
+		self:productionSkipped()
 	end
 end
 
 function UPK_Processor:secondChanged()
-	if self.productionHours[g_currentMission.environment.currentHour] then
+	if self:canProduce() then
 		self:produce(self.productsPerSecond)
+	else
+		self:productionSkipped()
 	end
 end
 
-function UPK_Processor:produce(processed)
-	if self.isServer and self.isEnabled then
+function UPK_Processor:canProduce(ignoreProductionHours)
+	if self.productionHours[g_currentMission.environment.currentHour] or ignoreProductionHours then
 		local produce=self.productionProbability==1
 		if not produce then
 			local rnr = mathrandom()
@@ -290,116 +366,170 @@ function UPK_Processor:produce(processed)
 			self:print('self.currentInterval = '..tostring(self.currentInterval))
 		end
 		if produce and self.currentInterval==1 then
-			if self.outcomeVariation~=0 then
-				if self.outcomeVariationType=="normal" then -- normal distribution
-					local r=mathmin(mathmax(getNormalDistributedRandomNumber(),-3),3)/3
-					processed=processed+processed*self.outcomeVariation*r
-				elseif self.outcomeVariationType=="uniform" then -- equal distribution
-					local r=2*mathrandom()-1
-					processed=processed+processed*self.outcomeVariation*r
-				end
+			return true
+		end
+	end
+	return false
+end
+
+function UPK_Processor:produce(processed)
+	if self.isServer and self.isEnabled then
+		if self.outcomeVariation~=0 then
+			if self.outcomeVariationType=="normal" then -- normal distribution
+				local r=mathmin(mathmax(getNormalDistributedRandomNumber(),-3),3)/3
+				processed=processed+processed*self.outcomeVariation*r
+			elseif self.outcomeVariationType=="uniform" then -- equal distribution
+				local r=2*mathrandom()-1
+				processed=processed+processed*self.outcomeVariation*r
 			end
-			if self.hasProductionPrerequisite then
-				for k,v in pairs(self.productionPrerequisite) do
-					if type(v)=="number" and v>0 then
-						if self.onlyWholeProducts then
-							processed=mathmin(processed,mathfloor(self:getFillLevel(k)/v))
-						else
-							processed=mathmin(processed,self:getFillLevel(k)/v)
-						end
-					end
-				end
-			end
-			processed=mathmin(processed,self:getCapacity(self.product)-self:getFillLevel(self.product))
-			if round(processed,8)>0 then
-				if self.hasRecipe then
-					for k,v in pairs(self.recipe) do
-						if type(v)=="number" and v>0 then
-							processed=mathmin(processed,self:getFillLevel(k)/v or 0)
-						end
-					end
-					local ressourcesUsed=self.recipe*processed
-					for k,v in pairs(ressourcesUsed) do
-						if type(v)=="number" then
-							_= self - {v,k}
-						end
-					end
-				end
-				-- deal with the produced outcome
-				self.bufferedProducts=self.bufferedProducts+processed
-				local finalProducts=0
-				if self.onlyWholeProducts then
-					local wholeProducts=mathfloor(self.bufferedProducts)
-					if wholeProducts>=1 then
-						finalProducts=wholeProducts
-						self.bufferedProducts=self.bufferedProducts-wholeProducts
-					end
-				else
-					finalProducts=self.bufferedProducts
-					self.bufferedProducts=0
-				end
-				finalProducts=round(finalProducts,8)
-				if finalProducts>0 then
-					local added = self + {finalProducts,self.product}
-					self:print('finalProducts: '..tostring(finalProducts)..', added: '..tostring(added))
-					if self.hasByproducts then
-						for k,v in pairs(self.byproducts) do
-							if type(v)=="number" and v>0 then
-								_= self + {v*finalProducts,k}
-							end
-						end
-					end
-					
-					-- emptyFillTypesIfProcessing
-					for _,v in pairs(self.emptyFillTypesIfProcessing) do
-						self:setFillLevel(0,v)
-					end
-					
-					-- addIfProcessing
-					if self.hasAddIfProcessing then
-						for k,v in pairs(self.addIfProcessing) do
-							if type(v)=="number" and v>0 then
-								_= self + {v,k}
-							end
-						end
-					end
-					
-					-- en/disableChildrenIfProcessing
-					if self.enableChildrenIfProcessing then
-						self:print('enable children')
-						self:setEnableChildren(true)
-					end
-					if self.disableChildrenIfProcessing then
-						self:print('disable children')
-						self:setEnableChildren(false)
-					end
-				else
-					
-					-- emptyFillTypesIfNotProcessing
-					for _,v in pairs(self.emptyFillTypesIfNotProcessing) do
-						self:setFillLevel(0,v)
-					end
-					
-					-- addIfNotProcessing
-					if self.hasAddIfNotProcessing then
-						for k,v in pairs(self.addIfNotProcessing) do
-							if type(v)=="number" and v>0 then
-								_= self + {v,k}
-							end
-						end
-					end
-					
-					-- en/disableChildrenIfNotProcessing
-					if self.enableChildrenIfNotProcessing then
-						self:print('enable children')
-						self:setEnableChildren(true)
-					end
-					if self.disableChildrenIfNotProcessing then
-						self:print('disable children')
-						self:setEnableChildren(false)
+		end
+		if self.hasProductionPrerequisite then
+			for k,v in pairs(self.productionPrerequisite) do
+				if type(v)=="number" and v>0 then
+					if self.onlyWholeProducts then
+						processed=mathmin(processed,mathfloor(self:getFillLevel(k)/v))
+					else
+						processed=mathmin(processed,self:getFillLevel(k)/v)
 					end
 				end
 			end
 		end
+		local finalProducts=0
+		processed=mathmin(processed,self:getCapacity(self.product)-self:getFillLevel(self.product))
+		if round(processed,8)>0 then
+			if self.hasRecipe then
+				for k,v in pairs(self.recipe) do
+					if type(v)=="number" and v>0 then
+						processed=mathmin(processed,self:getFillLevel(k)/v or 0)
+					end
+				end
+				local ressourcesUsed=self.recipe*processed
+				for k,v in pairs(ressourcesUsed) do
+					if type(v)=="number" then
+						_= self - {v,k}
+					end
+				end
+			end
+			-- deal with the produced outcome
+			self.bufferedProducts=self.bufferedProducts+processed
+			
+			if self.onlyWholeProducts then
+				local wholeProducts=mathfloor(self.bufferedProducts)
+				if wholeProducts>=1 then
+					finalProducts=wholeProducts
+					self.bufferedProducts=self.bufferedProducts-wholeProducts
+				end
+			else
+				finalProducts=self.bufferedProducts
+				self.bufferedProducts=0
+			end
+		end
+		
+		if round(finalProducts,8)>0 then
+			local added = self + {finalProducts,self.product}
+			self:print('finalProducts: '..tostring(finalProducts)..', added: '..tostring(added))
+			if self.hasByproducts then
+				for k,v in pairs(self.byproducts) do
+					if type(v)=="number" and v>0 then
+						_= self + {v*finalProducts,k}
+					end
+				end
+			end
+			
+			-- emptyFillTypesIfProcessing
+			for _,v in pairs(self.emptyFillTypesIfProcessing) do
+				self:setFillLevel(0,v)
+			end
+			
+			-- addIfProcessing
+			if self.hasAddIfProcessing then
+				for k,v in pairs(self.addIfProcessing) do
+					if type(v)=="number" and v>0 then
+						_= self + {v,k}
+					end
+				end
+			end
+			if self.hasRemoveIfProcessing then
+				for k,v in pairs(self.removeIfProcessing) do
+					if type(v)=="number" and v>0 then
+						_= self - {v,k}
+					end
+				end
+			end
+			
+			-- en/disableChildrenIfProcessing
+			if self.enableChildrenIfProcessing then
+				self:print('enable children')
+				self:setEnableChildren(true)
+			end
+			if self.disableChildrenIfProcessing then
+				self:print('disable children')
+				self:setEnableChildren(false)
+			end
+		else
+			
+			-- emptyFillTypesIfNotProcessing
+			for _,v in pairs(self.emptyFillTypesIfNotProcessing) do
+				self:setFillLevel(0,v)
+			end
+			
+			-- addIfNotProcessing
+			if self.hasAddIfNotProcessing then
+				for k,v in pairs(self.addIfNotProcessing) do
+					if type(v)=="number" and v>0 then
+						_= self + {v,k}
+					end
+				end
+			end
+			if self.hasRemoveIfNotProcessing then
+				for k,v in pairs(self.removeIfNotProcessing) do
+					if type(v)=="number" and v>0 then
+						_= self - {v,k}
+					end
+				end
+			end
+			
+			-- en/disableChildrenIfNotProcessing
+			if self.enableChildrenIfNotProcessing then
+				self:print('enable children')
+				self:setEnableChildren(true)
+			end
+			if self.disableChildrenIfNotProcessing then
+				self:print('disable children')
+				self:setEnableChildren(false)
+			end
+		end
+	end
+end
+
+function UPK_Processor:productionSkipped()
+	for _,v in pairs(self.emptyFillTypesIfProductionSkipped) do
+		self:setFillLevel(0,v)
+	end
+
+	if self.hasAddIfProductionSkipped then
+		for k,v in pairs(self.addIfProductionSkipped) do
+			if type(v)=="number" and v>0 then
+				_= self + {v,k}
+			end
+		end
+	end
+	
+	if self.hasRemoveIfProductionSkipped then
+		for k,v in pairs(self.removeIfProductionSkipped) do
+			if type(v)=="number" and v>0 then
+				_= self - {v,k}
+			end
+		end
+	end
+
+	-- en/disableChildrenIfNotProcessing
+	if self.enableChildrenIfProductionSkipped then
+		self:print('enable children')
+		self:setEnableChildren(true)
+	end
+	if self.disableChildrenIfProductionSkipped then
+		self:print('disable children')
+		self:setEnableChildren(false)
 	end
 end

@@ -37,7 +37,7 @@ function PlaceableUPK:finalizePlacement(...)
 	
 	if self.nodeId~=nil then
 		self.base=UPK_Base:new(self.nodeId,true,false,self)
-		if self.base~=false then
+		if type(self.base)=="table" then
 			if getBoolFromUserAttribute(self.base.nodeId, "adjustToTerrainHeight", false) then
 				UniversalProcessKit.adjustToTerrainHeight(self.base.nodeId)
 			end
@@ -47,7 +47,7 @@ function PlaceableUPK:finalizePlacement(...)
 end
 
 function PlaceableUPK:delete()
-	if self.base~=nil and self.base~=false then
+	if self.base~=nil and type(self.base)=="table" then
 		self.base:delete()
 	end
 	PlaceableUPK:superClass().delete(self)
@@ -68,7 +68,7 @@ end
 function PlaceableUPK:getSaveAttributesAndNodes(nodeIdent)
 	local attributes, nodes = PlaceableUPK:superClass().getSaveAttributesAndNodes(self, nodeIdent)
 
-	if self.base~=nil then
+	if self.base~=nil and type(self.base)=="table" then
 		local baseAttributes, baseNodes=self.base:getSaveAttributesAndNodes(nodeIdent)
 		attributes=attributes .. baseAttributes
 		nodes=nodes .. baseNodes

@@ -13,19 +13,28 @@ print('UniversalProcessKitListener.postLoadObjects is '..tostring(UniversalProce
 
 
 
-
 function UniversalProcessKitListener.loadMap(name)
 	--cleanup at map loaded
-	for k,v in pairs(Fillable.fillTypeNameToInt) do
-		UniversalProcessKit.fillTypeNameToInt[k]=v
-		UniversalProcessKit.fillTypeIntToName[v]=k
+	--[[
+	for filltypeName,fillType in pairs(Fillable.fillTypeNameToInt) do
+		--UniversalProcessKit.fillTypeNameToInt[k]=v
+		UniversalProcessKit.fillTypeIntToName[fillType]=filltypeName
 	end
+	
 	for k,v in pairs(UniversalProcessKit.fillTypeNameToInt) do
 		local fillabletype=Fillable.fillTypeNameToInt[k]
 		if fillabletype~=nil then
 			UniversalProcessKit.fillTypeNameToInt[k]=nil
 			--UniversalProcessKit.fillTypeIntToName[v]=nil
 		end
+	end
+	]]--
+	
+	if g_server ~= nil then
+		UniversalProcessKitListener.fillTypesSyncingObject = UPK_FillTypesSyncingObject:new(g_server ~= nil, g_client ~= nil)
+		g_server:addObject(UniversalProcessKitListener.fillTypesSyncingObject, UniversalProcessKitListener.fillTypesSyncingObject.id)
+		--self.syncTipTriggerObject:load(self)
+		UniversalProcessKitListener.fillTypesSyncingObject:register(false)
 	end
 	
 	UniversalProcessKitEnvironment.setSun()

@@ -11,6 +11,17 @@ for k,v in pairs(Fillable.fillTypeNameToInt) do
 end
 UniversalProcessKit.NUM_FILLTYPES = 32768 -- may collide with huge pile of FIFO or FILO storage
 
+
+local fillTypeIntServerToClient_mt = {
+	__index = function(t,k)
+		return k
+	end
+	}
+UniversalProcessKit.fillTypeIntServerToClient = {}
+UniversalProcessKit.fillTypeIntClientToServer = {}
+setmetatable(UniversalProcessKit.fillTypeIntServerToClient, fillTypeIntServerToClient_mt)
+setmetatable(UniversalProcessKit.fillTypeIntClientToServer, fillTypeIntServerToClient_mt)
+
 local fillTypeNameToInt_mt={
 	__index=Fillable.fillTypeNameToInt,
 	__call=function(func,...)
@@ -93,6 +104,9 @@ function UniversalProcessKit.addFillType(name,index)
 				rawset(UniversalProcessKit.fillTypeIntToName,index,name)
 				rawset(UniversalProcessKit.fillTypeNameToInt,name,index)
 				UniversalProcessKit.NUM_FILLTYPES=UniversalProcessKit.NUM_FILLTYPES+1
+				if g_server ~= nil and UniversalProcessKitListener.fillTypesSyncingObject ~= nil then
+					UniversalProcessKitListener.fillTypesSyncingObject:addFillTypeNameToSync(name)
+				end	
 				return index
 			end
 		end

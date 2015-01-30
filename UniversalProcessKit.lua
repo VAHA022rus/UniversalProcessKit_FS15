@@ -663,20 +663,24 @@ function UniversalProcessKit:getSaveAttributesAndNodes(nodeIdent)
 		for _,flb in pairs(self.p_flbs) do
 			local fillType = UniversalProcessKit.fillTypeIntToName[flb.fillType]
 			local fillLevel = flb.fillLevel
-			if fillLevels~="" then
-				fillLevels = fillLevels .. ' '
+			if fillType~="unknown" then
+				if fillLevels~="" then
+					fillLevels = fillLevels .. ' '
+				end
+				fillLevels = fillLevels .. tostring(round(fillLevel,4)) .. ' ' .. tostring(fillType)
 			end
-			fillLevels = fillLevels .. tostring(round(fillLevel,4)) .. ' ' .. tostring(fillType)
 		end
 	elseif self.storageType==UPK_Storage.SINGLE or self.storageType==UPK_Storage.FIFO or self.storageType==UPK_Storage.FILO then
 		for i=1,#self.p_flbs do
 			local flb = self.p_flbs[i]
 			local fillType = UniversalProcessKit.fillTypeIntToName[flb.fillType]
 			local fillLevel = flb.fillLevel
-			if fillLevels~="" then
-				fillLevels = fillLevels .. ' '
+			if fillType~="unknown" then
+				if fillLevels~="" then
+					fillLevels = fillLevels .. ' '
+				end
+				fillLevels = fillLevels .. tostring(round(fillLevel,6)) .. ' ' .. tostring(fillType)
 			end
-			fillLevels = fillLevels .. tostring(round(fillLevel,4)) .. ' ' .. tostring(fillType)
 		end
 	end
 	

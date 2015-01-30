@@ -20,6 +20,10 @@ function UPK_BalerTrigger:new(nodeId,parent)
 	self.createFillType = getBoolFromUserAttribute(nodeId, "createFillType", false)
     self.pricePerLiter = getNumberFromUserAttribute(nodeId, "pricePerLiter", 0)
 	
+	self.preferMapDefaultPrice = getBoolFromUserAttribute(nodeId, "preferMapDefaultPrice", false)
+	self.pricePerLiterMultiplier = getVectorFromUserAttribute(nodeId, "pricePerLiterMultiplier", "1 1 1")
+	self.pricesPerLiter = {}
+	
 	self.statName=getStringFromUserAttribute(nodeId, "statName")
 	local validStatName=false
 	if self.statName~=nil then
@@ -132,11 +136,12 @@ function UPK_BalerTrigger:fillForageWagon(trailer, deltaFillLevel)
 							deltaFillLevel=-self:addFillLevel(-deltaFillLevel,fillFillType)
 						end
 						self:print('deltaFillLevel 2: '..tostring(deltaFillLevel))
-						if self.pricePerLiter~=0 then
-							local price = deltaFillLevel * self.pricePerLiter
+						
+						local pricePerLiter = self:getPricePerLiter(fillFillType)
+						if pricePerLiter~=0 then
+							local price = deltaFillLevel * pricePerLiter
 							g_currentMission:addSharedMoney(-price, self.statName)
 						end
-						
 					end
 				end
 			end
@@ -184,8 +189,10 @@ function UPK_BalerTrigger:fillBaler(trailer, deltaFillLevel)
 								deltaFillLevel=-self:addFillLevel(-deltaFillLevel,fillFillType)
 							end
 							self:print('deltaFillLevel 2: '..tostring(deltaFillLevel))
-							if self.pricePerLiter~=0 then
-								local price = deltaFillLevel * self.pricePerLiter
+							
+							local pricePerLiter = self:getPricePerLiter(fillFillType)
+							if pricePerLiter~=0 then
+								local price = deltaFillLevel * pricePerLiter
 								g_currentMission:addSharedMoney(-price, self.statName)
 							end
 							
@@ -257,3 +264,4 @@ function UPK_BalerTrigger.getPickupNode(vehicle)
 	print('vehicle.upk_pickupNode = '..tostring(vehicle.upk_pickupNode))
 end
 
+UPK_BalerTrigger.getPricePerLiter = UPK_FillTrigger.getPricePerLiter

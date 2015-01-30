@@ -14,6 +14,8 @@ function UniversalProcessKit:addTrigger()
 	self.entities={}
 	self.entitiesInTrigger=0
 	self.playerInRange=false
+	self.playersInRange={}
+	self.playerInRangeNetworkNode = false
 
 	addTrigger(self.triggerId, "triggerCallback", self)
 	table.insert(g_upkTrigger, self)
@@ -30,6 +32,7 @@ function UniversalProcessKit:removeTrigger()
 		self.entities={}
 		self.entitiesInTrigger=0
 		self.playerInRange=false
+		self.playersInRange={}
 	end
 end
 
@@ -88,10 +91,10 @@ function UniversalProcessKit:fitCollisionMaskToAllowedVehicles()
 	-- combines = 2^22 = 4194304
 	-- fillables = 2^23 = 8388608
 	-- sum is 15728640
-	-- dynamic_objects = 2^24 = 16777216  whats that? bales?
+	-- dynamic_objects = 2^24 = 16777216  bales, pallets, trees
 	-- trafficVehicles = 2^25 = 33554432 
 	-- cutters = 2^26 = 67108864 whats that?
-	
+
 	
 
 	local trigger_player = 1048576
@@ -363,15 +366,17 @@ function UniversalProcessKit:triggerCallback(triggerId, otherActorId, onEnter, o
 		end
 		if self.allowWalker and g_currentMission.player ~= nil and otherActorId == g_currentMission.player.rootNode then
 			if onEnter then
+				self.playerInRangeNetworkNode = true
 				self:triggerOnEnter(nil, true)
 			else
+				self.playerInRangeNetworkNode = false
 				self:triggerOnLeave(nil, true)
 			end
 		end
 	end
 end
 
-function UniversalProcessKit:triggerOnEnter(vehicle, player)
+function UniversalProcessKit:triggerOnEnter(vehicle, player, alreadySent)
 	if vehicle~=nil then
 		if isInTable(self.entities, vehicle) then
 			return
@@ -382,14 +387,18 @@ function UniversalProcessKit:triggerOnEnter(vehicle, player)
 		end
 	end
 	self.entitiesInTrigger=length(self.entities)
-	if player==true then
+	if player==true and not self.playerInRange then
 		self.playerInRange = true
 		self.entitiesInTrigger=self.entitiesInTrigger+1
+		if not alreadySent then
+			self:print('UniversalProcessKitTriggerPlayerEvent.sendEvent(self, true, alreadySent)')
+			UniversalProcessKitTriggerPlayerEvent.sendEvent(self, true, alreadySent)
+		end
 	end
 	self:triggerUpdate(vehicle,true)
 end;
 
-function UniversalProcessKit:triggerOnLeave(vehicle, player)
+function UniversalProcessKit:triggerOnLeave(vehicle, player, alreadySent)
 	if vehicle~=nil then
 		local networkId=networkGetObjectId(vehicle)
 		if networkId~=nil and networkId~=0 then
@@ -397,14 +406,18 @@ function UniversalProcessKit:triggerOnLeave(vehicle, player)
 		end
 	end
 	self.entitiesInTrigger=length(self.entities)
-	if player==true then
+	if player==true and self.playerInRange then
 		self.playerInRange = false
+		if not alreadySent then
+			self:print('UniversalProcessKitTriggerPlayerEvent.sendEvent(self, false, alreadySent)')
+			UniversalProcessKitTriggerPlayerEvent.sendEvent(self, false, alreadySent)
+		end
 	end
 	self:triggerUpdate(vehicle,false)
 end;
 
 function UniversalProcessKit:getShowInfo()
-	if self.playerInRange then
+	if self.playerInRangeNetworkNode then
 		return g_currentMission.controlPlayer or false
 	else
 		for k,v in pairs(self.entities) do
@@ -417,6 +430,113 @@ function UniversalProcessKit:getShowInfo()
 end
 
 function UniversalProcessKit:onVehicleDeleted(vehicle)
+end
+
+
+UniversalProcessKitTriggerPlayerEvent = {}
+UniversalProcessKitTriggerPlayerEvent_mt = Class(UniversalProcessKitTriggerPlayerEvent, Event);
+InitEventClass(UniversalProcessKitTriggerPlayerEvent, "UniversalProcessKitTriggerPlayerEvent");
+
+function UniversalProcessKitTriggerPlayerEvent:emptyNew()
+    local self = Event:new(UniversalProcessKitTriggerPlayerEvent_mt)
+    return self
+end
+
+function UniversalProcessKitTriggerPlayerEvent:new(upkmodule, isPlayerInside)
+	local self = UniversalProcessKitTriggerPlayerEvent:emptyNew()
+	self.upkmodule = upkmodule
+	self.isPlayerInside = isPlayerInside
+	return self
+end
+
+function UniversalProcessKitTriggerPlayerEvent:writeStream(streamId, connection)
+	local syncObj = self.upkmodule.syncObj
+	local syncObjId = networkGetObjectId(syncObj)
+	print('syncObjId: '..tostring(syncObjId))
+	streamWriteInt32(streamId, syncObjId)
+	local syncId = self.upkmodule.syncId
+	print('syncId: '..tostring(syncId))
+	streamWriteInt32(streamId, syncId)
+	print('isPlayerInside: '..tostring(self.isPlayerInside))
+	streamWriteBool(streamId, self.isPlayerInside)
+end
+
+function UniversalProcessKitTriggerPlayerEvent:readStream(streamId, connection)
+	local syncObjId = streamReadInt32(streamId)
+	print('syncObjId: '..tostring(syncObjId))
+	local syncObj = networkGetObject(syncObjId)
+	local syncId = streamReadInt32(streamId)
+	print('syncId: '..tostring(syncId))
+	self.upkmodule=syncObj:getObjectToSync(syncId)
+	print('upkmodule: '..tostring(self.upkmodule))
+	self.isPlayerInside = streamReadBool(streamId)
+	print('isPlayerInside: '..tostring(self.isPlayerInside))
+	self:run(connection, streamId)
+end;
+
+function UniversalProcessKitTriggerPlayerEvent:run(connection, streamId)
+	if not connection:getIsServer() then -- if server: send after receiving
+		print('running as server')
+		
+		print('self.isPlayerInside is '..tostring(self.isPlayerInside))
+		
+		if streamId ~= nil then
+			print('running step a')
+			print('streamId is '..tostring(streamId))
+			if self.isPlayerInside then
+				self.upkmodule.playersInRange[streamId] = true
+			else
+				self.upkmodule.playersInRange[streamId] = nil
+			end
+		
+			local serverIsPlayerInside = false
+			for k,v in pairs(self.upkmodule.playersInRange) do
+				if v then
+					print('serverIsPlayerInside true for streamId '..tostring(k))
+					serverIsPlayerInside = true
+					break
+				end
+			end
+			self.isPlayerInside = serverIsPlayerInside or self.upkmodule.playerInRangeNetworkNode
+			print('self.isPlayerInside is '..tostring(self.isPlayerInside))
+		end
+		
+		if self.isPlayerInside then
+			self.upkmodule:triggerOnEnter(nil, true, true)
+		else
+			self.upkmodule:triggerOnLeave(nil, true, true)
+		end
+		
+		g_server:broadcastEvent(self, false, connection)
+
+	else
+		print('running step a')
+		if self.upkmodule ~= nil then
+			print('running step b')
+			
+			print('self.isPlayerInside is '..tostring(self.isPlayerInside))
+			
+			if self.isPlayerInside then
+				self.upkmodule:triggerOnEnter(nil, true, true)
+			else
+				self.upkmodule:triggerOnLeave(nil, true, true)
+			end
+		end
+	end
+end
+
+function UniversalProcessKitTriggerPlayerEvent.sendEvent(upkmodule, isPlayerInside, alreadySent)
+	print('UniversalProcessKitTriggerPlayerEvent.sendEvent('..tostring(upkmodule)..', '..tostring(isPlayerInside)..', '..tostring(alreadySent)..')')
+	print('calling event with alreadySent = '..tostring(alreadySent))
+	if not alreadySent then
+		if g_server ~= nil then
+			print('broadcasting isPlayerInside = '..tostring(isPlayerInside))
+			g_server:broadcastEvent(UniversalProcessKitTriggerPlayerEvent:new(upkmodule, isPlayerInside))
+		else
+			print('sending to server isPlayerInside = '..tostring(isPlayerInside))
+			g_client:getServerConnection():sendEvent(UniversalProcessKitTriggerPlayerEvent:new(upkmodule, isPlayerInside))
+		end
+	end
 end
 
 --[[ TRIGGER FUNCTIONS END ]]--
