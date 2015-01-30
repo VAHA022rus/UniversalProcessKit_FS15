@@ -1,6 +1,13 @@
 # UniversalProcessKit für LS15
 
-Dieses projekt befindet sich zur Zeit in der "Konvertierungsphase" aus den LS13-Skripten. Unter der Haube vom UPK hat sich sehr viel verändert und nach und nach werden jetzt die Module ergänzt.
+Das UniversalProcessKit (UPK) ist kein Mod im eigentliche Sinn, sondern es erweitert LS15 um Funktionalität, damit es Modder leichter haben, Gebäude mit Funktionen auszustatten. Dabei spielt es keine Rolle, ob das Gebäude platzierbar oder einbaubar sein soll.
+
+Dieses Kit besteht aus verschiedenen Modulen, deren Aktionen durch den Spieler ausgelöst werden oder welche die je nach Füllstand aktiv werden. Es kann zudem durch selbst programmierte Module erweitert werden.
+
+Die Konfiguration des UPK-Mods wird allein über UserAttributes in der i3d geregelt. Mapper und Modder "verwenden" die Funktionen einfach (wie die Funktionen der Giants-Skripte auch) - es ist nicht nötig/erlaubt das UPK zu "verbauen".
+
+
+__aktuelle Version -> AAA\_UniversalProcessKit__
 
 __aktuelle Entwickler-Version -> AAA\_UniversalProcessKit-dev__
 
@@ -31,11 +38,40 @@ Bisher enthaltene Module:
 - switcher
 - tiptrigger
 - unspecified
+- washtrigger
 - waterfilltrigger
 
 ##Changelog
 
-__V0.9.4 *experimentell*__
+__V0.9.6__
+
+- Modultyp washtrigger hinzugefügt
+- neu: washPerSecond (washtrigger)
+- neu: dirtThreshold (washtrigger)
+- neu: pricePerSecond (washtrigger)
+- neu: pricePerSecondMultiplier (washtrigger)
+- neu: statName (washtrigger)
+- neu: enableChildrenIfWashing (washtrigger)
+- neu: disableChildrenIfWashing (washtrigger)
+- neu: enableChildrenIfNotWashing (washtrigger)
+- neu: disableChildrenIfNotWashing (washtrigger)
+- neu: allowAttachment (Trigger-UserAttributes)
+- Beispielmod UPK_WashTriggerTest hinzugefügt
+
+__V0.9.5__
+
+- weitere Multiplayer-Bugs behoben
+- neu: removeIfProcessing (processor)
+- neu: removeIfNotProcessing (processor)
+- neu: emptyFillTypesIfProductionSkipped (processor)
+- neu: addIfProductionSkipped (processor)
+- neu: removeIfProductionSkipped (processor)
+- neu: enableChildrenIfProductionSkipped (processor)
+- neu: disableChildrenIfProductionSkipped (processor)
+- neu: preferMapDefaultPrice (balertrigger)
+- neu: pricePerLiterMultiplier (balertrigger)
+
+__V0.9.4__
 
 - filltrigger kann Paletten befüllen *experimentell*
 - emptytrigger kann Paletten entleeren *experimentell*

@@ -306,9 +306,11 @@ function getChildrenRigidBodyTypeStatic(id)
 	return class.staticShapes
 end;
 
+local staticShapesCollection = {}
+
 function UniversalProcessKit.setTranslation(id,x,y,z)
 	--print('set translation of nodeId '..tostring(id)..' to '..tostring(x)..', '..tostring(x)..', '..tostring(z))
-	local staticShapes=getChildrenRigidBodyTypeStatic(id)
+	local staticShapes=staticShapesCollection[id] or getChildrenRigidBodyTypeStatic(id)
 	for _,v in pairs(staticShapes) do
 		setRigidBodyType(v,"Kinematic")
 	end
@@ -397,6 +399,7 @@ _g.UPK_Switcher={}
 _g.UPK_TipTrigger={}
 _g.UPK_TipTriggerObject={}
 _g.UPK_TipTriggerActivatable={}
+_g.UPK_WashTrigger={}
 _g.UPK_WaterFillTrigger={}
 _g.PlaceableUPK={}
 _g.OnCreateUPK={}
@@ -1008,3 +1011,84 @@ function _g.debugObject(baseObj) -- _g may not be needed
 	return obj
 end;
 
+function tableShow(t, name, maxDepth)
+	local cart -- a container
+	local autoref -- for self references
+	maxDepth = maxDepth or 50;
+	local depth = 0;
+
+	--[[ counts the number of elements in a table
+local function tablecount(t)
+   local n = 0
+   for _, _ in pairs(t) do n = n+1 end
+   return n
+end
+]]
+	-- (RiciLake) returns true if the table is empty
+	local function isemptytable(t) return next(t) == nil end
+
+	local function basicSerialize(o)
+		local so = tostring(o)
+		if type(o) == "function" then
+			local info = debug.getinfo(o, "S")
+			-- info.name is nil because o is not a calling level
+			if info.what == "C" then
+				return string.format("%q", so .. ", C function")
+			else
+				-- the information is defined through lines
+				return string.format("%q", so .. ", defined in (" ..
+						info.linedefined .. "-" .. info.lastlinedefined ..
+						")" .. info.source)
+			end
+		elseif type(o) == "number" then
+			return so
+		else
+			return string.format("%q", so)
+		end
+	end
+
+	local function addtocart(value, name, indent, saved, field, curDepth)
+		indent = indent or ""
+		saved = saved or {}
+		field = field or name
+		cart = cart .. indent .. field
+
+		if type(value) ~= "table" then
+			cart = cart .. " = " .. basicSerialize(value) .. ";\n"
+		else
+			if saved[value] then
+				cart = cart .. " = {}; -- " .. saved[value]
+						.. " (self reference)\n"
+				autoref = autoref .. name .. " = " .. saved[value] .. ";\n"
+			else
+				saved[value] = name
+				--if tablecount(value) == 0 then
+				if isemptytable(value) then
+					cart = cart .. " = {};\n"
+				else
+					if curDepth <= maxDepth then
+						cart = cart .. " = {\n"
+						for k, v in pairs(value) do
+							k = basicSerialize(k)
+							local fname = string.format("%s[%s]", name, k)
+							field = string.format("[%s]", k)
+							-- three spaces between levels
+							addtocart(v, fname, indent .. "\t", saved, field, curDepth + 1);
+						end
+						cart = cart .. indent .. "};\n"
+					else
+						cart = cart .. " = { ... };\n";
+					end;
+				end
+			end
+		end;
+	end
+
+	name = name or "__unnamed__"
+	if type(t) ~= "table" then
+		return name .. " = " .. basicSerialize(t)
+	end
+	cart, autoref = "", ""
+	addtocart(t, name, indent, nil, nil, depth + 1)
+	return cart .. autoref
+end;

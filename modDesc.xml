@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="no" ?>
 <modDesc descVersion="21">
     <author>mor2000</author>
-    <version>0.9.5</version>
+    <version>0.9.6</version>
     <title>
         <en>AAA UniversalProcessKit</en>
         <de>AAA UniversalProcessKit</de>
@@ -48,6 +48,7 @@
 		<sourceFile filename="UPK_SellTarget.lua"/>
 		<sourceFile filename="UPK_SprayerFillTrigger.lua"/>
 		<sourceFile filename="UPK_Switcher.lua"/>
+		<sourceFile filename="UPK_WashTrigger.lua"/>
 		<sourceFile filename="UPK_WaterFillTrigger.lua"/>
 		<sourceFile filename="PlaceableUPK.lua" />
 		<sourceFile filename="OnCreateUPK.lua" />
@@ -69,7 +70,7 @@
 		<text name="silage"> <en>silage</en> <de>Silage</de> </text>
 		<text name="liquidManure"> <en>liquid manure</en> <de><![CDATA[Gülle]]></de> </text>
 		<text name="forage"> <en>compound feed</en> <de>Futter</de> </text>
-		<text name="forageMixing"> <en>forage</en> <de>Mischfutter</de> </text>
+		<text name="forage_mixing"> <en>forage</en> <de>Mischfutter</de> </text>
 		<text name="water"> <en>water</en> <de>Wasser</de> </text>
 		<text name="fuel"> <en>fuel</en> <de>Treibstoff</de> </text>
 		<text name="milk"> <en>milk</en> <de>Milch</de> </text>
@@ -97,7 +98,7 @@
 		<text name="erbse"> <en>pea</en> <de>Erbsen</de> </text>
 		<text name="mohn"> <en>poppy</en> <de>Mohn</de> </text>
 		<text name="fertilizer"> <en>fertilizer</en> <de><![CDATA[Dünger]]></de> </text>
-		<text name="kalk"> <en>chalk</en> <de>Kalk</de> </text>
+		<text name="kalk"> <en>lime</en> <de>Kalk</de> </text>
 		
 		<text name="apfel"> <en>apples</en> <de><![CDATA[Äpfel]]></de> </text>
 		<text name="apple"> <en>apples</en> <de><![CDATA[Äpfel]]></de> </text>
@@ -117,6 +118,8 @@
 		<text name="woodChip"> <en>woodchips</en> <de>Hackschnitzel</de> </text>
 		<text name="woodChips"> <en>woodchips</en> <de>Hackschnitzel</de> </text>
 		
+		<text name="schrot"> <en>grist</en> <de>Schrot</de> </text>
+		
 		<text name="pig"> <en>pigs</en> <de>Schweine</de> </text>
 		<text name="pigs"> <en>pigs</en> <de>Schweine</de> </text>
 		<text name="cow"> <en>cows</en> <de><![CDATA[Kühe]]></de> </text>
@@ -124,9 +127,30 @@
 		<text name="chicken"> <en>chicken</en> <de><![CDATA[Hühner]]></de> </text>
 		<text name="sheep"> <en>sheep</en> <de>Schafe</de> </text>
 		<text name="beef"> <en>cattle</en> <de>Rinder</de> </text>
+		<text name="calf"> <en>calfs</en> <de><![CDATA[Kälber]]></de> </text>
 		
 		<text name="wool"> <en>wool</en> <de>Wolle</de> </text>
 		<text name="egg"> <en>eggs</en> <de>Eier</de> </text>
+		
+		<text name="pig_unit_short"> <en>pcs</en> <de>Stk.</de> </text>
+		<text name="pig_unit_long"> <en>pieces</en> <de><![CDATA[Stück]]></de> </text>
+		<text name="pigs_unit_short"> <en>pcs</en> <de>Stk.</de> </text>
+		<text name="pigs_unit_long"> <en>pieces</en> <de><![CDATA[Stück]]></de> </text>
+		<text name="cow_unit_short"> <en>pcs</en> <de>Stk.</de> </text>
+		<text name="cow_unit_long"> <en>pieces</en> <de><![CDATA[Stück]]></de> </text>
+		<text name="cows_unit_short"> <en>pcs</en> <de>Stk.</de> </text>
+		<text name="cows_unit_long"> <en>pieces</en> <de><![CDATA[Stück]]></de> </text>
+		<text name="chicken_unit_short"> <en>pcs</en> <de>Stk.</de> </text>
+		<text name="chicken_unit_long"> <en>pieces</en> <de><![CDATA[Stück]]></de> </text>
+		<text name="sheep_unit_short"> <en>pcs</en> <de>Stk.</de> </text>
+		<text name="sheep_unit_long"> <en>pieces</en> <de><![CDATA[Stück]]></de> </text>
+		<text name="beef_unit_short"> <en>pcs</en> <de>Stk.</de> </text>
+		<text name="beef_unit_long"> <en>pieces</en> <de><![CDATA[Stück]]></de> </text>
+		<text name="calf_unit_short"> <en>pcs</en> <de>Stk.</de> </text>
+		<text name="calf_unit_long"> <en>pieces</en> <de><![CDATA[Stück]]></de> </text>
+		
+		<text name="egg_unit_short"> <en>pcs</en> <de>Stk.</de> </text>
+		<text name="egg_unit_long"> <en>pieces</en> <de><![CDATA[Stück]]></de> </text>
 		
 		<text name="capacityReached"> <en>the maximum filllevel of %s is reached</en> <de><![CDATA[Die maximale Füllmenge von %s ist erreicht]]></de> </text>
 		<text name="forage_wagon_cant_collect"> <en>this forage wagon cannot collect %s</en> <de>Dieser Ladewagen kann kein %s aufsammeln</de> </text>

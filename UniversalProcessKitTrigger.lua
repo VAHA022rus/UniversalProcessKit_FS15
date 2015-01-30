@@ -49,6 +49,8 @@ function UniversalProcessKit:getAllowedVehicles()
 	self.allowedVehicles[UniversalProcessKit.VEHICLE_COMBINE] = getBoolFromUserAttribute(self.nodeId, "allowCombine", self.allowedVehicles[UniversalProcessKit.VEHICLE_COMBINE])
 	self.allowedVehicles[UniversalProcessKit.VEHICLE_FILLABLE] = getBoolFromUserAttribute(self.nodeId, "allowFillable", self.allowedVehicles[UniversalProcessKit.VEHICLE_FILLABLE])
 	
+	self.allowedVehicles[UniversalProcessKit.VEHICLE_ATTACHMENT] = getBoolFromUserAttribute(self.nodeId, "allowAttachment", self.allowedVehicles[UniversalProcessKit.VEHICLE_ATTACHMENT])
+	
 	self.allowedVehicles[UniversalProcessKit.VEHICLE_TIPPER] = getBoolFromUserAttribute(self.nodeId, "allowTipper", self.allowedVehicles[UniversalProcessKit.VEHICLE_TIPPER])
 	self.allowedVehicles[UniversalProcessKit.VEHICLE_SHOVEL] = getBoolFromUserAttribute(self.nodeId, "allowShovel", self.allowedVehicles[UniversalProcessKit.VEHICLE_SHOVEL])
 
@@ -101,10 +103,9 @@ function UniversalProcessKit:fitCollisionMaskToAllowedVehicles()
 	local trigger_tractor = 2097152
 	local trigger_combine = 4194304
 	local trigger_fillable = 8388608
-	local trigger_bales = 16777216
-	local trigger_pallets = 16777216
+	local trigger_dynamic_objects = 16777216 -- bales, pallets
+	local trigger_attachment = 8192 -- cultivators, tedders, ...
 	local trigger_trafficVehicle = 33554432 -- doesnt seem to work right
-	
 
 	local collisionMask_old = getCollisionMask(self.triggerId)
 	local collisionMask_new = collisionMask_old
@@ -136,21 +137,21 @@ function UniversalProcessKit:fitCollisionMaskToAllowedVehicles()
 		self.allowedVehicles[UniversalProcessKit.VEHICLE_MIXERWAGONTRAILER] or
 		self.allowedVehicles[UniversalProcessKit.VEHICLE_MIXERWAGONPICKUP] or
 		self.allowedVehicles[UniversalProcessKit.VEHICLE_BALER]) and bitAND(collisionMask_new,trigger_fillable)==0 then
-		self:print('Warning: some kind of allowFillable is set to true but collisionMask was not fitting (fixed)')
+		self:print('Warning: allowFillable is set to true but collisionMask was not fitting (fixed)')
 		collisionMask_new = collisionMask_new + trigger_fillable
+	end
+	if self.allowedVehicles[UniversalProcessKit.VEHICLE_ATTACHMENT] and bitAND(collisionMask_new,trigger_attachment)==0 then
+		self:print('Warning: allowAttachment is set to true but collisionMask was not fitting (fixed)')
+		collisionMask_new = collisionMask_new + trigger_attachment
 	end
 	if (self.allowedVehicles[UniversalProcessKit.VEHICLE_TRAFFICVEHICLE] or
 		self.allowedVehicles[UniversalProcessKit.VEHICLE_MILKTRUCK]) and bitAND(collisionMask_new,trigger_trafficVehicle)==0 then
 		self:print('Warning: allowTrafficVehicle is set to true but collisionMask was not fitting (fixed)')
 		collisionMask_new = collisionMask_new + trigger_trafficVehicle
 	end
-	if self.allowBales and bitAND(collisionMask_new,trigger_bales)==0 then
-		self:print('Warning: allowBales is set to true but collisionMask was not fitting (fixed)')
-		collisionMask_new = collisionMask_new + trigger_bales
-	end
-	if self.allowPallets and bitAND(collisionMask_new,trigger_pallets)==0 then
-		self:print('Warning: allowPallets is set to true but collisionMask was not fitting (fixed)')
-		collisionMask_new = collisionMask_new + trigger_pallets
+	if (self.allowBales or self.allowPallets) and bitAND(collisionMask_new,trigger_dynamic_objects)==0 then
+		self:print('Warning: allowBales or allowPallets is set to true but collisionMask was not fitting (fixed)')
+		collisionMask_new = collisionMask_new + trigger_dynamic_objects
 	end
 	
 	-- substract colision mask bits if necessary
@@ -167,7 +168,7 @@ function UniversalProcessKit:fitCollisionMaskToAllowedVehicles()
 		self:print('Warning: allowCombine is set to false but collisionMask was not fitting (fixed)')
 		collisionMask_new = collisionMask_new - trigger_combine
 	end
-	if not (self.allowedVehicles[UniversalProcessKit.VEHICLE_FILLABLE] or -- check every fillable type
+	if (not (self.allowedVehicles[UniversalProcessKit.VEHICLE_FILLABLE] or -- check every fillable type
 		self.allowedVehicles[UniversalProcessKit.VEHICLE_TIPPER] or
 		self.allowedVehicles[UniversalProcessKit.VEHICLE_SHOVEL] or
 		self.allowedVehicles[UniversalProcessKit.VEHICLE_WATERTRAILER] or
@@ -179,22 +180,22 @@ function UniversalProcessKit:fitCollisionMaskToAllowedVehicles()
 		self.allowedVehicles[UniversalProcessKit.VEHICLE_FORAGEWAGON] or
 		self.allowedVehicles[UniversalProcessKit.VEHICLE_MIXERWAGONTRAILER] or
 		self.allowedVehicles[UniversalProcessKit.VEHICLE_MIXERWAGONPICKUP] or
-		self.allowedVehicles[UniversalProcessKit.VEHICLE_BALER]) and bitAND(collisionMask_new,trigger_fillable)==1 then
-		self:print('Warning: some kind of allowFillable is set to false but collisionMask was not fitting (fixed)')
+		self.allowedVehicles[UniversalProcessKit.VEHICLE_BALER]) and bitAND(collisionMask_new,trigger_fillable)==1) then
+		self:print('Warning: allowFillable is set to false but collisionMask was not fitting (fixed)')
 		collisionMask_new = collisionMask_new - trigger_fillable
+	end
+	if not self.allowedVehicles[UniversalProcessKit.VEHICLE_ATTACHMENT] and bitAND(collisionMask_new,trigger_attachment)==1 then
+		self:print('Warning: allowAttachment is set to false but collisionMask was not fitting (fixed)')
+		collisionMask_new = collisionMask_new - trigger_attachment
 	end
 	if not (self.allowedVehicles[UniversalProcessKit.VEHICLE_TRAFFICVEHICLE] or
 		self.allowedVehicles[UniversalProcessKit.VEHICLE_MILKTRUCK]) and bitAND(collisionMask_new,trigger_trafficVehicle)==1 then
 		self:print('Warning: allowTrafficVehicle is set to false but collisionMask was not fitting (fixed)')
 		collisionMask_new = collisionMask_new - trigger_trafficVehicle
 	end
-	if not self.allowBales and bitAND(collisionMask_new,trigger_bales)==1 then
-		self:print('Warning: allowBales is set to false but collisionMask was not fitting (fixed)')
-		collisionMask_new = collisionMask_new - trigger_bales
-	end
-	if not self.allowPallets and bitAND(collisionMask_new,trigger_pallets)==1 then
-		self:print('Warning: allowPallets is set to false but collisionMask was not fitting (fixed)')
-		collisionMask_new = collisionMask_new - trigger_pallets
+	if not (self.allowBales or self.allowPallets) and bitAND(collisionMask_new,trigger_dynamic_objects)==1 then
+		self:print('Warning: allowBales and allowPallets is set to false but collisionMask was not fitting (fixed)')
+		collisionMask_new = collisionMask_new - trigger_dynamic_objects
 	end
 	
 	-- result
@@ -204,88 +205,6 @@ function UniversalProcessKit:fitCollisionMaskToAllowedVehicles()
 		setCollisionMask(self.triggerId,collisionMask_new)
 	end
 end
-
-function tableShow(t, name, maxDepth)
-	local cart -- a container
-	local autoref -- for self references
-	maxDepth = maxDepth or 50;
-	local depth = 0;
-
-	--[[ counts the number of elements in a table
-local function tablecount(t)
-   local n = 0
-   for _, _ in pairs(t) do n = n+1 end
-   return n
-end
-]]
-	-- (RiciLake) returns true if the table is empty
-	local function isemptytable(t) return next(t) == nil end
-
-	local function basicSerialize(o)
-		local so = tostring(o)
-		if type(o) == "function" then
-			local info = debug.getinfo(o, "S")
-			-- info.name is nil because o is not a calling level
-			if info.what == "C" then
-				return string.format("%q", so .. ", C function")
-			else
-				-- the information is defined through lines
-				return string.format("%q", so .. ", defined in (" ..
-						info.linedefined .. "-" .. info.lastlinedefined ..
-						")" .. info.source)
-			end
-		elseif type(o) == "number" then
-			return so
-		else
-			return string.format("%q", so)
-		end
-	end
-
-	local function addtocart(value, name, indent, saved, field, curDepth)
-		indent = indent or ""
-		saved = saved or {}
-		field = field or name
-		cart = cart .. indent .. field
-
-		if type(value) ~= "table" then
-			cart = cart .. " = " .. basicSerialize(value) .. ";\n"
-		else
-			if saved[value] then
-				cart = cart .. " = {}; -- " .. saved[value]
-						.. " (self reference)\n"
-				autoref = autoref .. name .. " = " .. saved[value] .. ";\n"
-			else
-				saved[value] = name
-				--if tablecount(value) == 0 then
-				if isemptytable(value) then
-					cart = cart .. " = {};\n"
-				else
-					if curDepth <= maxDepth then
-						cart = cart .. " = {\n"
-						for k, v in pairs(value) do
-							k = basicSerialize(k)
-							local fname = string.format("%s[%s]", name, k)
-							field = string.format("[%s]", k)
-							-- three spaces between levels
-							addtocart(v, fname, indent .. "\t", saved, field, curDepth + 1);
-						end
-						cart = cart .. indent .. "};\n"
-					else
-						cart = cart .. " = { ... };\n";
-					end;
-				end
-			end
-		end;
-	end
-
-	name = name or "__unnamed__"
-	if type(t) ~= "table" then
-		return name .. " = " .. basicSerialize(t)
-	end
-	cart, autoref = "", ""
-	addtocart(t, name, indent, nil, nil, depth + 1)
-	return cart .. autoref
-end;
 
 function UniversalProcessKit:triggerCallback(triggerId, otherActorId, onEnter, onLeave, onStay, otherShapeId)
 	if self.isEnabled then
