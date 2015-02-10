@@ -306,11 +306,10 @@ function getChildrenRigidBodyTypeStatic(id)
 	return class.staticShapes
 end;
 
-local staticShapesCollection = {}
-
 function UniversalProcessKit.setTranslation(id,x,y,z)
 	--print('set translation of nodeId '..tostring(id)..' to '..tostring(x)..', '..tostring(x)..', '..tostring(z))
-	local staticShapes=staticShapesCollection[id] or getChildrenRigidBodyTypeStatic(id)
+	
+	local staticShapes=getChildrenRigidBodyTypeStatic(id)
 	for _,v in pairs(staticShapes) do
 		setRigidBodyType(v,"Kinematic")
 	end

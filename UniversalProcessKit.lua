@@ -291,9 +291,9 @@ function UniversalProcessKit:findChildrenLoopFunc(childId)
 		self:print('found module '..childName..' of type '..tostring(type)..' and id '..tostring(childId))
 		local module=UniversalProcessKit.ModuleTypes[type]:new(childId,self)
 		if module~=nil and module~=false then
-			if debugMode then
-				module=debugObject(module)
-			end
+			--if debugMode then
+			--	module=debugObject(module)
+			--end
 			table.insert(self.kids,module)
 			module:findChildren(childId)
 		else
@@ -510,6 +510,9 @@ end
 
 function UniversalProcessKit:addFillLevel(deltaFillLevel, fillType)
 	self:print('UniversalProcessKit:addFillLevel('..tostring(deltaFillLevel)..', '..tostring(fillType)..')')
+	if fillType~=nil then
+		fillType=self.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN][fillType] or fillType
+	end
 	return self + {deltaFillLevel, fillType}
 end;
 

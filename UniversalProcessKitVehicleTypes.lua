@@ -113,7 +113,8 @@ function UniversalProcessKit.getVehicleType(vehicle)
 			SpecializationUtil.hasSpecialization(Mower, vehicle.specializations) or
 			SpecializationUtil.hasSpecialization(Plough, vehicle.specializations) or
 			SpecializationUtil.hasSpecialization(Tedder, vehicle.specializations) or
-			SpecializationUtil.hasSpecialization(Windrower, vehicle.specializations) then
+			SpecializationUtil.hasSpecialization(Windrower, vehicle.specializations) or
+			(vehicle.attacherJoint~=nil and vehicle.attacherJoint.node~=nil and vehicle.attacherJoint.node~=0) then
 				print('attachment detected')
 			vehicleType=vehicleType+UniversalProcessKit.VEHICLE_ATTACHMENT
 		end

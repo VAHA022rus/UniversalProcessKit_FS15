@@ -406,7 +406,7 @@ function UPK_Processor:produce(processed)
 				local ressourcesUsed=self.recipe*processed
 				for k,v in pairs(ressourcesUsed) do
 					if type(v)=="number" then
-						_= self - {v,k}
+						self:addFillLevel(-v,k)
 					end
 				end
 			end
@@ -431,7 +431,7 @@ function UPK_Processor:produce(processed)
 			if self.hasByproducts then
 				for k,v in pairs(self.byproducts) do
 					if type(v)=="number" and v>0 then
-						_= self + {v*finalProducts,k}
+						self:addFillLevel(v*finalProducts,k)
 					end
 				end
 			end
@@ -445,14 +445,14 @@ function UPK_Processor:produce(processed)
 			if self.hasAddIfProcessing then
 				for k,v in pairs(self.addIfProcessing) do
 					if type(v)=="number" and v>0 then
-						_= self + {v,k}
+						self:addFillLevel(v,k)
 					end
 				end
 			end
 			if self.hasRemoveIfProcessing then
 				for k,v in pairs(self.removeIfProcessing) do
 					if type(v)=="number" and v>0 then
-						_= self - {v,k}
+						self:addFillLevel(-v,k)
 					end
 				end
 			end
@@ -477,14 +477,14 @@ function UPK_Processor:produce(processed)
 			if self.hasAddIfNotProcessing then
 				for k,v in pairs(self.addIfNotProcessing) do
 					if type(v)=="number" and v>0 then
-						_= self + {v,k}
+						self:addFillLevel(v,k)
 					end
 				end
 			end
 			if self.hasRemoveIfNotProcessing then
 				for k,v in pairs(self.removeIfNotProcessing) do
 					if type(v)=="number" and v>0 then
-						_= self - {v,k}
+						self:addFillLevel(-v,k)
 					end
 				end
 			end
@@ -510,7 +510,7 @@ function UPK_Processor:productionSkipped()
 	if self.hasAddIfProductionSkipped then
 		for k,v in pairs(self.addIfProductionSkipped) do
 			if type(v)=="number" and v>0 then
-				_= self + {v,k}
+				self:addFillLevel(v,k)
 			end
 		end
 	end
@@ -518,12 +518,12 @@ function UPK_Processor:productionSkipped()
 	if self.hasRemoveIfProductionSkipped then
 		for k,v in pairs(self.removeIfProductionSkipped) do
 			if type(v)=="number" and v>0 then
-				_= self - {v,k}
+				self:addFillLevel(-v,k)
 			end
 		end
 	end
 
-	-- en/disableChildrenIfNotProcessing
+	-- en/disableChildrenIfProductionSkipped
 	if self.enableChildrenIfProductionSkipped then
 		self:print('enable children')
 		self:setEnableChildren(true)

@@ -7,9 +7,9 @@ Dieses Kit besteht aus verschiedenen Modulen, deren Aktionen durch den Spieler a
 Die Konfiguration des UPK-Mods wird allein über UserAttributes in der i3d geregelt. Mapper und Modder "verwenden" die Funktionen einfach (wie die Funktionen der Giants-Skripte auch) - es ist nicht nötig/erlaubt das UPK zu "verbauen".
 
 
-__aktuelle Version -> AAA\_UniversalProcessKit__
+__aktuelle Version (0.9.6) -> AAA\_UniversalProcessKit__
 
-__aktuelle Entwickler-Version -> AAA\_UniversalProcessKit-dev__
+__aktuelle Entwickler-Version (0.9.7) -> AAA\_UniversalProcessKit-dev__
 
 __Dokumentation -> 00\_documentation__
 
@@ -42,6 +42,12 @@ Bisher enthaltene Module:
 - waterfilltrigger
 
 ##Changelog
+
+__V0.9.7__
+
+- verbesserte Erkennung von Anbaugeräten
+- diverse Bugs behoben
+
 
 __V0.9.6__
 

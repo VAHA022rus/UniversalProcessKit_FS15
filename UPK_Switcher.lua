@@ -129,7 +129,7 @@ end;
 
 function UPK_Switcher:onFillLevelChange(deltaFillLevel, newFillLevel, fillType) -- to be overwritten
 	
-	self:print('UPK_Switcher:onFillLevelChange('..tostring(deltaFillLevel)..', '..tostring(newFillLevel)..', '..tostring(fillType)..')')
+	--self:print('UPK_Switcher:onFillLevelChange('..tostring(deltaFillLevel)..', '..tostring(newFillLevel)..', '..tostring(fillType)..')')
 	
 	if self.switchAtFillTypes[fillType]==true and self.isEnabled then		
 		if self.useFillTypes then
@@ -143,7 +143,7 @@ function UPK_Switcher:onFillLevelChange(deltaFillLevel, newFillLevel, fillType) 
 					local fillLevel = self.fillLevelsCopy[k]
 					if self.fillTypeChoiceMax then
 						if fillLevel>tmpmaxfillLevel then
-							self:print('new max fill level: '..tostring(fillLevel))
+							--self:print('new max fill level: '..tostring(fillLevel))
 							tmpmaxfillLevel=fillLevel
 							useFillType = k
 						 end
@@ -155,19 +155,19 @@ function UPK_Switcher:onFillLevelChange(deltaFillLevel, newFillLevel, fillType) 
 					end
 				end
 			end
-			self:print('usefilltype is '..tostring(useFillType))
+			--self:print('usefilltype is '..tostring(useFillType))
 			if useFillType~=nil then
 				local shapeToShow=nil
 				if fillType~=nil and fillType~=UniversalProcessKit.FILLTYPE_UNKNOWN and useFillType~=self.oldFillType then
 					shapeToShow=self.switchFillTypeShapes[useFillType]
-					self:print('shapeToShow is '..tostring(shapeToShow))
+					--self:print('shapeToShow is '..tostring(shapeToShow))
 				end
 				if shapeToShow~=nil and shapeToShow~=self.oldShapeToShow then
 					if self.oldShapeToShow~=nil then
 						setVisibility(self.oldShapeToShow,false)
 						UniversalProcessKit.setTranslation(self.oldShapeToShow,unpack((self.shapePositions[self.oldShapeToShow]+self.hidingPosition) or {}))
 					end
-					self:print('showing '..tostring(shapeToShow))
+					--self:print('showing '..tostring(shapeToShow))
 					setVisibility(shapeToShow,true)
 					local x,y,z=unpack(self.shapePositions[shapeToShow] or {})
 					if x~=nil and y~=nil and z~=nil then
@@ -186,7 +186,7 @@ function UPK_Switcher:onFillLevelChange(deltaFillLevel, newFillLevel, fillType) 
 			end
 		elseif self.useFillLevels then
 			self.fillLevelsCopy[fillType] = newFillLevel -- self:getFillLevel(fillType) -- may not be newFillLevel in fifo or filo
-			self:print('self.fillLevelsCopy[fillType] '..tostring(self.fillLevelsCopy[fillType]))
+			--self:print('self.fillLevelsCopy[fillType] '..tostring(self.fillLevelsCopy[fillType]))
 			local fillLevel = 0
 			if self.fillTypeChoiceMax then
 				fillLevel = max(self.fillLevelsCopy) or 0

@@ -215,12 +215,17 @@ function UniversalProcessKit:triggerCallback(triggerId, otherActorId, onEnter, o
 						g_currentMission.nodeToVehicle[otherActorId] or
 						g_currentMission.nodeObjects[otherShapeId] or
 						g_currentMission.nodeObjects[otherActorId]
+		self:print('=======')
+		--self:print('onEnter '..tostring(onEnter))
+		--self:print('onLeave '..tostring(onLeave))
+		--self:print('onStay '..tostring(onStay))
 		self:print('g_currentMission.objectToTrailer[otherShapeId] '..tostring(g_currentMission.objectToTrailer[otherShapeId]))
 		self:print('g_currentMission.nodeToVehicle[otherShapeId] '..tostring(g_currentMission.nodeToVehicle[otherShapeId]))
 		self:print('g_currentMission.objectToTrailer[otherActorId] '..tostring(g_currentMission.objectToTrailer[otherActorId]))
 		self:print('g_currentMission.nodeToVehicle[otherActorId] '..tostring(g_currentMission.nodeToVehicle[otherActorId]))
 		self:print('vehicle is '..tostring(vehicle))
 		
+		--print(tableShow(vehicle,'',2))
 		
 		local checkStr=""
 		for _,v in pairs(UniversalProcessKit.getVehicleTypes(vehicle)) do
@@ -251,7 +256,7 @@ function UniversalProcessKit:triggerCallback(triggerId, otherActorId, onEnter, o
 					self:print('thingy is a pallet 1')
 					if onEnter then
 						self:triggerOnEnter(vehicle)
-					else
+					elseif onLeave then
 						self:triggerOnLeave(vehicle)
 					end
 				end
@@ -261,7 +266,7 @@ function UniversalProcessKit:triggerCallback(triggerId, otherActorId, onEnter, o
 				if vehicle:isa(Bale) then
 					if onEnter then
 						self:triggerOnEnter(vehicle)
-					else
+					elseif onLeave then
 						self:triggerOnLeave(vehicle)
 					end
 				end
@@ -275,7 +280,7 @@ function UniversalProcessKit:triggerCallback(triggerId, otherActorId, onEnter, o
 						end
 						table.insert(vehicle.upkTrigger,self)
 						self:triggerOnEnter(vehicle)
-					else
+					elseif onLeave then
 						removeValueFromTable(vehicle.upkTrigger,self)
 						self:triggerOnLeave(vehicle)
 					end
@@ -287,7 +292,7 @@ function UniversalProcessKit:triggerCallback(triggerId, otherActorId, onEnter, o
 			if onEnter then
 				self.playerInRangeNetworkNode = true
 				self:triggerOnEnter(nil, true)
-			else
+			elseif onLeave then
 				self.playerInRangeNetworkNode = false
 				self:triggerOnLeave(nil, true)
 			end

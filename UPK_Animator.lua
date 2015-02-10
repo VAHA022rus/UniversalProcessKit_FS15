@@ -51,6 +51,7 @@ function UPK_Animator:new(nodeId, parent)
 	self.rotationsPerSecond = getVectorFromUserAttribute(nodeId, "rotationsPerSecond", "0 0 0")*(2*math.pi)
 	if self.rotationsPerSecond[1]~=0 or self.rotationsPerSecond[2]~=0 or self.rotationsPerSecond[3]~=0 then
 		self.doRotatePerSecond = true
+		UniversalProcessKitListener.addHourChangeListener(self)
 	end
 	
 	-- rotate
@@ -151,17 +152,27 @@ function UPK_Animator:readStream(streamId, connection)
 			self.rotationTime = streamReadFloat32(streamId)
 		end
 		if self.doRotatePerSecond then
-			local px = streamReadFloat32(streamId)
-			local py = streamReadFloat32(streamId)
-			local pz = streamReadFloat32(streamId)
+			local rx = streamReadFloat32(streamId)
+			local ry = streamReadFloat32(streamId)
+			local rz = streamReadFloat32(streamId)
 			UniversalProcessKit.setRotation(self.nodeId, rx, ry, rz)
 		end
 	end
 end
 
 function UPK_Animator:delete()
+	if self.doRotatePerSecond then
+		UniversalProcessKitListener.removeHourChangeListener(self)
+	end
 	UniversalProcessKitListener.removeUpdateable(self)
 	UPK_Animator:superClass().delete(self)
+end
+
+function UPK_Animator:hourChanged()
+	if self.doRotatePerSecond then
+		local rx, ry, rz = getRotation(self.nodeId)
+		setRotation(self.nodeId, rx%(2*mathpi),ry%(2*mathpi),rz%(2*mathpi)) -- resets rotation to small numbers
+	end
 end
 
 function UPK_Animator:update(dt)

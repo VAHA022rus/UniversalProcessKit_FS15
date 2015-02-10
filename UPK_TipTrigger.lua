@@ -294,18 +294,20 @@ end
 
 function UPK_TipTrigger:getTipInfoForTrailer(trailer, tipReferencePointIndex)
 	self:print('UPK_TipTrigger:getTipInfoForTrailer')
-	if trailer.upk_currentTipTrigger==self then
+	--if trailer.currentTipTrigger==self then
 		local minDistance, bestPoint = self:getTipDistanceFromTrailer(trailer, tipReferencePointIndex)
 		local trailerFillType = trailer.currentFillType
-		local isAllowed = minDistance<1 and
+		local isAllowed = --minDistance<1 and
 			self.acceptedFillTypes[trailerFillType] and
 			self:allowFillType(trailerFillType)
-		--self:print('minDistance<1: '..tostring(minDistance<1))
+		
+		self:print('isAllowed: '..tostring(isAllowed))
 		--self:print('self.acceptedFillTypes[trailerFillType]: '..tostring(self.acceptedFillTypes[trailerFillType]))
 		--self:print('self:allowFillType(trailerFillType): '..tostring(self:allowFillType(trailerFillType)))
+		self:print('minDistance: '..tostring(minDistance))
 		return isAllowed, minDistance, bestPoint
-	end
-	return false,math.huge,nil
+		--end
+	--return false,math.huge,nil
 end
 
 function UPK_TipTrigger:getTipDistanceFromTrailer(trailer, tipReferencePointIndex)
@@ -316,7 +318,7 @@ function UPK_TipTrigger:getTipDistanceFromTrailer(trailer, tipReferencePointInde
 	if tipReferencePointIndex ~= nil then
 		minDistance=self:getTipDistance(trailer,tipReferencePointIndex)
 		if minDistance<math.huge then
-			returnDistance=0
+			--returnDistance=0
 		end
 	else
 		for i,_ in pairs(trailer.tipReferencePoints) do
@@ -325,12 +327,12 @@ function UPK_TipTrigger:getTipDistanceFromTrailer(trailer, tipReferencePointInde
 				if distance < minDistance then
 					bestPoint = i
 					minDistance = distance
-					returnDistance = 0
+					--returnDistance = 0
 				end
 			end
 		end
 	end
-	return returnDistance, bestPoint
+	return minDistance/1000, bestPoint -- tiptrigger shouldnt be bigger than 1000m
 end
 
 function UPK_TipTrigger:getTipDistance(trailer,tipReferencePointIndex)
@@ -388,24 +390,31 @@ function UPK_TipTrigger:getNoAllowedText(trailer)
 end
 
 function UPK_TipTrigger:triggerUpdate(vehicle,isInTrigger)
-	--self:print('UPK_TipTrigger:triggerUpdate('..tostring(vehicle)..','..tostring(isInTrigger)..')')
+	self:print('UPK_TipTrigger:triggerUpdate('..tostring(vehicle)..','..tostring(isInTrigger)..')')
 	if self.isEnabled then
 		if UniversalProcessKit.isVehicleType(vehicle, UniversalProcessKit.VEHICLE_TIPPER) then
-			--self:print('vehicle is tipper')
+			self:print('vehicle is tipper')
 			if isInTrigger then
-				vehicle.upk_currentTipTrigger=self
+				--if vehicle.upk_currentTipTrigger==nil then
+				--	vehicle.upk_currentTipTrigger={}
+				--end
+				--table.insert(vehicle.upk_currentTipTrigger,self)
 				if g_currentMission.trailerTipTriggers[vehicle] == nil then
 					g_currentMission.trailerTipTriggers[vehicle] = {}
 				end
 				table.insert(g_currentMission.trailerTipTriggers[vehicle], self)
 			else
-				if vehicle.upk_currentTipTrigger==self then
-					vehicle.upk_currentTipTrigger=nil
+				--[[
+				if vehicle.upk_currentTipTrigger[1]==self then
+					table.remove(vehicle.upk_currentTipTrigger,1)
 				end
+				]]--
+				
+				
 				local triggers = g_currentMission.trailerTipTriggers[vehicle]
 				if type(triggers) == "table" then
 					removeValueFromTable(triggers,self)
-					if #triggers == 0 then
+					if length(triggers) == 0 then
 						g_currentMission.trailerTipTriggers[vehicle] = nil
 					end
 				end

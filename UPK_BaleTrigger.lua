@@ -140,7 +140,7 @@ function UPK_BaleTrigger:triggerUpdate(vehicle,isInTrigger)
 				end
 			else
 				self.balesInTrigger[vehicle]=nil
-				self.nrBalesInTrigger = self.nrPalletsInTrigger -1
+				self.nrBalesInTrigger = self.nrBalesInTrigger -1
 			end
 		end
 	end

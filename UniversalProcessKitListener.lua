@@ -6,6 +6,11 @@ UniversalProcessKitListener.updateablesDay = {}
 UniversalProcessKitListener.updateablesHour = {}
 UniversalProcessKitListener.updateablesMinute = {}
 UniversalProcessKitListener.updateablesSecond = {}
+UniversalProcessKitListener.updateablesOrder = {}
+UniversalProcessKitListener.updateablesDayOrder = {}
+UniversalProcessKitListener.updateablesHourOrder = {}
+UniversalProcessKitListener.updateablesMinuteOrder = {}
+UniversalProcessKitListener.updateablesSecondOrder = {}
 UniversalProcessKitListener.dtsum = 0
 UniversalProcessKitListener.postLoadObjects = {}
 
@@ -64,11 +69,17 @@ function UniversalProcessKitListener.deleteMap(name)
 end
 
 function UniversalProcessKitListener.addUpdateable(obj)
-	UniversalProcessKitListener.updateables[obj]=true
+	if not UniversalProcessKitListener.updateables[obj] then
+		table.insert(UniversalProcessKitListener.updateablesOrder,obj)
+		UniversalProcessKitListener.updateables[obj]=true
+	end
 end
 
 function UniversalProcessKitListener.removeUpdateable(obj)
-	UniversalProcessKitListener.updateables[obj]=nil
+	if UniversalProcessKitListener.updateables[obj] then
+		removeValueFromTable(UniversalProcessKitListener.updateablesOrder,obj)
+		UniversalProcessKitListener.updateables[obj]=nil
+	end
 end
 
 function UniversalProcessKitListener:update(dt)
@@ -89,8 +100,9 @@ function UniversalProcessKitListener:update(dt)
 	
 	-- running updates
 	
-	for obj,v in pairs(UniversalProcessKitListener.updateables) do
-		if v then
+	for i=1,#UniversalProcessKitListener.updateablesOrder do
+		local obj=UniversalProcessKitListener.updateablesOrder[i]
+		if UniversalProcessKitListener.updateables[obj] then
 			obj:update(dt)
 		end
 	end
@@ -99,17 +111,24 @@ end
 -- day
 
 function UniversalProcessKitListener.addDayChangeListener(obj)
-	UniversalProcessKitListener.updateablesDay[obj]=true
+	if not UniversalProcessKitListener.updateablesDay[obj] then
+		table.insert(UniversalProcessKitListener.updateablesDayOrder,obj)
+		UniversalProcessKitListener.updateablesDay[obj]=true
+	end
 end
 
 function UniversalProcessKitListener.removeDayChangeListener(obj)
-	UniversalProcessKitListener.updateablesDay[obj]=nil
+	if UniversalProcessKitListener.updateablesDay[obj] then
+		removeValueFromTable(UniversalProcessKitListener.updateablesDayOrder,obj)
+		UniversalProcessKitListener.updateablesDay[obj]=nil
+	end
 end
 
 function UniversalProcessKitListener:dayChanged()
-	for obj,v in pairs(UniversalProcessKitListener.updateablesDay) do
-		if v then
-			obj:dayChanged(dt)
+	for i=1,#UniversalProcessKitListener.updateablesDayOrder do
+		local obj=UniversalProcessKitListener.updateablesDayOrder[i]
+		if UniversalProcessKitListener.updateablesDay[obj] then
+			obj:dayChanged()
 		end
 	end
 end
@@ -117,17 +136,24 @@ end
 -- hour
 
 function UniversalProcessKitListener.addHourChangeListener(obj)
-	UniversalProcessKitListener.updateablesHour[obj]=true
+	if not UniversalProcessKitListener.updateablesHour[obj] then
+		table.insert(UniversalProcessKitListener.updateablesHourOrder,obj)
+		UniversalProcessKitListener.updateablesHour[obj]=true
+	end
 end
 
 function UniversalProcessKitListener.removeHourChangeListener(obj)
-	UniversalProcessKitListener.updateablesHour[obj]=nil
+	if UniversalProcessKitListener.updateablesHour[obj] then
+		removeValueFromTable(UniversalProcessKitListener.updateablesHourOrder,obj)
+		UniversalProcessKitListener.updateablesHour[obj]=nil
+	end
 end
 
 function UniversalProcessKitListener:hourChanged()
-	for obj,v in pairs(UniversalProcessKitListener.updateablesHour) do
-		if v then
-			obj:hourChanged(dt)
+	for i=1,#UniversalProcessKitListener.updateablesHourOrder do
+		local obj=UniversalProcessKitListener.updateablesHourOrder[i]
+		if UniversalProcessKitListener.updateablesHour[obj] then
+			obj:hourChanged()
 		end
 	end
 end
@@ -135,17 +161,24 @@ end
 -- minute
 
 function UniversalProcessKitListener.addMinuteChangeListener(obj)
-	UniversalProcessKitListener.updateablesMinute[obj]=true
+	if not UniversalProcessKitListener.updateablesMinute[obj] then
+		table.insert(UniversalProcessKitListener.updateablesMinuteOrder,obj)
+		UniversalProcessKitListener.updateablesMinute[obj]=true
+	end
 end
 
 function UniversalProcessKitListener.removeMinuteChangeListener(obj)
-	UniversalProcessKitListener.updateablesMinute[obj]=nil
+	if UniversalProcessKitListener.updateablesMinute[obj] then
+		removeValueFromTable(UniversalProcessKitListener.updateablesMinuteOrder,obj)
+		UniversalProcessKitListener.updateablesMinute[obj]=nil
+	end
 end
 
 function UniversalProcessKitListener:minuteChanged()
-	for obj,v in pairs(UniversalProcessKitListener.updateablesMinute) do
-		if v then
-			obj:minuteChanged(dt)
+	for i=1,#UniversalProcessKitListener.updateablesMinuteOrder do
+		local obj=UniversalProcessKitListener.updateablesMinuteOrder[i]
+		if UniversalProcessKitListener.updateablesMinute[obj] then
+			obj:minuteChanged()
 		end
 	end
 end
@@ -153,17 +186,24 @@ end
 -- second
 
 function UniversalProcessKitListener.addSecondChangeListener(obj)
-	UniversalProcessKitListener.updateablesSecond[obj]=true
+	if not UniversalProcessKitListener.updateablesSecond[obj] then
+		table.insert(UniversalProcessKitListener.updateablesSecondOrder,obj)
+		UniversalProcessKitListener.updateablesSecond[obj]=true
+	end
 end
 
 function UniversalProcessKitListener.removeSecondChangeListener(obj)
-	UniversalProcessKitListener.updateablesSecond[obj]=nil
+	if UniversalProcessKitListener.updateablesSecond[obj] then
+		removeValueFromTable(UniversalProcessKitListener.updateablesSecondOrder,obj)
+		UniversalProcessKitListener.updateablesSecond[obj]=nil
+	end
 end
 
 function UniversalProcessKitListener.secondChanged()
-	for obj,v in pairs(UniversalProcessKitListener.updateablesSecond) do
-		if v then
-			obj:secondChanged(dt)
+	for i=1,#UniversalProcessKitListener.updateablesSecondOrder do
+		local obj=UniversalProcessKitListener.updateablesSecondOrder[i]
+		if UniversalProcessKitListener.updateablesSecond[obj] then
+			obj:secondChanged()
 		end
 	end
 end
