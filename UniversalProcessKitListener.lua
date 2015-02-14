@@ -35,6 +35,74 @@ function UniversalProcessKitListener.loadMap(name)
 	end
 	]]--
 	
+	
+	-- new store categories
+	
+	local maxStoreCategoryOrderId=0
+	for _, category in pairs(StoreItemsUtil.storeCategories) do
+		if category.orderId ~= nil and category.orderId > maxStoreCategoryOrderId then
+			maxStoreCategoryOrderId = category.orderId
+		end
+	end
+	
+	local storePicturesPath = upkModDirectory .. 'storePictures/'
+	
+	--print('storePicturesPath = '..tostring(storePicturesPath))
+	
+	local storageCategoryFruit = {}
+	storageCategoryFruit['image'] = storePicturesPath .. 'store.dds'
+	storageCategoryFruit['title'] = g_i18n:getText('storeCategory_fruit')
+	storageCategoryFruit['name'] = 'upk_fruit'
+	storageCategoryFruit['orderId'] = maxStoreCategoryOrderId + 1
+	
+	local storageCategoryAnimals = {}
+	storageCategoryAnimals['image'] = storePicturesPath .. 'store.dds'
+	storageCategoryAnimals['title'] = g_i18n:getText('storeCategory_animals')
+	storageCategoryAnimals['name'] = 'upk_animals'
+	storageCategoryAnimals['orderId'] = maxStoreCategoryOrderId + 2
+	
+	local storageCategoryStorage = {}
+	storageCategoryStorage['image'] = storePicturesPath .. 'store.dds'
+	storageCategoryStorage['title'] = g_i18n:getText('storeCategory_storage')
+	storageCategoryStorage['name'] = 'upk_storage'
+	storageCategoryStorage['orderId'] = maxStoreCategoryOrderId + 3
+	
+	local storageCategoryBuildings = {}
+	storageCategoryBuildings['image'] = storePicturesPath .. 'store.dds'
+	storageCategoryBuildings['title'] = g_i18n:getText('storeCategory_buildings')
+	storageCategoryBuildings['name'] = 'upk_buildings'
+	storageCategoryBuildings['orderId'] = maxStoreCategoryOrderId + 4
+	
+	local storageCategorySellingPoints = {}
+	storageCategorySellingPoints['image'] = storePicturesPath .. 'store.dds'
+	storageCategorySellingPoints['title'] = g_i18n:getText('storeCategory_sellingPoints')
+	storageCategorySellingPoints['name'] = 'upk_sellingPoints'
+	storageCategorySellingPoints['orderId'] = maxStoreCategoryOrderId + 5
+	
+	local storageCategoryFactories = {}
+	storageCategoryFactories['image'] = storePicturesPath .. 'store.dds'
+	storageCategoryFactories['title'] = g_i18n:getText('storeCategory_factories')
+	storageCategoryFactories['name'] = 'upk_factories'
+	storageCategoryFactories['orderId'] = maxStoreCategoryOrderId + 6
+	
+	local storageCategoryExamples = {}
+	storageCategoryExamples['image'] = storePicturesPath .. 'store.dds'
+	storageCategoryExamples['title'] = g_i18n:getText('storeCategory_examples')
+	storageCategoryExamples['name'] = 'upk_examples'
+	storageCategoryExamples['orderId'] = maxStoreCategoryOrderId + 7
+	
+	StoreItemsUtil.storeCategories["upk_fruit"] = storageCategoryFruit
+	StoreItemsUtil.storeCategories["upk_animals"] = storageCategoryAnimals
+	StoreItemsUtil.storeCategories["upk_storage"] = storageCategoryStorage
+	StoreItemsUtil.storeCategories["upk_buildings"] = storageCategoryBuildings
+	StoreItemsUtil.storeCategories["upk_sellingPoints"] = storageCategorySellingPoints
+	StoreItemsUtil.storeCategories["upk_factories"] = storageCategoryFactories
+	StoreItemsUtil.storeCategories["upk_examples"] = storageCategoryExamples
+	
+	
+	
+	
+	
 	if g_server ~= nil then
 		UniversalProcessKitListener.fillTypesSyncingObject = UPK_FillTypesSyncingObject:new(g_server ~= nil, g_client ~= nil)
 		g_server:addObject(UniversalProcessKitListener.fillTypesSyncingObject, UniversalProcessKitListener.fillTypesSyncingObject.id)
@@ -106,6 +174,7 @@ function UniversalProcessKitListener:update(dt)
 			obj:update(dt)
 		end
 	end
+
 end
 
 -- day
@@ -215,9 +284,21 @@ function UniversalProcessKitListener.registerPostLoadObject(obj)
 	table.insert(UniversalProcessKitListener.postLoadObjects,obj)
 end
 
+function UniversalProcessKitListener.keyEvent(self,unicode,sym,modifier,isDown)
+	--print('UniversalProcessKitListener.keyEvent('..tostring(unicode)..','..tostring(sym)..','..tostring(modifier)..','..tostring(isDown)..')')
+	-- player spawner
+
+	if InputBinding.isPressed(InputBinding.UPK_PLAYERTELEPORT) then
+		print("Teleport pressed")
+		UPK_PlayerSpawner.togglePlayerSpawner(1)
+	elseif InputBinding.isPressed(InputBinding.UPK_PLAYERTELEPORT_BACK) then
+		print("Teleport back pressed")
+		UPK_PlayerSpawner.togglePlayerSpawner(-1)
+	end
+end
+	
 local function emptyFunc() end
 UniversalProcessKitListener.mouseEvent=emptyFunc
-UniversalProcessKitListener.keyEvent=emptyFunc
 UniversalProcessKitListener.draw=emptyFunc
 
 addModEventListener(UniversalProcessKitListener)

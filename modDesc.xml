@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="no" ?>
 <modDesc descVersion="21">
     <author>mor2000</author>
-    <version>0.9.7</version>
+    <version>0.9.8</version>
     <title>
         <en>AAA UniversalProcessKit</en>
         <de>AAA UniversalProcessKit</de>
@@ -44,6 +44,7 @@
 		<sourceFile filename="UPK_Mover.lua"/>
 		<sourceFile filename="UPK_PalletTrigger.lua"/>
 		<sourceFile filename="UPK_ParkTrigger.lua"/>
+		<sourceFile filename="UPK_PlayerSpawner.lua"/>
 		<sourceFile filename="UPK_Processor.lua"/>
 		<sourceFile filename="UPK_SellTarget.lua"/>
 		<sourceFile filename="UPK_SprayerFillTrigger.lua"/>
@@ -56,6 +57,17 @@
 	<storeItems/>
 		
     <l10n>
+		<text name="storeCategory_fruit"> <en><![CDATA[fruit & vegetables]]></en> <de><![CDATA[Obst & Gemüse]]></de> </text>
+		<text name="storeCategory_animals"> <en><![CDATA[animal husbandry]]></en> <de><![CDATA[Tierzucht]]></de> </text>
+		<text name="storeCategory_storage"> <en><![CDATA[storage]]></en> <de><![CDATA[Lager]]></de> </text>
+		<text name="storeCategory_buildings"> <en><![CDATA[buildings & halls]]></en> <de><![CDATA[Gebäude & Hallen]]></de> </text>
+		<text name="storeCategory_sellingPoints"> <en><![CDATA[selling points]]></en> <de><![CDATA[Verkaufsstellen]]></de> </text>
+		<text name="storeCategory_factories"> <en><![CDATA[factories]]></en> <de><![CDATA[Fabriken]]></de> </text>
+		<text name="storeCategory_examples"> <en><![CDATA[UPK examples]]></en> <de><![CDATA[UPK Beispiele]]></de> </text>
+		
+		<text name="UPK_PLAYERTELEPORT"> <en>UPK_PLAYERTELEPORT</en> <de>UPK_PLAYERTELEPORT</de> </text>
+		<text name="UPK_PLAYERTELEPORT_BACK"> <en>UPK_PLAYERTELEPORT_BACK</en> <de>UPK_PLAYERTELEPORT_BACK</de> </text>
+		
 		<text name="sun"> <en>daylight</en> <de><![CDATA[Helligkeit]]></de> </text>
 		<text name="rain"> <en>rain intensity</en> <de><![CDATA[Regenintensität]]></de> </text>
 		<text name="temperature"> <en>temperature</en> <de><![CDATA[Temperatur]]></de> </text>
@@ -164,4 +176,9 @@
 		<text name="buytrigger_stop_rent_OBJECT"> <en>stop to rent %s</en> <de>Mieten von %s stoppen</de> </text>
 		<text name="buytrigger_remaining_time"> <en>%s hours of rent left</en> <de>%s Stunden Miete verbleibend</de> </text>
 	</l10n>
+	
+	<inputBindings>
+       	<input name="UPK_PLAYERTELEPORT" key1="KEY_less" button="" />
+		<input name="UPK_PLAYERTELEPORT_BACK" key1="KEY_lshift KEY_less" button="" />
+    </inputBindings>
 </modDesc>

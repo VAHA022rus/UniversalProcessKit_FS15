@@ -43,6 +43,7 @@ function UniversalProcessKit:getAllowedVehicles()
 		self.allowedVehicles[UniversalProcessKit.VEHICLE_FILLABLE]=true
 		self.allowedVehicles[UniversalProcessKit.VEHICLE_COMBINE]=true
 		self.allowedVehicles[UniversalProcessKit.VEHICLE_MIXERWAGONTRAILER]=true
+		self.allowedVehicles[UniversalProcessKit.VEHICLE_ATTACHMENT] = true
 	end
 	
 	self.allowedVehicles[UniversalProcessKit.VEHICLE_MOTORIZED] = getBoolFromUserAttribute(self.nodeId, "allowMotorized", self.allowedVehicles[UniversalProcessKit.VEHICLE_MOTORIZED])

@@ -9,7 +9,7 @@ Die Konfiguration des UPK-Mods wird allein über UserAttributes in der i3d gereg
 
 __aktuelle Version (0.9.6) -> AAA\_UniversalProcessKit__
 
-__aktuelle Entwickler-Version (0.9.7) -> AAA\_UniversalProcessKit-dev__
+__aktuelle Entwickler-Version (0.9.8) -> AAA\_UniversalProcessKit-dev__
 
 __Dokumentation -> 00\_documentation__
 
@@ -32,6 +32,7 @@ Bisher enthaltene Module:
 - mover
 - pallettrigger
 - parktrigger
+- playerspawner
 - processor
 - selltarget
 - sprayerfilltrigger
@@ -42,6 +43,12 @@ Bisher enthaltene Module:
 - waterfilltrigger
 
 ##Changelog
+
+__V0.9.8__
+
+- Modultyp playerspawner hinzugefügt (2.16)
+- neue Kategorien im Shop hinzugefügt: „Obst & Gemüse“, „Tierzucht“, „Lager“, „Gebäude & Hallen“, „Verkaufsstellen“, „Fabriken“ sowie „UPK Beispiele“ um die Übersichtlichkeit bei den platzierbaren Gebäuden wieder herzustellen (siehe 3.)
+- Beispielmod UPK_PlayerSpawnerTest hinzugefügt
 
 __V0.9.7__
 
