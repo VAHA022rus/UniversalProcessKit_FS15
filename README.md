@@ -7,7 +7,7 @@ Dieses Kit besteht aus verschiedenen Modulen, deren Aktionen durch den Spieler a
 Die Konfiguration des UPK-Mods wird allein über UserAttributes in der i3d geregelt. Mapper und Modder "verwenden" die Funktionen einfach (wie die Funktionen der Giants-Skripte auch) - es ist nicht nötig/erlaubt das UPK zu "verbauen".
 
 
-__aktuelle Version (0.9.6) -> AAA\_UniversalProcessKit__
+__aktuelle Version (0.9.8) -> AAA\_UniversalProcessKit__
 
 __aktuelle Entwickler-Version (0.9.8) -> AAA\_UniversalProcessKit-dev__
 
@@ -43,6 +43,27 @@ Bisher enthaltene Module:
 - waterfilltrigger
 
 ##Changelog
+
+__V0.9.9__
+
+- neu: spawnAboveTerrainHeight (playerspawner)
+- neu: heading (displaytrigger)
+- neu: mode (activatortrigger)
+- neu: emptyFillTypesOnActivate (activatortrigger)
+- neu: addOnActivate (activatortrigger)
+- neu: removeOnActivate (activatortrigger)
+- neu: enableChildrenOnActivate (activatortrigger)
+- neu: disableChildrenOnActivate (activatortrigger)
+- neu: emptyFillTypesOnDeactivate (activatortrigger)
+- neu: addOnDeactivate (activatortrigger)
+- neu: removeOnDeactivate (activatortrigger)
+- neu: enableChildrenOnDeactivate (activatortrigger)
+- neu: disableChildrenOnDeactivate (activatortrigger)
+- verbesserte Genauigkeit für filltrigger (8 Nachkommastellen)
+- verbessertes Trigger-Verhalten
+- neu in der Doku: Besondere Fülltypen (6)
+- Beispielmod UPK_ActivatorTriggerTest2 hinzugefügt
+
 
 __V0.9.8__
 

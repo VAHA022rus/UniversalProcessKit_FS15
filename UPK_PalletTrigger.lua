@@ -75,7 +75,7 @@ end
 
 function UPK_PalletTrigger:triggerUpdate(vehicle,isInTrigger)
 	self:print('UPK_PalletTrigger:triggerUpdate')
-	if self.isEnabled then
+	if true then
 		self:print('vehicle is: '..tostring(vehicle))
 		if type(vehicle)=="table" and vehicle.isPallet then
 			self:print('isInTrigger is: '..tostring(isInTrigger))

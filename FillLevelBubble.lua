@@ -20,11 +20,13 @@ _g.fillLevelBubble_mt = {
 	end,
 	__newindex = function(t,k,v)
 		if k=="fillLevel" then
-			if v==0 then
+			if v<=0.00000001 then
 				t.p_fillType = UniversalProcessKit.FILLTYPE_UNKNOWN
+				t.p_fillLevel = 0
+			else
+				--print(tostring(t)..' fillLevel set to '..tostring(v))
+				t.p_fillLevel = v
 			end
-			--print(tostring(t)..' fillLevel set to '..tostring(v))
-			t.p_fillLevel = v
 		end
 	end,
 	__add = function(lhs,rhs)
@@ -34,6 +36,7 @@ _g.fillLevelBubble_mt = {
 			end
 			local oldFillLevel = lhs.fillLevel
 			local newFillLevel = mathmax(mathmin(oldFillLevel + rhs, lhs.capacity), 0)
+			--print('new fillLevel: '..tostring(newFillLevel))
 			local diff = newFillLevel - oldFillLevel
 			lhs:onFillLevelChange(diff,newFillLevel,lhs.fillType)
 			lhs.fillLevel = newFillLevel
@@ -65,6 +68,7 @@ _g.fillLevelBubble_mt = {
 			end
 			local oldFillLevel = lhs.fillLevel
 			local newFillLevel = mathmin(mathmax(oldFillLevel - rhs, 0), lhs.capacity)
+			--print('new fillLevel: '..tostring(newFillLevel))
 			local diff = newFillLevel - oldFillLevel
 			lhs:onFillLevelChange(diff,newFillLevel,lhs.fillType)
 			lhs.fillLevel = newFillLevel

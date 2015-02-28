@@ -514,9 +514,15 @@ function UniversalProcessKit:addFillLevel(deltaFillLevel, fillType)
 		fillType=self.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN][fillType] or fillType
 	end
 	return self + {deltaFillLevel, fillType}
-end;
+end
 
-
+function UniversalProcessKit:addFillLevels(fillLevelsArr)
+	for fillType, deltaFillLevel in pairs(fillLevelsArr) do
+		if type(deltaFillLevel)=="number" and type(fillType)=="number" then
+			self:addFillLevel(deltaFillLevel,fillType)
+		end
+	end
+end
 
 function UniversalProcessKit:getUniqueFillType()
 	local currentFillType=Fillable.FILLTYPE_UNKNOWN
@@ -572,6 +578,17 @@ end;
 
 function UniversalProcessKit:setEnable(isEnabled,alreadySent)
 	self:print('UniversalProcessKit:setEnable('..tostring(isEnabled)..')')
+	
+	if type(self.entities) == "table" and self.entitiesInTrigger>0 then
+		for _, vehicle in pairs(self.entities) do
+			print('setting vehicle '..tostring(vehicle)..' in trigger to '..tostring(isEnabled))
+			self:triggerUpdate(vehicle,isEnabled)
+		end
+		if self.playerInRange == true then
+			self:triggerUpdate(nil,isEnabled)
+		end
+	end
+	
 	if isEnabled~=nil then
 		self.isEnabled=isEnabled
 		if not alreadySent then
@@ -635,7 +652,7 @@ function UniversalProcessKit:loadFromAttributesAndNodes(xmlFile, key)
 	
 	local appearsOnMap = getXMLBool(xmlFile, key .. "#showMapHotspot")
 	self:print('read from save file: showMapHotspot = '..tostring(appearsOnMap)..' ('..type(appearsOnMap)..')')
-	self:showMapHotspot(Utils.getNoNil(getXMLBool(xmlFile, key .. "#showMapHotspot"), getBoolFromUserAttribute(self.nodeId, "showMapHotspot", false)), true)
+	self:showMapHotspot(Utils.getNoNil(appearsOnMap, getBoolFromUserAttribute(self.nodeId, "showMapHotspot", false)), true)
 
 	self:loadExtraNodes(xmlFile, key)
 	
@@ -658,8 +675,11 @@ function UniversalProcessKit:getSaveAttributesAndNodes(nodeIdent)
 		extraNodes=extraNodes.." isEnabled=\"false\""
 	end
 	
-	self:print('save to file: showMapHotspot = '..tostring(self.appearsOnMap))
-	extraNodes=extraNodes.." showMapHotspot=\""..tostring(self.appearsOnMap).."\""
+	local standardAppearsOnMap = getBoolFromUserAttribute(self.nodeId, "showMapHotspot", false)
+	if self.appearsOnMap~=standardAppearsOnMap then
+		self:print('save to file: showMapHotspot = '..tostring(self.appearsOnMap))
+		extraNodes=extraNodes.." showMapHotspot=\""..tostring(self.appearsOnMap).."\""
+	end
 	
 	local fillLevels = ""
 	if self.storageType==UPK_Storage.SEPARATE then

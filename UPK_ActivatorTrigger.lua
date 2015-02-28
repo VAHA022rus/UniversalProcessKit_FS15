@@ -7,21 +7,120 @@ local UPK_ActivatorTrigger_mt = ClassUPK(UPK_ActivatorTrigger,UniversalProcessKi
 InitObjectClass(UPK_ActivatorTrigger, "UPK_ActivatorTrigger")
 UniversalProcessKit.addModule("activatortrigger",UPK_ActivatorTrigger)
 
+UPK_ActivatorTrigger.MODE_SWITCH=1
+UPK_ActivatorTrigger.MODE_BUTTON=2
+UPK_ActivatorTrigger.MODE_ONETIME=3
+
 function UPK_ActivatorTrigger:new(nodeId, parent)
 	local self = UniversalProcessKit:new(nodeId, parent, UPK_ActivatorTrigger_mt)
 	registerObjectClassName(self, "UPK_ActivatorTrigger")
 	
-	self:setIsActive(getBoolFromUserAttribute(nodeId, "isActive", false), true)
-	
-	local function returnNilIfEmptyString(str)
-		if str=="" then
-			return nil
-		end
-		return str
-	end
+	self.isActive=getBoolFromUserAttribute(nodeId, "isActive", false)
 	
 	self.activateText = returnNilIfEmptyString(self.i18n[getStringFromUserAttribute(nodeId, "activateText")]) or "[activateText]"
 	self.deactivateText = returnNilIfEmptyString(self.i18n[getStringFromUserAttribute(nodeId, "deactivateText")]) or "[deactivateText]"
+	
+	-- general mode
+	
+	local mode = getStringFromUserAttribute(nodeId, "mode")
+	if mode=="button" then
+		self.mode=UPK_ActivatorTrigger.MODE_BUTTON
+	elseif mode=="one-time" then
+		self.mode=UPK_ActivatorTrigger.MODE_ONETIME
+		self.onetimeused = false
+	else
+		self.mode=UPK_ActivatorTrigger.MODE_SWITCH
+	end
+	
+	-- on activate
+	
+	self.hasEmptyFillTypesOnActivate=false
+	self.emptyFillTypesOnActivate={}
+	local emptyFillTypesOnActivateArr = getArrayFromUserAttribute(nodeId, "emptyFillTypesOnActivate")
+	for i=1,#emptyFillTypesOnActivateArr do
+		local fillType=unpack(UniversalProcessKit.fillTypeNameToInt(emptyFillTypesOnActivateArr[i]))
+		table.insert(self.emptyFillTypesOnActivate,fillType)
+		self.hasEmptyFillTypesOnActivate=true
+	end
+	
+	self.hasAddOnActivate=false
+	self.addOnActivate={}
+	local addOnActivateArr=getArrayFromUserAttribute(nodeId, "addOnActivate")
+	for i=1,#addOnActivateArr,2 do
+		local amount=tonumber(addOnActivateArr[i])
+		local fillType=unpack(UniversalProcessKit.fillTypeNameToInt(addOnActivateArr[i+1]))
+		if type(amount)=="number" and amount>0 and type(fillType)=="number" then
+			self.addOnActivate[fillType]=amount
+			self.hasAddOnActivate=true
+		end
+	end
+	
+	self.hasRemoveOnActivate=false
+	self.removeOnActivate={}
+	local removeOnActivateArr=getArrayFromUserAttribute(nodeId, "removeOnActivate")
+	for i=1,#removeOnActivateArr,2 do
+		local amount=tonumber(removeOnActivateArr[i])
+		local fillType=unpack(UniversalProcessKit.fillTypeNameToInt(removeOnActivateArr[i+1]))
+		if type(amount)=="number" and amount>0 and type(fillType)=="number" then
+			self.removeOnActivate[fillType]=-amount
+			self.hasRemoveOnActivate=true
+		end
+	end
+	
+	self.enableChildrenOnActivate = getBoolFromUserAttribute(nodeId, "enableChildrenOnActivate", true)
+	self:print('enableChildrenOnActivate = '..tostring(self.enableChildrenOnActivate))
+	self.disableChildrenOnActivate = getBoolFromUserAttribute(nodeId, "disableChildrenOnActivate", false)
+	self:print('disableChildrenOnActivate = '..tostring(self.disableChildrenOnActivate))
+	
+	if self.enableChildrenIfProcessing then
+		self.disableChildrenIfProcessing = false
+	end
+	
+	-- on deactivate
+	
+	self.hasEmptyFillTypesOnDeactivate=false
+	self.emptyFillTypesOnDeactivate={}
+	local emptyFillTypesOnDeactivateArr = getArrayFromUserAttribute(nodeId, "emptyFillTypesOnDeactivate")
+	for i=1,#emptyFillTypesOnDeactivateArr do
+		local fillType=unpack(UniversalProcessKit.fillTypeNameToInt(emptyFillTypesOnDeactivateArr[i]))
+		table.insert(self.emptyFillTypesOnDeactivate,fillType)
+		self.hasEmptyFillTypesOnDeactivate=true
+	end
+	
+	self.hasAddOnDeactivate=false
+	self.addOnDeactivate={}
+	local addOnDeactivateArr=getArrayFromUserAttribute(nodeId, "addOnDeactivate")
+	for i=1,#addOnDeactivateArr,2 do
+		local amount=tonumber(addOnDeactivateArr[i])
+		local fillType=unpack(UniversalProcessKit.fillTypeNameToInt(addOnDeactivateArr[i+1]))
+		if type(amount)=="number" and amount>0 and type(fillType)=="number" then
+			self.addOnDeactivate[fillType]=amount
+			self.hasAddOnDeactivate=true
+		end
+	end
+	
+	self.hasRemoveOnDeactivate=false
+	self.removeOnDeactivate={}
+	local removeOnDeactivateArr=getArrayFromUserAttribute(nodeId, "removeOnDeactivate")
+	for i=1,#removeOnDeactivateArr,2 do
+		local amount=tonumber(removeOnDeactivateArr[i])
+		local fillType=unpack(UniversalProcessKit.fillTypeNameToInt(removeOnDeactivateArr[i+1]))
+		if type(amount)=="number" and amount>0 and type(fillType)=="number" then
+			self.removeOnDeactivate[fillType]=-amount
+			self.hasRemoveOnDeactivate=true
+		end
+	end
+	
+	self.enableChildrenOnDeactivate = getBoolFromUserAttribute(nodeId, "enableChildrenOnDeactivate", false)
+	self:print('enableChildrenOnDeactivate = '..tostring(self.enableChildrenOnDeactivate))
+	self.disableChildrenOnDeactivate = getBoolFromUserAttribute(nodeId, "disableChildrenOnDeactivate", true)
+	self:print('disableChildrenOnDeactivate = '..tostring(self.disableChildrenOnDeactivate))
+	
+	if self.enableChildrenOnDeactivate then
+		self.disableChildrenOnDeactivate = false
+	end
+	
+	--
 	
 	self.activatorActivatable = UPK_ActivatorTriggerActivatable:new(self)
 	self.activatorActivatableAdded=false
@@ -59,8 +158,8 @@ function UPK_ActivatorTrigger:triggerUpdate(vehicle,isInTrigger)
 	print('UPK_ActivatorTrigger:triggerUpdate()')
 	if self.isClient then
 		self:print('self.entitiesInTrigger='..tostring(self.entitiesInTrigger))
-		if self.entitiesInTrigger>0 then
-			if not self.activatorActivatableAdded and self:getShowInfo() then
+		if self.entitiesInTrigger>0 and self:getShowInfo() then
+			if not self.onetimeused and not self.activatorActivatableAdded then
 				self:print('addActivatableObject')
 				g_currentMission:addActivatableObject(self.activatorActivatable)
 				self.activatorActivatableAdded=true
@@ -71,15 +170,50 @@ function UPK_ActivatorTrigger:triggerUpdate(vehicle,isInTrigger)
 				g_currentMission:removeActivatableObject(self.activatorActivatable)
 				self.activatorActivatableAdded=false
 			end
-		end
+		end	
 	end
 end
 
 function UPK_ActivatorTrigger:setIsActive(isActive,alreadySent)
 	self:print('UPK_ActivatorTrigger:setIsActive('..tostring(isActive)..', '..tostring(alreadySent)..')')
-	if isActive~=nil then
+	if isActive~=nil and not self.onetimeused then
 		self.isActive=isActive
-		self:setEnableChildren(self.isActive,alreadySent)
+		if self.isActive then
+			if self.hasEmptyFillTypesOnActivate then
+				for _,v in pairs(self.emptyFillTypesOnActivate) do
+					self:setFillLevel(0,v)
+				end
+			end
+			if self.hasAddOnActivate then
+				self:addFillLevels(self.addOnActivate)
+			end
+			if self.hasRemoveOnActivate then
+				self:addFillLevels(self.removeOnActivate)
+			end
+			if self.enableChildrenOnActivate then
+				self:setEnableChildren(true,alreadySent)
+			elseif self.disableChildrenOnActivate then
+				self:setEnableChildren(false,alreadySent)
+			end
+		else
+			if self.hasEmptyFillTypesOnDeactivate then
+				for _,v in pairs(self.emptyFillTypesOnDeactivate) do
+					self:setFillLevel(0,v)
+				end
+			end
+			if self.hasAddOnDeactivate then
+				self:addFillLevels(self.addOnDeactivate)
+			end
+			if self.hasRemoveOnDeactivate then
+				self:addFillLevels(self.removeOnDeactivate)
+			end
+			if self.enableChildrenOnDeactivate then
+				self:setEnableChildren(true,alreadySent)
+			elseif self.disableChildrenOnDeactivate then
+				self:setEnableChildren(false,alreadySent)
+			end
+		end
+		
 		if not alreadySent then
 			UPK_ActivatorTriggerEvent.sendEvent(self,self.isActive, alreadySent)
 		end
@@ -87,7 +221,8 @@ function UPK_ActivatorTrigger:setIsActive(isActive,alreadySent)
 end
 
 function UPK_ActivatorTrigger:loadExtraNodes(xmlFile, key)
-	self:setIsActive(Utils.getNoNil(getXMLBool(xmlFile, key .. "#isActive"), false), true)
+	self.isActive=Utils.getNoNil(getXMLBool(xmlFile, key .. "#isActive"), false)
+	self.onetimeused=getXMLBool(xmlFile, key .. "#onetimeused")
 	return true
 end;
 
@@ -95,6 +230,9 @@ function UPK_ActivatorTrigger:getSaveExtraNodes(nodeIdent)
 	local nodes=""
 	if self.isActive then
 		nodes=nodes.." isActive=\"true\""
+	end
+	if self.onetimeused then
+		nodes=nodes.." onetimeused=\"true\""
 	end
 	return nodes
 end;
@@ -109,35 +247,95 @@ function UPK_ActivatorTriggerActivatable:new(upkmodule)
 	self.upkmodule = upkmodule or {}
 	self.activateText = "unknown"
 	return self
-end;
+end
 
 function UPK_ActivatorTriggerActivatable:getIsActivatable()
 	if self.upkmodule.isEnabled then
+		if self.upkmodule.onetimeused then
+			return false
+		end
+		if self.upkmodule.mode==UPK_ActivatorTrigger.MODE_BUTTON then
+			if self.upkmodule.hasAddOnActivate then
+				for k,v in pairs(self.upkmodule.addOnActivate) do
+					if self.upkmodule:getFillLevel(k)+v>self.upkmodule:getCapacity(k) then
+						return false
+					end
+				end
+			end
+			if self.upkmodule.hasRemoveOnActivate then
+				for k,v in pairs(self.upkmodule.removeOnActivate) do
+					if self.upkmodule:getFillLevel(k)-v<0 then
+						return false
+					end
+				end
+			end
+		else
+			if self.upkmodule.isActive then
+				if self.upkmodule.hasAddOnDeactivate then
+					for k,v in pairs(self.upkmodule.addOnDeactivate) do
+						if self.upkmodule:getFillLevel(k)+v>self.upkmodule:getCapacity(k) then
+							return false
+						end
+					end
+				end
+				if self.upkmodule.hasRemoveOnDeactivate then
+					for k,v in pairs(self.upkmodule.removeOnDeactivate) do
+						if self.upkmodule:getFillLevel(k)-v<0 then
+							return false
+						end
+					end
+				end
+			end
+			if not self.upkmodule.isActive then
+				if self.upkmodule.hasAddOnActivate then
+					for k,v in pairs(self.upkmodule.addOnActivate) do
+						if self.upkmodule:getFillLevel(k)+v>self.upkmodule:getCapacity(k) then
+							return false
+						end
+					end
+				end
+				if self.upkmodule.hasRemoveOnActivate then
+					for k,v in pairs(self.upkmodule.removeOnActivate) do
+						if self.upkmodule:getFillLevel(k)-v<0 then
+							return false
+						end
+					end
+				end
+			end
+		end
 		self:updateActivateText()
 		return true
 	end
 	return false
-end;
+end
 
 function UPK_ActivatorTriggerActivatable:onActivateObject()
 	if self.upkmodule.isEnabled then
-		print('self.upkmodule:setIsActive('..tostring(not self.upkmodule.isActive)..')')
-		self.upkmodule:setIsActive(not self.upkmodule.isActive, false)
+		if self.upkmodule.mode==UPK_ActivatorTrigger.MODE_BUTTON then
+			self.upkmodule:setIsActive(true, false)
+		elseif not self.onetimeused then
+			self.upkmodule:setIsActive(not self.upkmodule.isActive, false)
+			if self.upkmodule.mode==UPK_ActivatorTrigger.MODE_ONETIME then
+				self.upkmodule.onetimeused = true
+				g_currentMission:removeActivatableObject(self.upkmodule.activatorActivatable)
+				return
+			end
+		end
 		self:updateActivateText()
 		g_currentMission:addActivatableObject(self)
 	end
-end;
+end
 
 function UPK_ActivatorTriggerActivatable:drawActivate()
-end;
+end
 
 function UPK_ActivatorTriggerActivatable:updateActivateText()
-	if self.upkmodule.isActive then
-		self.activateText = self.upkmodule.deactivateText
-	else
+	if not self.upkmodule.isActive or self.upkmodule.mode==UPK_ActivatorTrigger.MODE_BUTTON then
 		self.activateText = self.upkmodule.activateText
+	else
+		self.activateText = self.upkmodule.deactivateText
 	end
-end;
+end
 
 UPK_ActivatorTriggerEvent = {}
 UPK_ActivatorTriggerEvent_mt = Class(UPK_ActivatorTriggerEvent, Event);

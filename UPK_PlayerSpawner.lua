@@ -1,7 +1,7 @@
 -- by mor2000
 
 --------------------
--- EntityTrigger (enables modules if vehicle or walker is present)
+-- PlayerSpawner
 
 
 local UPK_PlayerSpawner_mt = ClassUPK(UPK_PlayerSpawner,UniversalProcessKit)
@@ -14,6 +14,8 @@ UPK_PlayerSpawner.spawnerIndex = 1
 function UPK_PlayerSpawner:new(nodeId, parent)
 	local self = UniversalProcessKit:new(nodeId, parent, UPK_PlayerSpawner_mt)
 	registerObjectClassName(self, "UPK_PlayerSpawner")
+	
+	self.spawnAboveTerrainHeight = getNumberFromUserAttribute(nodeId, "spawnAboveTerrainHeight", 0.5, 0.5)
 	
 	table.insert(UPK_PlayerSpawner.spawner,self)
 	
@@ -60,20 +62,8 @@ function UPK_PlayerSpawner.togglePlayerSpawner(delta)
 			local x, _, z = getWorldTranslation(spawnerNodeId)
 			local y = getTerrainHeightAtWorldPos(g_currentMission.terrainRootNode, x, 0, z)
 			local dx, _, dz = localDirectionToWorld(spawnerNodeId, 0, 0, 1)
-			g_client:getServerConnection():sendEvent(PlayerTeleportEvent:new(x, y + 0.5, z))
+			g_client:getServerConnection():sendEvent(PlayerTeleportEvent:new(x, y + self.spawnAboveTerrainHeight, z))
 			g_currentMission.player.rotY = Utils.getYRotationFromDirection(dx, dz) + math.pi
 		end
 	end
 end
-
---[[
-
-	if onEnter and self.isEnabled and g_currentMission.controlPlayer and g_currentMission.player ~= nil and otherId == g_currentMission.player.rootNode then
-		local x, y, z = getWorldTranslation(self.triggerPlayerSpawn)
-		local dx, dy, dz = localDirectionToWorld(self.triggerPlayerSpawn, 0, 0, 1)
-		g_currentMission.player:moveToAbsolute(x, y, z)
-		g_client:getServerConnection():sendEvent(PlayerTeleportEvent:new(x, y, z))
-		g_currentMission.player.rotY = Utils.getYRotationFromDirection(dx, dz) + math.pi
-	end
-
-]]--

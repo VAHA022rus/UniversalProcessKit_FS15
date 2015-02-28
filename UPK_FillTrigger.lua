@@ -136,7 +136,7 @@ end
 
 function UPK_FillTrigger:triggerUpdate(vehicle,isInTrigger)
 	self:print('UPK_FillTrigger:triggerUpdate('..tostring(vehicle)..', '..tostring(isInTrigger)..')')
-	if self.isEnabled and self.isServer then
+	if true and self.isServer then
 		for k,v in pairs(self.allowedVehicles) do
 			if v and UniversalProcessKit.isVehicleType(vehicle, k) then
 				if isInTrigger then
@@ -198,7 +198,7 @@ function UPK_FillTrigger:update(dt)
 		else
 			for _,trailer in pairs(self.entities) do
 				--self:print('vehicle is '..tostring(trailer.upk_vehicleType))
-				local deltaFillLevel = self.fillLitersPerSecond * 0.001 * dt
+				local deltaFillLevel = floor(self.fillLitersPerSecond * 0.001 * dt,8)
 				local added = 0
 				for k,v in pairs(self.allowedVehicles) do
 					--self:print('checking for '..tostring(k)..': '..tostring(v))
@@ -270,10 +270,10 @@ function UPK_FillTrigger:getPricePerLiter(fillType)
 end
 
 function UPK_FillTrigger:fillTrailer(trailer, deltaFillLevel) -- tippers, shovels etc
-	self:print('UPK_FillTrigger:fillTrailer('..tostring(trailer)..', '..tostring(deltaFillLevel)..')')
+	--self:print('UPK_FillTrigger:fillTrailer('..tostring(trailer)..', '..tostring(deltaFillLevel)..')')
 	if self.isServer and self.isEnabled then
 		local fillFillType = self.fillFillType or self:getFillType() -- for single, fifo and filo
-		self:print('fillFillType '..tostring(fillFillType))
+		--self:print('fillFillType '..tostring(fillFillType))
 		if fillFillType~=UniversalProcessKit.FILLTYPE_UNKNOWN then
 			
 			if self.fillOnlyWholeNumbers then
@@ -297,10 +297,11 @@ function UPK_FillTrigger:fillTrailer(trailer, deltaFillLevel) -- tippers, shovel
 				trailerFillLevel<trailer.capacity then
 				
 				trailer:resetFillLevelIfNeeded(fillFillType)
+				trailerFillLevel = trailer:getFillLevel(fillFillType)
 				if not self.createFillType then
 					deltaFillLevel=math.min(deltaFillLevel, fillLevel)
 				end
-				trailer:setFillLevel(trailerFillLevel + deltaFillLevel, fillFillType)
+				trailer:setFillLevel(round(trailerFillLevel + deltaFillLevel,8), fillFillType)
 				deltaFillLevel = trailer:getFillLevel(fillFillType) - trailerFillLevel
 				if deltaFillLevel~=0 then
 					if not self.createFillType then
@@ -344,7 +345,7 @@ function UPK_FillTrigger:fillMotorized(trailer, deltaFillLevel) -- motorized
 				if not self.createFillType then
 					deltaFillLevel=math.min(deltaFillLevel, fillLevel)
 				end
-				trailer:setFuelFillLevel(trailerFillLevel + deltaFillLevel)
+				trailer:setFuelFillLevel(round(trailerFillLevel + deltaFillLevel,8))
 				deltaFillLevel = trailer.fuelFillLevel - trailerFillLevel
 				if deltaFillLevel~=0 then
 					if not self.createFillType then
@@ -391,10 +392,11 @@ function UPK_FillTrigger:fillMixerWagonPickup(trailer, deltaFillLevel) -- mixing
 				trailer.fillLevel<trailer.capacity then
 				
 				trailer:resetFillLevelIfNeeded(fillFillType)
+				trailerFillLevel = trailer:getFillLevel(fillFillType)
 				if not self.createFillType then
 					deltaFillLevel=math.min(deltaFillLevel, fillLevel)
 				end
-				trailer:setFillLevel(trailerFillLevel + deltaFillLevel, fillFillType)
+				trailer:setFillLevel(round(trailerFillLevel + deltaFillLevel,8), fillFillType)
 				deltaFillLevel = trailer:getFillLevel(fillFillType) - trailerFillLevel
 				if deltaFillLevel~=0 then
 					if not self.createFillType then
@@ -441,10 +443,11 @@ function UPK_FillTrigger:fillMixerWagonTrailer(trailer, deltaFillLevel) -- mixer
 				trailer.fillLevel<trailer.capacity then
 				
 				trailer:resetFillLevelIfNeeded(fillFillType)
+				trailerFillLevel = trailer:getFillLevel(fillFillType)
 				if not self.createFillType then
 					deltaFillLevel=math.min(deltaFillLevel, fillLevel)
 				end
-				trailer:setFillLevel(trailerFillLevel + deltaFillLevel, fillFillType)
+				trailer:setFillLevel(round(trailerFillLevel + deltaFillLevel,8), fillFillType)
 				deltaFillLevel = trailer:getFillLevel(fillFillType) - trailerFillLevel
 				if deltaFillLevel~=0 then
 					if not self.createFillType then
@@ -493,7 +496,7 @@ function UPK_FillTrigger:fillPallet(trailer, deltaFillLevel) -- pallets
 				if not self.createFillType then
 					deltaFillLevel=math.min(deltaFillLevel, fillLevel)
 				end
-				trailer:setFillLevel(trailerFillLevel + deltaFillLevel, fillFillType)
+				trailer:setFillLevel(round(trailerFillLevel + deltaFillLevel,8), fillFillType)
 				deltaFillLevel = trailer:getFillLevel() - trailerFillLevel
 				if deltaFillLevel~=0 then
 					if not self.createFillType then

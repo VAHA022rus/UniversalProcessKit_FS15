@@ -283,7 +283,7 @@ function UPK_TipTrigger:updateTrailerTipping(trailer, fillDelta, fillType)
 				toomuch = fillDelta + fill -- max 0
 			end
 			self:print('toomuch: '..tostring(toomuch))
-			if round(toomuch,8)<0 then
+			if toomuch<=-0.00000001 then
 				self:print('end tipping')
 				trailer:onEndTip()
 				trailer:setFillLevel(trailer:getFillLevel(fillType)-toomuch, fillType) -- put sth back
@@ -391,7 +391,7 @@ end
 
 function UPK_TipTrigger:triggerUpdate(vehicle,isInTrigger)
 	self:print('UPK_TipTrigger:triggerUpdate('..tostring(vehicle)..','..tostring(isInTrigger)..')')
-	if self.isEnabled then
+	if true then
 		if UniversalProcessKit.isVehicleType(vehicle, UniversalProcessKit.VEHICLE_TIPPER) then
 			self:print('vehicle is tipper')
 			if isInTrigger then

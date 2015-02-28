@@ -125,6 +125,12 @@ function round(nr, digits)
 	return result
 end
 
+function floor(nr, digits)
+	digits = digits or 0
+	local result=mathfloor(nr*times10[digits])/times10[digits]
+	return result
+end
+
 function gmatch(str, pattern)
 	local arr={}
 	if type(str)=="string" then
@@ -241,9 +247,9 @@ function removeValueFromTable(tbl, value, all)
 				end
 			end
 		end
-		table.sort(index, function(a, b) return a>b end)
-		for _,v in pairs(index) do
-			table.remove(tbl,v)
+		table.sort(index, function(a, b) return a<b end)
+		for i=#index,1,-1 do
+			tbl[index[i]]=nil
 		end
 		return #index
 	end

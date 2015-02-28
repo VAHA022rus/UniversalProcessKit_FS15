@@ -12,10 +12,12 @@ function UniversalProcessKit:addTrigger()
 	self:getAllowedVehicles()
 	self:fitCollisionMaskToAllowedVehicles()
 	self.entities={}
+	self.entityDistances={}
 	self.entitiesInTrigger=0
 	self.playerInRange=false
 	self.playersInRange={}
 	self.playerInRangeNetworkNode = false
+	self.triggerTracker = UniversalProcessKitTriggerTracker:new(self)
 
 	addTrigger(self.triggerId, "triggerCallback", self)
 	table.insert(g_upkTrigger, self)
@@ -25,6 +27,7 @@ end
 
 function UniversalProcessKit:removeTrigger()
 	if self.triggerId~=nil and self.triggerId~=0 then
+		self.triggerTracker:delete()
 		removeValueFromTable(g_upkTrigger, self)
 		removeTrigger(self.triggerId)
 		self.triggerId = 0
@@ -54,7 +57,7 @@ function UniversalProcessKit:getAllowedVehicles()
 	
 	self.allowedVehicles[UniversalProcessKit.VEHICLE_TIPPER] = getBoolFromUserAttribute(self.nodeId, "allowTipper", self.allowedVehicles[UniversalProcessKit.VEHICLE_TIPPER])
 	self.allowedVehicles[UniversalProcessKit.VEHICLE_SHOVEL] = getBoolFromUserAttribute(self.nodeId, "allowShovel", self.allowedVehicles[UniversalProcessKit.VEHICLE_SHOVEL])
-
+	
 	self.allowedVehicles[UniversalProcessKit.VEHICLE_WATERTRAILER] = getBoolFromUserAttribute(self.nodeId, "allowWaterTrailer", self.allowedVehicles[UniversalProcessKit.VEHICLE_WATERTRAILER])
 	self.allowedVehicles[UniversalProcessKit.VEHICLE_FUELTRAILER] = getBoolFromUserAttribute(self.nodeId, "allowFuelTrailer", self.allowedVehicles[UniversalProcessKit.VEHICLE_FUELTRAILER])
 	self.allowedVehicles[UniversalProcessKit.VEHICLE_LIQUIDMANURETRAILER] = getBoolFromUserAttribute(self.nodeId, "allowLiquidManureTrailer", self.allowedVehicles[UniversalProcessKit.VEHICLE_LIQUIDMANURETRAILER])
@@ -73,11 +76,33 @@ function UniversalProcessKit:getAllowedVehicles()
 	self.allowedVehicles[UniversalProcessKit.VEHICLE_MIXERWAGONPICKUP] = getBoolFromUserAttribute(self.nodeId, "allowMixerWagonPickup", self.allowedVehicles[UniversalProcessKit.VEHICLE_MIXERWAGONPICKUP])
 	self.allowedVehicles[UniversalProcessKit.VEHICLE_MIXERWAGONTRAILER] = getBoolFromUserAttribute(self.nodeId, "allowMixerWagonTrailer", self.allowedVehicles[UniversalProcessKit.VEHICLE_MIXERWAGONTRAILER])
 	
+	self.allowVehicle = self.allowedVehicles[UniversalProcessKit.VEHICLE_MOTORIZED] or
+		self.allowedVehicles[UniversalProcessKit.VEHICLE_COMBINE]
+
+	self.allowAttachment = self.allowedVehicles[UniversalProcessKit.VEHICLE_ATTACHMENT]
+	
+	self.allowSomeTrailer = (self.allowedVehicles[UniversalProcessKit.VEHICLE_FILLABLE] or
+		self.allowedVehicles[UniversalProcessKit.VEHICLE_TIPPER] or
+		self.allowedVehicles[UniversalProcessKit.VEHICLE_WATERTRAILER] or
+		self.allowedVehicles[UniversalProcessKit.VEHICLE_FUELTRAILER] or
+		self.allowedVehicles[UniversalProcessKit.VEHICLE_LIQUIDMANURETRAILER] or
+		self.allowedVehicles[UniversalProcessKit.VEHICLE_MILKTRAILER] or
+		self.allowedVehicles[UniversalProcessKit.VEHICLE_SOWINGMACHINE] or
+		self.allowedVehicles[UniversalProcessKit.VEHICLE_SPRAYER] or
+		self.allowedVehicles[UniversalProcessKit.VEHICLE_FORAGEWAGON] or
+		self.allowedVehicles[UniversalProcessKit.VEHICLE_MIXERWAGONTRAILER] or
+		self.allowedVehicles[UniversalProcessKit.VEHICLE_BALER])
+	
+	self.allowShovel = self.allowedVehicles[UniversalProcessKit.VEHICLE_SHOVEL] or
+		self.allowedVehicles[UniversalProcessKit.VEHICLE_MIXERWAGONPICKUP]
+
 	self.allowWalker = Utils.getNoNil(self.allowWalker, getBoolFromUserAttribute(self.nodeId, "allowWalker", true))
 	
 	self.allowBales = Utils.getNoNil(self.allowBales, getBoolFromUserAttribute(self.nodeId, "allowBales", false))
-	
 	self.allowPallets = Utils.getNoNil(self.allowPallets, getBoolFromUserAttribute(self.nodeId, "allowPallets", false))
+	self.allowWood = Utils.getNoNil(self.allowWood, getBoolFromUserAttribute(self.nodeId, "allowWood", false))
+	
+	self.allowSomeDynamicObject = (self.allowBales or self.allowPallets)
 	
 	for k,v in pairs(self.allowedVehicles) do
 		if not v then
@@ -150,8 +175,8 @@ function UniversalProcessKit:fitCollisionMaskToAllowedVehicles()
 		self:print('Warning: allowTrafficVehicle is set to true but collisionMask was not fitting (fixed)')
 		collisionMask_new = collisionMask_new + trigger_trafficVehicle
 	end
-	if (self.allowBales or self.allowPallets) and bitAND(collisionMask_new,trigger_dynamic_objects)==0 then
-		self:print('Warning: allowBales or allowPallets is set to true but collisionMask was not fitting (fixed)')
+	if (self.allowBales or self.allowPallets or self.allowWood) and bitAND(collisionMask_new,trigger_dynamic_objects)==0 then
+		self:print('Warning: allowBales or allowPallets or allowWood is set to true but collisionMask was not fitting (fixed)')
 		collisionMask_new = collisionMask_new + trigger_dynamic_objects
 	end
 	
@@ -194,8 +219,8 @@ function UniversalProcessKit:fitCollisionMaskToAllowedVehicles()
 		self:print('Warning: allowTrafficVehicle is set to false but collisionMask was not fitting (fixed)')
 		collisionMask_new = collisionMask_new - trigger_trafficVehicle
 	end
-	if not (self.allowBales or self.allowPallets) and bitAND(collisionMask_new,trigger_dynamic_objects)==1 then
-		self:print('Warning: allowBales and allowPallets is set to false but collisionMask was not fitting (fixed)')
+	if not (self.allowBales or self.allowPallets or self.allowWood) and bitAND(collisionMask_new,trigger_dynamic_objects)==1 then
+		self:print('Warning: allowBales and allowPallets or allowWood is set to false but collisionMask was not fitting (fixed)')
 		collisionMask_new = collisionMask_new - trigger_dynamic_objects
 	end
 	
@@ -208,39 +233,70 @@ function UniversalProcessKit:fitCollisionMaskToAllowedVehicles()
 end
 
 function UniversalProcessKit:triggerCallback(triggerId, otherActorId, onEnter, onLeave, onStay, otherShapeId)
-	if self.isEnabled then
-		--self:print('otherShapeId: '..tostring(otherShapeId)..', otherActorId: '..tostring(otherActorId))
-		local vehicle=g_currentMission.objectToTrailer[otherShapeId] or
-						g_currentMission.nodeToVehicle[otherShapeId] or
-						g_currentMission.objectToTrailer[otherActorId] or
-						g_currentMission.nodeToVehicle[otherActorId] or
-						g_currentMission.nodeObjects[otherShapeId] or
-						g_currentMission.nodeObjects[otherActorId]
-		self:print('=======')
-		--self:print('onEnter '..tostring(onEnter))
-		--self:print('onLeave '..tostring(onLeave))
-		--self:print('onStay '..tostring(onStay))
-		self:print('g_currentMission.objectToTrailer[otherShapeId] '..tostring(g_currentMission.objectToTrailer[otherShapeId]))
-		self:print('g_currentMission.nodeToVehicle[otherShapeId] '..tostring(g_currentMission.nodeToVehicle[otherShapeId]))
-		self:print('g_currentMission.objectToTrailer[otherActorId] '..tostring(g_currentMission.objectToTrailer[otherActorId]))
-		self:print('g_currentMission.nodeToVehicle[otherActorId] '..tostring(g_currentMission.nodeToVehicle[otherActorId]))
-		self:print('vehicle is '..tostring(vehicle))
-		
-		--print(tableShow(vehicle,'',2))
-		
-		local checkStr=""
-		for _,v in pairs(UniversalProcessKit.getVehicleTypes(vehicle)) do
-			checkStr=checkStr..tostring(v)..", "
+	self:print('=======')
+	self:print('otherShapeId: '..tostring(otherShapeId)..', otherActorId: '..tostring(otherActorId))
+	
+	local vehicle
+	
+	self:print('onEnter '..tostring(onEnter))
+	self:print('onLeave '..tostring(onLeave))
+	-- self:print('onStay '..tostring(onStay))
+	
+	if self.allowVehicle or self.allowAttachment or self.allowSomeTrailer or self.allowShovel then
+		if self.allowVehicle then
+			vehicle = g_currentMission.nodeToVehicle[otherActorId]
+			self:print('vehicle found? '..tostring(vehicle))
+		elseif self.allowAttachment then
+			vehicle = g_currentMission.nodeObjects[otherActorId]
+			self:print('attachment found? '..tostring(vehicle))
+		elseif self.allowSomeTrailer then
+			vehicle = g_currentMission.objectToTrailer[otherShapeId]
+			self:print('trailer found? '..tostring(vehicle))
+		elseif self.allowShovel then
+			vehicle = g_currentMission.nodeToVehicle[otherActorId]
+			self:print('shovel found? '..tostring(vehicle))
 		end
-		self:print('vehicle Type is '..tostring(checkStr))
-		
-		--[[
-		self:print("====================")
-		
-		_g.print(tableShow(g_currentMission.plantedTrees.clientTrees))
-		
-		self:print("====================")
-		]]--
+		if vehicle~=nil then
+			if vehicle.upkShapesInTrigger == nil then
+				vehicle.upkShapesInTrigger = {}
+			end
+			if vehicle.upkShapesInTrigger[self] == nil then
+				vehicle.upkShapesInTrigger[self] = {}
+			end
+			for k,v in pairs(UniversalProcessKit.getVehicleTypes(vehicle)) do
+				if v and self.allowedVehicles[k] then
+					if onEnter then
+						vehicle.upkShapesInTrigger[self][otherShapeId]=true
+					else
+						vehicle.upkShapesInTrigger[self][otherShapeId]=nil
+					end
+					
+					local shapesInTrigger = length(vehicle.upkShapesInTrigger[self])
+					self:print('shapes of '..tostring(vehicle)..' in trigger: '..tostring(shapesInTrigger))
+					
+					if onEnter and shapesInTrigger>0 then
+						if vehicle.upkTrigger == nil then
+							vehicle.upkTrigger={}
+						end
+						if not isInTable(vehicle.upkTrigger,self) then
+							table.insert(vehicle.upkTrigger,self)
+						end
+						self:print('vehicle entered: '..tostring(vehicle))
+						self:triggerOnEnter(vehicle)
+					elseif shapesInTrigger==0 then
+						removeValueFromTable(vehicle.upkTrigger,self)
+						self:print('vehicle left: '..tostring(vehicle))
+						self:triggerOnLeave(vehicle)
+					end
+				end
+			end
+		end
+	end
+	
+	if self.allowSomeDynamicObject then
+		vehicle = g_currentMission.nodeObjects[otherShapeId] or
+					g_currentMission.nodeObjects[otherActorId]
+		self:print('pallet/bale found? '..tostring(vehicle))
 		
 		if vehicle~=nil then
 			if self.allowPallets then
@@ -262,7 +318,7 @@ function UniversalProcessKit:triggerCallback(triggerId, otherActorId, onEnter, o
 					end
 				end
 			end
-			
+		
 			if self.allowBales then
 				if vehicle:isa(Bale) then
 					if onEnter then
@@ -272,43 +328,41 @@ function UniversalProcessKit:triggerCallback(triggerId, otherActorId, onEnter, o
 					end
 				end
 			end
-
-			for k,v in pairs(UniversalProcessKit.getVehicleTypes(vehicle)) do
-				if v and self.allowedVehicles[k] then
-					if onEnter then
-						if vehicle.upkTrigger == nil then
-							vehicle.upkTrigger={}
-						end
-						table.insert(vehicle.upkTrigger,self)
-						self:triggerOnEnter(vehicle)
-					elseif onLeave then
-						removeValueFromTable(vehicle.upkTrigger,self)
-						self:triggerOnLeave(vehicle)
-					end
-					break
-				end
+		end
+	end
+	
+	if self.allowWood then
+		vehicle = g_currentMission.nodeObjects[otherShapeId] or
+					g_currentMission.nodeObjects[otherActorId]
+		self:print('wood found? '..tostring(vehicle))
+		
+		if vehicle~=nil then
+			local splitType = SplitUtil.splitTypes[getSplitType(otherActorId)]
+			if splitType ~= nil then
+				self:print('splitType '..tostring(splitType))
 			end
 		end
-		if self.allowWalker and g_currentMission.player ~= nil and otherActorId == g_currentMission.player.rootNode then
-			if onEnter then
-				self.playerInRangeNetworkNode = true
-				self:triggerOnEnter(nil, true)
-			elseif onLeave then
-				self.playerInRangeNetworkNode = false
-				self:triggerOnLeave(nil, true)
-			end
+	end
+
+	if self.allowWalker and g_currentMission.player ~= nil and otherActorId == g_currentMission.player.rootNode then
+		if onEnter then
+			self.playerInRangeNetworkNode = true
+			self:triggerOnEnter(nil, true)
+		elseif onLeave then
+			self.playerInRangeNetworkNode = false
+			self:triggerOnLeave(nil, true)
 		end
 	end
 end
 
 function UniversalProcessKit:triggerOnEnter(vehicle, player, alreadySent)
+	self:print('UniversalProcessKit:triggerOnEnter('..tostring(vehicle)..', '..tostring(player)..', '..tostring(alreadySent))
 	if vehicle~=nil then
-		if isInTable(self.entities, vehicle) then
-			return
-		end
-		local networkId=networkGetObjectId(vehicle)
-		if networkId~=nil and networkId~=0 then
-			self.entities[networkId]=vehicle
+		if not isInTable(self.entities, vehicle) then
+			local networkId=networkGetObjectId(vehicle)
+			if networkId~=nil and networkId~=0 then
+				self.entities[networkId]=vehicle
+			end
 		end
 	end
 	self.entitiesInTrigger=length(self.entities)
@@ -320,15 +374,24 @@ function UniversalProcessKit:triggerOnEnter(vehicle, player, alreadySent)
 			UniversalProcessKitTriggerPlayerEvent.sendEvent(self, true, alreadySent)
 		end
 	end
-	self:triggerUpdate(vehicle,true)
+	if self.entitiesInTrigger>0 then
+		UniversalProcessKitListener.addUpdateable(self.triggerTracker)
+	end
+	if self.isEnabled then
+		self:triggerUpdate(vehicle,true)
+	end
 end;
 
 function UniversalProcessKit:triggerOnLeave(vehicle, player, alreadySent)
+	self:print('UniversalProcessKit:triggerOnLeave('..tostring(vehicle)..', '..tostring(player)..', '..tostring(alreadySent))
+
 	if vehicle~=nil then
-		local networkId=networkGetObjectId(vehicle)
-		if networkId~=nil and networkId~=0 then
-			self.entities[networkId]=nil
-		end
+		--print('isInTable(self.entities, vehicle) is '..tostring(isInTable(self.entities, vehicle)))
+		local valrem = removeValueFromTable(self.entities,vehicle)
+		--print('removing vehicle at '..tostring(valrem))
+		self.entityDistances[vehicle]=nil
+		--print('isInTable(self.entities, vehicle) is '..tostring(isInTable(self.entities, vehicle)))
+		vehicle.upkShapesInTrigger[self]={}
 	end
 	self.entitiesInTrigger=length(self.entities)
 	if player==true and self.playerInRange then
@@ -338,7 +401,15 @@ function UniversalProcessKit:triggerOnLeave(vehicle, player, alreadySent)
 			UniversalProcessKitTriggerPlayerEvent.sendEvent(self, false, alreadySent)
 		end
 	end
-	self:triggerUpdate(vehicle,false)
+	if self.playerInRange then
+		self.entitiesInTrigger = self.entitiesInTrigger + 1
+	end
+	if self.entitiesInTrigger<=0 then
+		UniversalProcessKitListener.removeUpdateable(self.triggerTracker)
+	end
+	if self.isEnabled then
+		self:triggerUpdate(vehicle,false)
+	end
 end;
 
 function UniversalProcessKit:getShowInfo()
@@ -346,7 +417,7 @@ function UniversalProcessKit:getShowInfo()
 		return g_currentMission.controlPlayer or false
 	else
 		for k,v in pairs(self.entities) do
-			if v.isEntered or v:getIsActiveForInput(true) then
+			if v.isEntered or v:getIsActiveForInput(false) then
 				return true
 			end
 		end
@@ -357,6 +428,71 @@ end
 function UniversalProcessKit:onVehicleDeleted(vehicle)
 end
 
+-- UniversalProcessKitTriggerTracker
+
+UniversalProcessKitTriggerTracker = {}
+UniversalProcessKitTriggerTracker_mt = { __index=UniversalProcessKitTriggerTracker }
+
+function UniversalProcessKitTriggerTracker:new(upkmodule)
+	local self = {}
+	setmetatable(self,UniversalProcessKitTriggerTracker_mt)
+	self.upkmodule = upkmodule
+	return self
+end
+
+function UniversalProcessKitTriggerTracker:update(dt)
+	if type(self.upkmodule.entities) == "table" and self.upkmodule.entitiesInTrigger>0 then
+		local wx, wy, wz = getWorldTranslation(self.upkmodule.nodeId)
+		for _, vehicle in pairs(self.upkmodule.entities) do
+			if vehicle.components[1]~=nil then
+				local node = vehicle.rootNode --components[1].node
+				local vehicle_test = g_currentMission.nodeToVehicle[node] or
+								g_currentMission.objectToTrailer[node] or
+								g_currentMission.nodeObjects[node]
+				if vehicle_test~=nil then
+					local vx, vy, vz = getWorldTranslation(node)
+					if vx~=nil and vy~=nil and vz~=nil then
+						local distance=Utils.vector3Length(wx-vx,wy-vy,wz-vz)
+						if self.upkmodule.entityDistances[vehicle]~=nil then
+							if mathabs(self.upkmodule.entityDistances[vehicle] - distance) > 5 then
+								print('vehicle got too far away')
+								self.upkmodule:triggerOnLeave(vehicle)
+							end
+						end
+						self.upkmodule.entityDistances[vehicle] = distance
+					end
+				else
+					print('vehicle doesnt exists anymore')
+					self.upkmodule:triggerOnLeave(vehicle)
+				end
+			end
+		end
+		if self.upkmodule.playerInRangeNetworkNode == true and not g_currentMission.controlPlayer then
+			print('player doesnt exists anymore')
+			self.upkmodule.playerInRangeNetworkNode = false
+			self.upkmodule.playerDistance = nil
+			self.upkmodule:triggerOnLeave(nil,true)
+		elseif self.upkmodule.playerInRangeNetworkNode == true then
+			local vx, vy, vz = getWorldTranslation(g_currentMission.player.rootNode)
+			local distance=Utils.vector3Length(wx-vx,wy-vy,wz-vz)
+			if self.upkmodule.playerDistance~=nil then
+				if mathabs(self.upkmodule.playerDistance - distance) > 5 then
+					print('player got too far away')
+					self.upkmodule.playerInRangeNetworkNode = false
+					self.upkmodule.playerDistance = nil
+					self.upkmodule:triggerOnLeave(nil, true)
+				end
+			end
+			self.upkmodule.playerDistance = distance
+		end
+	end
+end
+
+function UniversalProcessKitTriggerTracker:delete()
+	UniversalProcessKitListener.removeUpdateable(self)
+end
+
+-- UniversalProcessKitTriggerPlayerEvent
 
 UniversalProcessKitTriggerPlayerEvent = {}
 UniversalProcessKitTriggerPlayerEvent_mt = Class(UniversalProcessKitTriggerPlayerEvent, Event);
