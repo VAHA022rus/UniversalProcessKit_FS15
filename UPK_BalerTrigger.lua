@@ -60,7 +60,7 @@ end
 
 function UPK_BalerTrigger:triggerUpdate(vehicle,isInTrigger)
 	--self:print('UPK_BalerTrigger:triggerUpdate('..tostring(vehicle)..', '..tostring(isInTrigger)..')')
-	if self.isServer then
+	if self.isEnabled and self.isServer then
 		for k,v in pairs(self.allowedVehicles) do
 			--self:print('check for VEHICLE_FORAGEWAGON '..tostring(UniversalProcessKit.isVehicleType(vehicle, UniversalProcessKit.VEHICLE_FORAGEWAGON)))
 			--self:print('check for VEHICLE_BALER '..tostring(UniversalProcessKit.isVehicleType(vehicle,UniversalProcessKit.VEHICLE_BALER)))

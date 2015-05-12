@@ -26,7 +26,7 @@ end
 
 function UPK_ParkTrigger:triggerUpdate(vehicle,isInTrigger)
 	self:print('UPK_ParkTrigger:triggerUpdate('..tostring(vehicle)..', '..tostring(isInTrigger)..')')
-	if vehicle~=nil then
+	if self.isEnabled and vehicle~=nil then
 		if isInTrigger then
 			vehicle.nonTabbable = true
 		elseif not SpecializationUtil.hasSpecialization(NonTabbable, vehicle.specializations) then

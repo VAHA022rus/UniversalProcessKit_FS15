@@ -119,9 +119,9 @@ function UPK_Processor:new(nodeId, parent)
 	local addIfProcessingArr=getArrayFromUserAttribute(nodeId, "addIfProcessing")
 	for i=1,#addIfProcessingArr,2 do
 		local amount=tonumber(addIfProcessingArr[i])
-		local fillType=unpack(UniversalProcessKit.fillTypeNameToInt(addIfProcessingArr[i+1]))
-		if type(amount)=="number" and amount>0 and type(fillType)=="number" then
-			self.addIfProcessing[fillType]=amount
+		local type=unpack(UniversalProcessKit.fillTypeNameToInt(addIfProcessingArr[i+1]))
+		if amount~=nil and type~=nil then
+			self.addIfProcessing[type]=amount
 			self.hasAddIfProcessing=true
 		end
 	end
@@ -131,9 +131,9 @@ function UPK_Processor:new(nodeId, parent)
 	local removeIfProcessingArr=getArrayFromUserAttribute(nodeId, "removeIfProcessing")
 	for i=1,#removeIfProcessingArr,2 do
 		local amount=tonumber(removeIfProcessingArr[i])
-		local fillType=unpack(UniversalProcessKit.fillTypeNameToInt(removeIfProcessingArr[i+1]))
-		if type(amount)=="number" and amount>0 and type(fillType)=="number" then
-			self.removeIfProcessing[fillType]=-amount
+		local type=unpack(UniversalProcessKit.fillTypeNameToInt(removeIfProcessingArr[i+1]))
+		if amount~=nil and type~=nil then
+			self.removeIfProcessing[type]=amount
 			self.hasAddIfProcessing=true
 		end
 	end
@@ -161,9 +161,9 @@ function UPK_Processor:new(nodeId, parent)
 	local addIfNotProcessingArr=getArrayFromUserAttribute(nodeId, "addIfNotProcessing")
 	for i=1,#addIfNotProcessingArr,2 do
 		local amount=tonumber(addIfNotProcessingArr[i])
-		local fillType=unpack(UniversalProcessKit.fillTypeNameToInt(addIfNotProcessingArr[i+1]))
-		if type(amount)=="number" and amount>0 and type(fillType)=="number" then
-			self.addIfNotProcessing[fillType]=amount
+		local type=unpack(UniversalProcessKit.fillTypeNameToInt(addIfNotProcessingArr[i+1]))
+		if amount~=nil and type~=nil then
+			self.addIfNotProcessing[type]=amount
 			self.hasAddIfNotProcessing=true
 		end
 	end
@@ -173,9 +173,9 @@ function UPK_Processor:new(nodeId, parent)
 	local removeIfNotProcessingArr=getArrayFromUserAttribute(nodeId, "removeIfNotProcessing")
 	for i=1,#removeIfNotProcessingArr,2 do
 		local amount=tonumber(removeIfNotProcessingArr[i])
-		local fillType=unpack(UniversalProcessKit.fillTypeNameToInt(removeIfNotProcessingArr[i+1]))
-		if type(amount)=="number" and amount>0 and type(fillType)=="number" then
-			self.removeIfNotProcessing[fillType]=-amount
+		local type=unpack(UniversalProcessKit.fillTypeNameToInt(removeIfNotProcessingArr[i+1]))
+		if amount~=nil and type~=nil then
+			self.removeIfNotProcessing[type]=amount
 			self.hasAddIfNotProcessing=true
 		end
 	end
@@ -203,9 +203,9 @@ function UPK_Processor:new(nodeId, parent)
 	local addIfProductionSkippedArr=getArrayFromUserAttribute(nodeId, "addIfProductionSkipped")
 	for i=1,#addIfProductionSkippedArr,2 do
 		local amount=tonumber(addIfProductionSkippedArr[i])
-		local fillType=unpack(UniversalProcessKit.fillTypeNameToInt(addIfProductionSkippedArr[i+1]))
-		if type(amount)=="number" and amount>0 and type(fillType)=="number" then
-			self.addIfProductionSkipped[fillType]=amount
+		local type=unpack(UniversalProcessKit.fillTypeNameToInt(addIfProductionSkippedArr[i+1]))
+		if amount~=nil and type~=nil then
+			self.addIfProductionSkipped[type]=amount
 			self.hasAddIfProductionSkipped=true
 		end
 	end
@@ -215,9 +215,9 @@ function UPK_Processor:new(nodeId, parent)
 	local removeIfProductionSkippedArr=getArrayFromUserAttribute(nodeId, "removeIfProductionSkipped")
 	for i=1,#removeIfProductionSkippedArr,2 do
 		local amount=tonumber(removeIfProductionSkippedArr[i])
-		local fillType=unpack(UniversalProcessKit.fillTypeNameToInt(removeIfProductionSkippedArr[i+1]))
-		if type(amount)=="number" and amount>0 and type(fillType)=="number" then
-			self.removeIfProductionSkipped[fillType]=-amount
+		local type=unpack(UniversalProcessKit.fillTypeNameToInt(removeIfProductionSkippedArr[i+1]))
+		if amount~=nil and type~=nil then
+			self.removeIfProductionSkipped[type]=amount
 			self.hasAddIfProductionSkipped=true
 		end
 	end
@@ -434,10 +434,18 @@ function UPK_Processor:produce(processed)
 			
 			-- addIfProcessing
 			if self.hasAddIfProcessing then
-				self:addFillLevels(self.addIfProcessing)
+				for k,v in pairs(self.addIfProcessing) do
+					if type(v)=="number" and v>0 then
+						self:addFillLevel(v,k)
+					end
+				end
 			end
 			if self.hasRemoveIfProcessing then
-				self:addFillLevels(self.removeIfProcessing)
+				for k,v in pairs(self.removeIfProcessing) do
+					if type(v)=="number" and v>0 then
+						self:addFillLevel(-v,k)
+					end
+				end
 			end
 			
 			-- en/disableChildrenIfProcessing
@@ -458,10 +466,18 @@ function UPK_Processor:produce(processed)
 			
 			-- addIfNotProcessing
 			if self.hasAddIfNotProcessing then
-				self:addFillLevels(self.addIfNotProcessing)
+				for k,v in pairs(self.addIfNotProcessing) do
+					if type(v)=="number" and v>0 then
+						self:addFillLevel(v,k)
+					end
+				end
 			end
 			if self.hasRemoveIfNotProcessing then
-				self:addFillLevels(self.removeIfNotProcessing)
+				for k,v in pairs(self.removeIfNotProcessing) do
+					if type(v)=="number" and v>0 then
+						self:addFillLevel(-v,k)
+					end
+				end
 			end
 			
 			-- en/disableChildrenIfNotProcessing
@@ -483,11 +499,19 @@ function UPK_Processor:productionSkipped()
 	end
 
 	if self.hasAddIfProductionSkipped then
-		self:addFillLevels(self.addIfProductionSkipped)
+		for k,v in pairs(self.addIfProductionSkipped) do
+			if type(v)=="number" and v>0 then
+				self:addFillLevel(v,k)
+			end
+		end
 	end
 	
 	if self.hasRemoveIfProductionSkipped then
-		self:addFillLevels(self.removeIfProductionSkipped)
+		for k,v in pairs(self.removeIfProductionSkipped) do
+			if type(v)=="number" and v>0 then
+				self:addFillLevel(-v,k)
+			end
+		end
 	end
 
 	-- en/disableChildrenIfProductionSkipped

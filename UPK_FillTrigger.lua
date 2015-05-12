@@ -270,10 +270,10 @@ function UPK_FillTrigger:getPricePerLiter(fillType)
 end
 
 function UPK_FillTrigger:fillTrailer(trailer, deltaFillLevel) -- tippers, shovels etc
-	--self:print('UPK_FillTrigger:fillTrailer('..tostring(trailer)..', '..tostring(deltaFillLevel)..')')
+	self:print('UPK_FillTrigger:fillTrailer('..tostring(trailer)..', '..tostring(deltaFillLevel)..')')
 	if self.isServer and self.isEnabled then
 		local fillFillType = self.fillFillType or self:getFillType() -- for single, fifo and filo
-		--self:print('fillFillType '..tostring(fillFillType))
+		self:print('fillFillType '..tostring(fillFillType))
 		if fillFillType~=UniversalProcessKit.FILLTYPE_UNKNOWN then
 			
 			if self.fillOnlyWholeNumbers then

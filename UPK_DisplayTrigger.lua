@@ -59,13 +59,13 @@ function UPK_DisplayTrigger:delete()
 end
 
 function UPK_DisplayTrigger:triggerUpdate(vehicle,isInTrigger)
-	self:print('UPK_DisplayTrigger:triggerUpdate('..tostring(vehicle)..','..tostring(isInTrigger)..')')
-	self:print('entitiesInTrigger = '..tostring(self.entitiesInTrigger))
+	--self:print('UPK_DisplayTrigger:triggerUpdate('..tostring(vehicle)..','..tostring(isInTrigger)..')')
+	--self:print('entitiesInTrigger = '..tostring(self.entitiesInTrigger))
 	if self.entitiesInTrigger>0 then
-		self:print('UniversalProcessKitListener.addUpdateable()')
+		--self:print('UniversalProcessKitListener.addUpdateable()')
 		UniversalProcessKitListener.addUpdateable(self)
 	else
-		self:print('UniversalProcessKitListener.removeUpdateable()')
+		--self:print('UniversalProcessKitListener.removeUpdateable()')
 		UniversalProcessKitListener.removeUpdateable(self)
 	end
 end

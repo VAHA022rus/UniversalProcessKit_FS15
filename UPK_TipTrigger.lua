@@ -363,11 +363,15 @@ function UPK_TipTrigger:getNoAllowedText(trailer)
 	local fillTypeName = self.i18n[UniversalProcessKit.fillTypeIntToName[trailerFillType]]
 	local fillType = self:getFillType()
 	
-	local newFillType = self.fillTypesConversionMatrix[fillType][trailerFillType]
+	local flbs=self:getFillLevelBubbleShellFromFillType(trailerFillType)
+		
+	self:print('fillType '..tostring(fillType))
+	self:print('trailerFillType '..tostring(trailerFillType))
+	self:print('newFillType '..tostring(newFillType))
 	
-	if newFillType~=nil and newFillType~=Fillable.FILLTYPE_UNKNOWN and self.showCapacityReachedWarning then
-		local fillLevel = self:getFillLevel(newFillType)
-		local capacity = self:getCapacity(newFillType)
+	if flbs~=nil and trailerFillType~=Fillable.FILLTYPE_UNKNOWN and self.showCapacityReachedWarning then
+		local fillLevel = flbs:getFillLevel(trailerFillType)
+		local capacity = flbs:getCapacity(trailerFillType)
 		
 		if fillLevel==capacity then
 			if string.find(self.i18n["capacityReached"], "%%s")~=nil then
@@ -378,7 +382,7 @@ function UPK_TipTrigger:getNoAllowedText(trailer)
 		end
 	end
 	
-	if newFillType==nil and trailerFillType~=Fillable.FILLTYPE_UNKNOWN and self.showNotAcceptedWarning then
+	if flbs==nil and trailerFillType~=Fillable.FILLTYPE_UNKNOWN and self.showNotAcceptedWarning then
 		if string.find(self.i18n["notAcceptedHere"], "%%s")~=nil then
 			return string.format(self.i18n["notAcceptedHere"], fillTypeName)
 		else
@@ -391,7 +395,7 @@ end
 
 function UPK_TipTrigger:triggerUpdate(vehicle,isInTrigger)
 	self:print('UPK_TipTrigger:triggerUpdate('..tostring(vehicle)..','..tostring(isInTrigger)..')')
-	if true then
+	if self.isEnabled then
 		if UniversalProcessKit.isVehicleType(vehicle, UniversalProcessKit.VEHICLE_TIPPER) then
 			self:print('vehicle is tipper')
 			if isInTrigger then

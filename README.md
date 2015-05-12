@@ -9,7 +9,7 @@ Die Konfiguration des UPK-Mods wird allein über UserAttributes in der i3d gereg
 
 __aktuelle Version (0.9.8) -> AAA\_UniversalProcessKit__
 
-__aktuelle Entwickler-Version (0.9.8) -> AAA\_UniversalProcessKit-dev__
+__aktuelle Entwickler-Version (0.9.10) -> AAA\_UniversalProcessKit-dev__
 
 __Dokumentation -> 00\_documentation__
 
@@ -44,7 +44,20 @@ Bisher enthaltene Module:
 
 ##Changelog
 
+__V0.9.10__
+
+ROLLBACK ZU V0.9.8!!!!
+
+- neu: heading (displaytrigger)
+- neu: mode (activatortrigger)
+- verbesserte Genauigkeit für filltrigger (8 Nachkommastellen)
+- bekannte Fülltypen erweitert
+- Fränzösisch und Russisch ergänzt (großer Dank an JeyMini)
+- Beispielmod UPK_ActivatorTriggerTest2 hinzugefügt
+
 __V0.9.9__
+
+VERSION GELÖSCHT
 
 - neu: spawnAboveTerrainHeight (playerspawner)
 - neu: heading (displaytrigger)

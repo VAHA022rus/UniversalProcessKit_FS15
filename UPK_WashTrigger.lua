@@ -77,7 +77,7 @@ end
 
 function UPK_WashTrigger:triggerUpdate(vehicle,isInTrigger)
 	self:print('UPK_WashTrigger:triggerUpdate')
-	if true and self.washPerSecond~=0 then
+	if self.isEnabled and self.washPerSecond~=0 then
 		for k,v in pairs(self.allowedVehicles) do
 			if v and UniversalProcessKit.isVehicleType(vehicle, k) then
 				if isInTrigger then

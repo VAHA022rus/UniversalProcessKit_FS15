@@ -15,8 +15,6 @@ function UPK_PlayerSpawner:new(nodeId, parent)
 	local self = UniversalProcessKit:new(nodeId, parent, UPK_PlayerSpawner_mt)
 	registerObjectClassName(self, "UPK_PlayerSpawner")
 	
-	self.spawnAboveTerrainHeight = getNumberFromUserAttribute(nodeId, "spawnAboveTerrainHeight", 0.5, 0.5)
-	
 	table.insert(UPK_PlayerSpawner.spawner,self)
 	
 	self:print('loaded PlayerSpawner successfully')
@@ -58,11 +56,11 @@ function UPK_PlayerSpawner.togglePlayerSpawner(delta)
 			print('next spawner found!')
 			print('index '..tostring(index))
 			UPK_PlayerSpawner.spawnerIndex = index
-			local spawnerNodeId = UPK_PlayerSpawner.spawner[index].nodeId
-			local x, _, z = getWorldTranslation(spawnerNodeId)
-			local y = getTerrainHeightAtWorldPos(g_currentMission.terrainRootNode, x, 0, z)
-			local dx, _, dz = localDirectionToWorld(spawnerNodeId, 0, 0, 1)
-			g_client:getServerConnection():sendEvent(PlayerTeleportEvent:new(x, y + self.spawnAboveTerrainHeight, z))
+			local spawner = UPK_PlayerSpawner.spawner[index]
+			local x, y, z = getWorldTranslation(spawner.nodeId)
+			local miny = getTerrainHeightAtWorldPos(g_currentMission.terrainRootNode, x, 0, z) + 0.5
+			local dx, _, dz = localDirectionToWorld(spawner.nodeId, 0, 0, 1)
+			g_client:getServerConnection():sendEvent(PlayerTeleportEvent:new(x, mathmin(y,miny), z))
 			g_currentMission.player.rotY = Utils.getYRotationFromDirection(dx, dz) + math.pi
 		end
 	end

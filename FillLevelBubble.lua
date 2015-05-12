@@ -36,7 +36,6 @@ _g.fillLevelBubble_mt = {
 			end
 			local oldFillLevel = lhs.fillLevel
 			local newFillLevel = mathmax(mathmin(oldFillLevel + rhs, lhs.capacity), 0)
-			--print('new fillLevel: '..tostring(newFillLevel))
 			local diff = newFillLevel - oldFillLevel
 			lhs:onFillLevelChange(diff,newFillLevel,lhs.fillType)
 			lhs.fillLevel = newFillLevel
@@ -68,7 +67,6 @@ _g.fillLevelBubble_mt = {
 			end
 			local oldFillLevel = lhs.fillLevel
 			local newFillLevel = mathmin(mathmax(oldFillLevel - rhs, 0), lhs.capacity)
-			--print('new fillLevel: '..tostring(newFillLevel))
 			local diff = newFillLevel - oldFillLevel
 			lhs:onFillLevelChange(diff,newFillLevel,lhs.fillType)
 			lhs.fillLevel = newFillLevel

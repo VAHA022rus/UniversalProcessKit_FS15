@@ -105,7 +105,7 @@ end
 
 function UPK_BaleTrigger:triggerUpdate(vehicle,isInTrigger)
 	self:print('UPK_BaleTrigger:triggerUpdate')
-	if true then
+	if self.isEnabled then
 		self:print('vehicle is: '..tostring(vehicle))
 		if type(vehicle)=="table" and vehicle:isa(Bale) then
 			self:print('isInTrigger is: '..tostring(isInTrigger))

@@ -32,7 +32,7 @@ end
 
 function UPK_EntityTrigger:triggerUpdate(vehicle,isInTrigger)
 	self:print('UPK_EntityTrigger:triggerUpdate')
-	if true then
+	if self.isEnabled then
 		self:print('self.entitiesInTrigger='..tostring(self.entitiesInTrigger))
 		if self.entitiesInTrigger>0 then
 			if self.isEnabledChildren==self.enableOnEmpty then

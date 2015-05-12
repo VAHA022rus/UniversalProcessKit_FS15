@@ -80,7 +80,7 @@ end
 
 function UPK_GasStationTrigger:triggerUpdate(vehicle,isInTrigger)
 	--self:print('UPK_GasStationTrigger:triggerUpdate('..tostring(vehicle)..', '..tostring(isInTrigger)..')')
-	if true and self.isClient and vehicle~=nil then
+	if self.isEnabled and self.isClient and vehicle~=nil then
 		if isInTrigger then
 			--self:print('is in trigger')
 			if vehicle.addFuelFillTrigger~=nil and not vehicle.UPK_gasStationTriggerAdded then

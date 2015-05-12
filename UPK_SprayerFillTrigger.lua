@@ -78,7 +78,7 @@ end
 
 function UPK_SprayerFillTrigger:triggerUpdate(vehicle,isInTrigger)
 	--self:print('UPK_SprayerFillTrigger:triggerUpdate('..tostring(vehicle)..', '..tostring(isInTrigger)..')')
-	if self.isClient then
+	if self.isEnabled and self.isClient then
 		if self.allowedVehicles[UniversalProcessKit.VEHICLE_SPRAYER] and UniversalProcessKit.isVehicleType(vehicle, UniversalProcessKit.VEHICLE_SPRAYER) then
 			--self:print('recognized sprayer')
 			if isInTrigger then

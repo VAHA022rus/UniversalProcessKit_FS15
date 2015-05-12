@@ -114,7 +114,7 @@ function UPK_EmptyTrigger:new(nodeId, parent)
 end
 
 function UPK_EmptyTrigger:triggerUpdate(vehicle,isInTrigger)
-	if self.isServer then
+	if self.isEnabled and self.isServer then
 		for k,v in pairs(self.allowedVehicles) do
 			if v and UniversalProcessKit.isVehicleType(vehicle, k) then
 				if isInTrigger then
