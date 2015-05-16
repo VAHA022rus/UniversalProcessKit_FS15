@@ -8,6 +8,8 @@ function UniversalProcessKit:triggerUpdate(vehicle,isInTrigger)
 end
 
 function UniversalProcessKit:addTrigger()
+	self:printFn('UniversalProcessKit:addTrigger()')
+	
 	self.triggerId=self.nodeId
 	self:getAllowedVehicles()
 	self:fitCollisionMaskToAllowedVehicles()
@@ -24,6 +26,8 @@ function UniversalProcessKit:addTrigger()
 end
 
 function UniversalProcessKit:removeTrigger()
+	self:printFn('UniversalProcessKit:removeTrigger()')
+	
 	if self.triggerId~=nil and self.triggerId~=0 then
 		removeValueFromTable(g_upkTrigger, self)
 		removeTrigger(self.triggerId)
@@ -37,6 +41,8 @@ function UniversalProcessKit:removeTrigger()
 end
 
 function UniversalProcessKit:getAllowedVehicles()
+	self:printFn('UniversalProcessKit:getAllowedVehicles()')
+	
 	if self.allowedVehicles==nil then
 		self.allowedVehicles={}
 		self.allowedVehicles[UniversalProcessKit.VEHICLE_MOTORIZED]=true
@@ -87,6 +93,8 @@ function UniversalProcessKit:getAllowedVehicles()
 end
 
 function UniversalProcessKit:fitCollisionMaskToAllowedVehicles()
+	self:printFn('UniversalProcessKit:fitCollisionMaskToAllowedVehicles()')
+	
 	-- taking care of correct collisionMask
 	-- http://gdn.giants-software.com/thread.php?categoryId=16&threadId=677
 	-- player = 2^20 = 1048576
@@ -114,15 +122,15 @@ function UniversalProcessKit:fitCollisionMaskToAllowedVehicles()
 	-- add colision mask bits if necessary
 	
 	if self.allowWalker and bitAND(collisionMask_new,trigger_player)==0 then
-		self:print('Warning: allowWalker is set to true but collisionMask was not fitting (fixed)')
+		self:printInfo('Warning: allowWalker is set to true but collisionMask was not fitting (fixed)')
 		collisionMask_new = collisionMask_new + trigger_player
 	end
 	if self.allowedVehicles[UniversalProcessKit.VEHICLE_MOTORIZED] and bitAND(collisionMask_new,trigger_tractor)==0 then
-		self:print('Warning: allowMotorized is set to true but collisionMask was not fitting (fixed)')
+		self:printInfo('Warning: allowMotorized is set to true but collisionMask was not fitting (fixed)')
 		collisionMask_new = collisionMask_new + trigger_tractor
 	end
 	if self.allowedVehicles[UniversalProcessKit.VEHICLE_COMBINE] and bitAND(collisionMask_new,trigger_combine)==0 then
-		self:print('Warning: allowCombine is set to true but collisionMask was not fitting (fixed)')
+		self:printInfo('Warning: allowCombine is set to true but collisionMask was not fitting (fixed)')
 		collisionMask_new = collisionMask_new + trigger_combine
 	end
 	if (self.allowedVehicles[UniversalProcessKit.VEHICLE_FILLABLE] or -- check every fillable type
@@ -138,35 +146,35 @@ function UniversalProcessKit:fitCollisionMaskToAllowedVehicles()
 		self.allowedVehicles[UniversalProcessKit.VEHICLE_MIXERWAGONTRAILER] or
 		self.allowedVehicles[UniversalProcessKit.VEHICLE_MIXERWAGONPICKUP] or
 		self.allowedVehicles[UniversalProcessKit.VEHICLE_BALER]) and bitAND(collisionMask_new,trigger_fillable)==0 then
-		self:print('Warning: allowFillable is set to true but collisionMask was not fitting (fixed)')
+		self:printInfo('Warning: allowFillable is set to true but collisionMask was not fitting (fixed)')
 		collisionMask_new = collisionMask_new + trigger_fillable
 	end
 	if self.allowedVehicles[UniversalProcessKit.VEHICLE_ATTACHMENT] and bitAND(collisionMask_new,trigger_attachment)==0 then
-		self:print('Warning: allowAttachment is set to true but collisionMask was not fitting (fixed)')
+		self:printInfo('Warning: allowAttachment is set to true but collisionMask was not fitting (fixed)')
 		collisionMask_new = collisionMask_new + trigger_attachment
 	end
 	if (self.allowedVehicles[UniversalProcessKit.VEHICLE_TRAFFICVEHICLE] or
 		self.allowedVehicles[UniversalProcessKit.VEHICLE_MILKTRUCK]) and bitAND(collisionMask_new,trigger_trafficVehicle)==0 then
-		self:print('Warning: allowTrafficVehicle is set to true but collisionMask was not fitting (fixed)')
+		self:printInfo('Warning: allowTrafficVehicle is set to true but collisionMask was not fitting (fixed)')
 		collisionMask_new = collisionMask_new + trigger_trafficVehicle
 	end
 	if (self.allowBales or self.allowPallets) and bitAND(collisionMask_new,trigger_dynamic_objects)==0 then
-		self:print('Warning: allowBales or allowPallets is set to true but collisionMask was not fitting (fixed)')
+		self:printInfo('Warning: allowBales or allowPallets is set to true but collisionMask was not fitting (fixed)')
 		collisionMask_new = collisionMask_new + trigger_dynamic_objects
 	end
 	
 	-- substract colision mask bits if necessary
 	
 	if not self.allowWalker and bitAND(collisionMask_new,trigger_player)==1 then
-		self:print('Warning: allowWalker is set to false but collisionMask was not fitting (fixed)')
+		self:printInfo('Warning: allowWalker is set to false but collisionMask was not fitting (fixed)')
 		collisionMask_new = collisionMask_new - trigger_player
 	end
 	if not self.allowedVehicles[UniversalProcessKit.VEHICLE_MOTORIZED] and bitAND(collisionMask_new,trigger_tractor)==1 then
-		self:print('Warning: allowMotorized is set to false but collisionMask was not fitting (fixed)')
+		self:printInfo('Warning: allowMotorized is set to false but collisionMask was not fitting (fixed)')
 		collisionMask_new = collisionMask_new - trigger_tractor
 	end
 	if not self.allowedVehicles[UniversalProcessKit.VEHICLE_COMBINE] and bitAND(collisionMask_new,trigger_combine)==1 then
-		self:print('Warning: allowCombine is set to false but collisionMask was not fitting (fixed)')
+		self:printInfo('Warning: allowCombine is set to false but collisionMask was not fitting (fixed)')
 		collisionMask_new = collisionMask_new - trigger_combine
 	end
 	if (not (self.allowedVehicles[UniversalProcessKit.VEHICLE_FILLABLE] or -- check every fillable type
@@ -182,65 +190,52 @@ function UniversalProcessKit:fitCollisionMaskToAllowedVehicles()
 		self.allowedVehicles[UniversalProcessKit.VEHICLE_MIXERWAGONTRAILER] or
 		self.allowedVehicles[UniversalProcessKit.VEHICLE_MIXERWAGONPICKUP] or
 		self.allowedVehicles[UniversalProcessKit.VEHICLE_BALER]) and bitAND(collisionMask_new,trigger_fillable)==1) then
-		self:print('Warning: allowFillable is set to false but collisionMask was not fitting (fixed)')
+		self:printInfo('Warning: allowFillable is set to false but collisionMask was not fitting (fixed)')
 		collisionMask_new = collisionMask_new - trigger_fillable
 	end
 	if not self.allowedVehicles[UniversalProcessKit.VEHICLE_ATTACHMENT] and bitAND(collisionMask_new,trigger_attachment)==1 then
-		self:print('Warning: allowAttachment is set to false but collisionMask was not fitting (fixed)')
+		self:printInfo('Warning: allowAttachment is set to false but collisionMask was not fitting (fixed)')
 		collisionMask_new = collisionMask_new - trigger_attachment
 	end
 	if not (self.allowedVehicles[UniversalProcessKit.VEHICLE_TRAFFICVEHICLE] or
 		self.allowedVehicles[UniversalProcessKit.VEHICLE_MILKTRUCK]) and bitAND(collisionMask_new,trigger_trafficVehicle)==1 then
-		self:print('Warning: allowTrafficVehicle is set to false but collisionMask was not fitting (fixed)')
+		self:printInfo('Warning: allowTrafficVehicle is set to false but collisionMask was not fitting (fixed)')
 		collisionMask_new = collisionMask_new - trigger_trafficVehicle
 	end
 	if not (self.allowBales or self.allowPallets) and bitAND(collisionMask_new,trigger_dynamic_objects)==1 then
-		self:print('Warning: allowBales and allowPallets is set to false but collisionMask was not fitting (fixed)')
+		self:printInfo('Warning: allowBales and allowPallets is set to false but collisionMask was not fitting (fixed)')
 		collisionMask_new = collisionMask_new - trigger_dynamic_objects
 	end
 	
 	-- result
 	
 	if collisionMask_new ~= collisionMask_old then
-		self:print('Warning: set collisionMask according to allowed vehicles to '..tostring(collisionMask_new)..' (you may want to fix that)')
+		self:printInfo('Warning: set collisionMask according to allowed vehicles to ',collisionMask_new,' (you may want to fix that)')
 		setCollisionMask(self.triggerId,collisionMask_new)
 	end
 end
 
 function UniversalProcessKit:triggerCallback(triggerId, otherActorId, onEnter, onLeave, onStay, otherShapeId)
+	self:printFn('UniversalProcessKit:triggerCallback(',triggerId,', ',otherActorId,', ',onEnter,', ',onLeave,', ',onStay,', ',otherShapeId,')')
 	if self.isEnabled then
-		--self:print('otherShapeId: '..tostring(otherShapeId)..', otherActorId: '..tostring(otherActorId))
 		local vehicle=g_currentMission.objectToTrailer[otherShapeId] or
 						g_currentMission.nodeToVehicle[otherShapeId] or
 						g_currentMission.objectToTrailer[otherActorId] or
 						g_currentMission.nodeToVehicle[otherActorId] or
 						g_currentMission.nodeObjects[otherShapeId] or
 						g_currentMission.nodeObjects[otherActorId]
-		self:print('=======')
-		--self:print('onEnter '..tostring(onEnter))
-		--self:print('onLeave '..tostring(onLeave))
-		--self:print('onStay '..tostring(onStay))
-		self:print('g_currentMission.objectToTrailer[otherShapeId] '..tostring(g_currentMission.objectToTrailer[otherShapeId]))
-		self:print('g_currentMission.nodeToVehicle[otherShapeId] '..tostring(g_currentMission.nodeToVehicle[otherShapeId]))
-		self:print('g_currentMission.objectToTrailer[otherActorId] '..tostring(g_currentMission.objectToTrailer[otherActorId]))
-		self:print('g_currentMission.nodeToVehicle[otherActorId] '..tostring(g_currentMission.nodeToVehicle[otherActorId]))
-		self:print('vehicle is '..tostring(vehicle))
-		
-		--print(tableShow(vehicle,'',2))
-		
+		self:printAll('=======')
+		self:printAll('g_currentMission.objectToTrailer[otherShapeId] ',g_currentMission.objectToTrailer[otherShapeId])
+		self:printAll('g_currentMission.nodeToVehicle[otherShapeId] ',g_currentMission.nodeToVehicle[otherShapeId])
+		self:printAll('g_currentMission.objectToTrailer[otherActorId] ',g_currentMission.objectToTrailer[otherActorId])
+		self:printAll('g_currentMission.nodeToVehicle[otherActorId] ',g_currentMission.nodeToVehicle[otherActorId])
+		self:printAll('vehicle is '..tostring(vehicle))
+				
 		local checkStr=""
 		for _,v in pairs(UniversalProcessKit.getVehicleTypes(vehicle)) do
 			checkStr=checkStr..tostring(v)..", "
 		end
-		self:print('vehicle Type is '..tostring(checkStr))
-		
-		--[[
-		self:print("====================")
-		
-		_g.print(tableShow(g_currentMission.plantedTrees.clientTrees))
-		
-		self:print("====================")
-		]]--
+		self:printAll('vehicle Type is '..tostring(checkStr))
 		
 		if vehicle~=nil then
 			if self.allowPallets then
@@ -254,7 +249,7 @@ function UniversalProcessKit:triggerCallback(triggerId, otherActorId, onEnter, o
 					end
 				end
 				if vehicle.isPallet then
-					self:print('thingy is a pallet 1')
+					self:printAll('thingy is a pallet 1')
 					if onEnter then
 						self:triggerOnEnter(vehicle)
 					elseif onLeave then
@@ -302,6 +297,7 @@ function UniversalProcessKit:triggerCallback(triggerId, otherActorId, onEnter, o
 end
 
 function UniversalProcessKit:triggerOnEnter(vehicle, player, alreadySent)
+	self:printFn('UniversalProcessKit:triggerCallback(',vehicle,', ',player,', ',alreadySent,')')
 	if vehicle~=nil then
 		if isInTable(self.entities, vehicle) then
 			return
@@ -316,7 +312,6 @@ function UniversalProcessKit:triggerOnEnter(vehicle, player, alreadySent)
 		self.playerInRange = true
 		self.entitiesInTrigger=self.entitiesInTrigger+1
 		if not alreadySent then
-			self:print('UniversalProcessKitTriggerPlayerEvent.sendEvent(self, true, alreadySent)')
 			UniversalProcessKitTriggerPlayerEvent.sendEvent(self, true, alreadySent)
 		end
 	end
@@ -324,6 +319,7 @@ function UniversalProcessKit:triggerOnEnter(vehicle, player, alreadySent)
 end;
 
 function UniversalProcessKit:triggerOnLeave(vehicle, player, alreadySent)
+	self:printFn('UniversalProcessKit:triggerOnLeave(',vehicle,', ',player,', ',alreadySent,')')
 	if vehicle~=nil then
 		local networkId=networkGetObjectId(vehicle)
 		if networkId~=nil and networkId~=0 then
@@ -334,7 +330,6 @@ function UniversalProcessKit:triggerOnLeave(vehicle, player, alreadySent)
 	if player==true and self.playerInRange then
 		self.playerInRange = false
 		if not alreadySent then
-			self:print('UniversalProcessKitTriggerPlayerEvent.sendEvent(self, false, alreadySent)')
 			UniversalProcessKitTriggerPlayerEvent.sendEvent(self, false, alreadySent)
 		end
 	end
@@ -342,6 +337,7 @@ function UniversalProcessKit:triggerOnLeave(vehicle, player, alreadySent)
 end;
 
 function UniversalProcessKit:getShowInfo()
+	self:printFn('UniversalProcessKit:getShowInfo()')
 	if self.playerInRangeNetworkNode then
 		return g_currentMission.controlPlayer or false
 	else
@@ -355,6 +351,7 @@ function UniversalProcessKit:getShowInfo()
 end
 
 function UniversalProcessKit:onVehicleDeleted(vehicle)
+	self:printFn('UniversalProcessKit:onVehicleDeleted()')
 end
 
 
@@ -363,11 +360,13 @@ UniversalProcessKitTriggerPlayerEvent_mt = Class(UniversalProcessKitTriggerPlaye
 InitEventClass(UniversalProcessKitTriggerPlayerEvent, "UniversalProcessKitTriggerPlayerEvent");
 
 function UniversalProcessKitTriggerPlayerEvent:emptyNew()
+	printFn('UniversalProcessKitTriggerPlayerEvent:emptyNew()')
     local self = Event:new(UniversalProcessKitTriggerPlayerEvent_mt)
     return self
 end
 
 function UniversalProcessKitTriggerPlayerEvent:new(upkmodule, isPlayerInside)
+	printFn('UniversalProcessKitTriggerPlayerEvent:emptyNew(',upkmodule, ', ', isPlayerInside,')')
 	local self = UniversalProcessKitTriggerPlayerEvent:emptyNew()
 	self.upkmodule = upkmodule
 	self.isPlayerInside = isPlayerInside
@@ -375,39 +374,42 @@ function UniversalProcessKitTriggerPlayerEvent:new(upkmodule, isPlayerInside)
 end
 
 function UniversalProcessKitTriggerPlayerEvent:writeStream(streamId, connection)
+	printFn('UniversalProcessKitTriggerPlayerEvent:writeStream(',streamId, ', ', connection,')')
 	local syncObj = self.upkmodule.syncObj
 	local syncObjId = networkGetObjectId(syncObj)
-	print('syncObjId: '..tostring(syncObjId))
+	printAll('syncObjId: '..tostring(syncObjId))
 	streamWriteInt32(streamId, syncObjId)
 	local syncId = self.upkmodule.syncId
-	print('syncId: '..tostring(syncId))
+	printAll('syncId: '..tostring(syncId))
 	streamWriteInt32(streamId, syncId)
-	print('isPlayerInside: '..tostring(self.isPlayerInside))
+	printAll('isPlayerInside: '..tostring(self.isPlayerInside))
 	streamWriteBool(streamId, self.isPlayerInside)
 end
 
 function UniversalProcessKitTriggerPlayerEvent:readStream(streamId, connection)
+	printFn('UniversalProcessKitTriggerPlayerEvent:readStream(',streamId, ', ', connection,')')
 	local syncObjId = streamReadInt32(streamId)
-	print('syncObjId: '..tostring(syncObjId))
+	printAll('syncObjId: '..tostring(syncObjId))
 	local syncObj = networkGetObject(syncObjId)
 	local syncId = streamReadInt32(streamId)
-	print('syncId: '..tostring(syncId))
+	printAll('syncId: '..tostring(syncId))
 	self.upkmodule=syncObj:getObjectToSync(syncId)
-	print('upkmodule: '..tostring(self.upkmodule))
+	printAll('upkmodule: '..tostring(self.upkmodule))
 	self.isPlayerInside = streamReadBool(streamId)
-	print('isPlayerInside: '..tostring(self.isPlayerInside))
+	printAll('isPlayerInside: '..tostring(self.isPlayerInside))
 	self:run(connection, streamId)
 end;
 
 function UniversalProcessKitTriggerPlayerEvent:run(connection, streamId)
+	printFn('UniversalProcessKitTriggerPlayerEvent:run(',streamId, ', ', connection,')')
 	if not connection:getIsServer() then -- if server: send after receiving
-		print('running as server')
+		printAll('running as server')
 		
-		print('self.isPlayerInside is '..tostring(self.isPlayerInside))
+		printAll('self.isPlayerInside is '..tostring(self.isPlayerInside))
 		
 		if streamId ~= nil then
-			print('running step a')
-			print('streamId is '..tostring(streamId))
+			printAll('running step a')
+			printAll('streamId is '..tostring(streamId))
 			if self.isPlayerInside then
 				self.upkmodule.playersInRange[streamId] = true
 			else
@@ -417,13 +419,13 @@ function UniversalProcessKitTriggerPlayerEvent:run(connection, streamId)
 			local serverIsPlayerInside = false
 			for k,v in pairs(self.upkmodule.playersInRange) do
 				if v then
-					print('serverIsPlayerInside true for streamId '..tostring(k))
+					printAll('serverIsPlayerInside true for streamId '..tostring(k))
 					serverIsPlayerInside = true
 					break
 				end
 			end
 			self.isPlayerInside = serverIsPlayerInside or self.upkmodule.playerInRangeNetworkNode
-			print('self.isPlayerInside is '..tostring(self.isPlayerInside))
+			printAll('self.isPlayerInside is '..tostring(self.isPlayerInside))
 		end
 		
 		if self.isPlayerInside then
@@ -435,11 +437,11 @@ function UniversalProcessKitTriggerPlayerEvent:run(connection, streamId)
 		g_server:broadcastEvent(self, false, connection)
 
 	else
-		print('running step a')
+		printAll('running step a')
 		if self.upkmodule ~= nil then
-			print('running step b')
+			printAll('running step b')
 			
-			print('self.isPlayerInside is '..tostring(self.isPlayerInside))
+			printAll('self.isPlayerInside is '..tostring(self.isPlayerInside))
 			
 			if self.isPlayerInside then
 				self.upkmodule:triggerOnEnter(nil, true, true)
@@ -451,14 +453,14 @@ function UniversalProcessKitTriggerPlayerEvent:run(connection, streamId)
 end
 
 function UniversalProcessKitTriggerPlayerEvent.sendEvent(upkmodule, isPlayerInside, alreadySent)
-	print('UniversalProcessKitTriggerPlayerEvent.sendEvent('..tostring(upkmodule)..', '..tostring(isPlayerInside)..', '..tostring(alreadySent)..')')
-	print('calling event with alreadySent = '..tostring(alreadySent))
+	printFn('UniversalProcessKitTriggerPlayerEvent.sendEvent(',upkmodule,', ',isPlayerInside,', ',alreadySent,')')
+	printAll('calling event with alreadySent = '..tostring(alreadySent))
 	if not alreadySent then
 		if g_server ~= nil then
-			print('broadcasting isPlayerInside = '..tostring(isPlayerInside))
+			printAll('broadcasting isPlayerInside = '..tostring(isPlayerInside))
 			g_server:broadcastEvent(UniversalProcessKitTriggerPlayerEvent:new(upkmodule, isPlayerInside))
 		else
-			print('sending to server isPlayerInside = '..tostring(isPlayerInside))
+			printAll('sending to server isPlayerInside = '..tostring(isPlayerInside))
 			g_client:getServerConnection():sendEvent(UniversalProcessKitTriggerPlayerEvent:new(upkmodule, isPlayerInside))
 		end
 	end

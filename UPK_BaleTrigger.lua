@@ -9,6 +9,7 @@ InitObjectClass(UPK_BaleTrigger, "UPK_BaleTrigger")
 UniversalProcessKit.addModule("baletrigger",UPK_BaleTrigger)
 
 function UPK_BaleTrigger:new(nodeId, parent)
+	printFn('UPK_BaleTrigger:new(',nodeId,', ',parent,')')
 	local self = UniversalProcessKit:new(nodeId, parent, UPK_BaleTrigger_mt)
 	registerObjectClassName(self, "UPK_BaleTrigger")
 	
@@ -18,10 +19,29 @@ function UPK_BaleTrigger:new(nodeId, parent)
 	
 	local acceptedFillTypesArr = getArrayFromUserAttribute(nodeId, "acceptedFillTypes")
 	for _,fillType in pairs(UniversalProcessKit.fillTypeNameToInt(acceptedFillTypesArr)) do
-		self:print('accepting '..tostring(UniversalProcessKit.fillTypeIntToName[fillType])..' ('..tostring(fillType)..')')
+		self:printInfo('accepting '..tostring(UniversalProcessKit.fillTypeIntToName[fillType])..' ('..tostring(fillType)..')')
 		self.acceptedFillTypes[fillType] = true
 		--self.fillTypesConversionMatrix = self.fillTypesConversionMatrix + FillTypesConversionMatrix:new(fillType)
 	end
+	
+	self.revenuePerLiter = getNumberFromUserAttribute(nodeId, "revenuePerLiter", nil)
+	self.revenuesPerLiter = {}
+		
+	local revenuesPerLiterArr = getArrayFromUserAttribute(nodeId, "revenuesPerLiter")
+	for i=1,#revenuesPerLiterArr,2 do
+		local revenue=tonumber(revenuesPerLiterArr[i])
+		local fillType=unpack(UniversalProcessKit.fillTypeNameToInt(revenuesPerLiterArr[i+1]))
+		if revenue~=nil and fillType~=nil then
+			self.revenuesPerLiter[fillType] = revenue
+		end
+	end
+	
+	local revenues_mt = {
+		__index=function(t,k)
+			return self.revenuePerLiter
+		end
+	}
+	setmetatable(self.revenuesPerLiter,revenues_mt)
 	
 	self.acceptRoundBales = getBoolFromUserAttribute(nodeId, "acceptRoundBales", true)
 	self.acceptSquareBales = getBoolFromUserAttribute(nodeId, "acceptSquareBales", true)
@@ -88,27 +108,29 @@ function UPK_BaleTrigger:new(nodeId, parent)
 
 	self:addTrigger()
 	
-	self:print('loaded BaleTrigger successfully')
+	self:printFn('UPK_BaleTrigger:new done')
 	
 	return self
 end
 
 function UPK_BaleTrigger:delete()
+	self:printFn('UPK_BaleTrigger:delete()')
 	UniversalProcessKitListener.removeUpdateable(self)
 	UPK_BaleTrigger:superClass().delete(self)
 end
 
 function UPK_BaleTrigger:postLoad()
+	self:printFn('UPK_BaleTrigger:postLoad()')
 	UPK_BaleTrigger:superClass().postLoad(self)
 	self:triggerUpdate(false,false)
 end
 
 function UPK_BaleTrigger:triggerUpdate(vehicle,isInTrigger)
-	self:print('UPK_BaleTrigger:triggerUpdate')
+	self:printFn('UPK_BaleTrigger:triggerUpdate(',vehicle,', ',isInTrigger,')')
 	if self.isEnabled then
-		self:print('vehicle is: '..tostring(vehicle))
+		self:printAll('vehicle is: '..tostring(vehicle))
 		if type(vehicle)=="table" and vehicle:isa(Bale) then
-			self:print('isInTrigger is: '..tostring(isInTrigger))
+			self:printAll('isInTrigger is: '..tostring(isInTrigger))
 			if isInTrigger then
 				if not self.balesInTrigger[vehicle] then
 					local fillType = vehicle:getFillType()
@@ -117,11 +139,11 @@ function UPK_BaleTrigger:triggerUpdate(vehicle,isInTrigger)
 						isRoundBale = Utils.getNoNil(getUserAttribute(vehicle.nodeId, "isRoundbale"), false)
 						vehicle.isRoundbale = isRoundBale
 					end
-					self:print('fillType is: '..tostring(fillType))
-					self:print('self.acceptedFillTypes[fillType] is: '..tostring(self.acceptedFillTypes[fillType]))
-					self:print('isRoundBale is: '..tostring(isRoundBale))
-					self:print('acceptRoundBales is: '..tostring(self.acceptRoundBales))
-					self:print('acceptSquareBales is: '..tostring(self.acceptSquareBales))
+					self:printAll('fillType is: '..tostring(fillType))
+					self:printAll('self.acceptedFillTypes[fillType] is: '..tostring(self.acceptedFillTypes[fillType]))
+					self:printAll('isRoundBale is: '..tostring(isRoundBale))
+					self:printAll('acceptRoundBales is: '..tostring(self.acceptRoundBales))
+					self:printAll('acceptSquareBales is: '..tostring(self.acceptSquareBales))
 					if self.acceptedFillTypes[fillType] and ((isRoundBale and self.acceptRoundBales) or (not isRoundBale and self.acceptSquareBales)) then
 						self.balesInTrigger[vehicle]=true
 						table.insert(self.balesInLine,vehicle)
@@ -135,7 +157,7 @@ function UPK_BaleTrigger:triggerUpdate(vehicle,isInTrigger)
 							end
 						end
 					else
-						self:print('This kind of bale is not accepted')
+						self:printAll('This kind of bale is not accepted')
 					end
 				end
 			else
@@ -147,6 +169,7 @@ function UPK_BaleTrigger:triggerUpdate(vehicle,isInTrigger)
 end
 
 function UPK_BaleTrigger:update(dt)
+	self:printAll('UPK_BaleTrigger:update(',dt,')')
 	self.dtsum = self.dtsum + dt
 	
 	if self.dtsum>self.delay then
@@ -176,12 +199,17 @@ function UPK_BaleTrigger:update(dt)
 				elseif self.mode=="save" then
 					-- nothing yet
 				else
-					self:print('want to sell bale for '..tostring(bale:getValue()))
+					self:printAll('want to sell bale for '..tostring(bale:getValue()))
 					self.balesInTrigger[bale]=nil
 					self.nrBalesInTrigger = self.nrBalesInTrigger -1
 					local fillType = bale:getFillType()
 					local difficulty = g_currentMission.missionStats.difficulty
-					local revenue = bale:getValue() * self.revenueMultiplier[difficulty]
+					local revenue = 0
+					if self.revenuesPerLiter[fillType]~=nil then
+						revenue = self.revenuesPerLiter[fillType] * bale.fillLevel * self.revenueMultiplier[difficulty]
+					else 
+						revenue = bale:getValue() * self.revenueMultiplier[difficulty]
+					end
 					if revenue~=0 then
 						g_currentMission:addSharedMoney(revenue, self.statName)
 					end

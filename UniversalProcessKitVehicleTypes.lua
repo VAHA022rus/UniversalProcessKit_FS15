@@ -37,6 +37,7 @@ UniversalProcessKit.VEHICLE_MIXERWAGONTRAILER=getNextBit() -- 262144
 
 
 function UniversalProcessKit.getVehicleType(vehicle)
+	printFn('UniversalProcessKit.getVehicleType(',vehicle,')')
 	if type(vehicle)~="table" then
 		return 0
 	end
@@ -48,9 +49,9 @@ function UniversalProcessKit.getVehicleType(vehicle)
 	if vehicle.upk_vehicleType==nil then
 		local vehicleType=0
 		
-		print('checking vehicle')
+		printAll('checking vehicle')
 		if SpecializationUtil.hasSpecialization(Motorized, vehicle.specializations) then
-			print('its motorized')
+			printAll('its motorized')
 			vehicleType=vehicleType+UniversalProcessKit.VEHICLE_MOTORIZED
 		end
 		if SpecializationUtil.hasSpecialization(SowingMachine, vehicle.specializations) then
@@ -81,11 +82,11 @@ function UniversalProcessKit.getVehicleType(vehicle)
 			vehicleType=vehicleType+UniversalProcessKit.VEHICLE_TIPPER
 		end
 		if SpecializationUtil.hasSpecialization(ForageWagon, vehicle.specializations) then
-			print('identified VEHICLE_FORAGEWAGON')
+			printAll('identified VEHICLE_FORAGEWAGON')
 			vehicleType=vehicleType+UniversalProcessKit.VEHICLE_FORAGEWAGON
 		end
 		if SpecializationUtil.hasSpecialization(Baler, vehicle.specializations) then
-			print('identified VEHICLE_BALER')
+			printAll('identified VEHICLE_BALER')
 			vehicleType=vehicleType+UniversalProcessKit.VEHICLE_BALER
 		end
 		if SpecializationUtil.hasSpecialization(Combine, vehicle.specializations) then -- doenst seem to recognize combines
@@ -115,7 +116,7 @@ function UniversalProcessKit.getVehicleType(vehicle)
 			SpecializationUtil.hasSpecialization(Tedder, vehicle.specializations) or
 			SpecializationUtil.hasSpecialization(Windrower, vehicle.specializations) or
 			(vehicle.attacherJoint~=nil and vehicle.attacherJoint.node~=nil and vehicle.attacherJoint.node~=0) then
-				print('attachment detected')
+				printAll('attachment detected')
 			vehicleType=vehicleType+UniversalProcessKit.VEHICLE_ATTACHMENT
 		end
 		
@@ -126,10 +127,12 @@ function UniversalProcessKit.getVehicleType(vehicle)
 end;
 
 function UniversalProcessKit.isVehicleType(vehicle, vehicleTypeTest)
+	printFn('UniversalProcessKit.isVehicleType(',vehicle,', ',vehicleTypeTest,')')
 	return bitAND(UniversalProcessKit.getVehicleType(vehicle), vehicleTypeTest)~=0
 end;
 
 function UniversalProcessKit.getVehicleTypes(vehicle)
+	printFn('UniversalProcessKit.getVehicleTypes(',vehicle,')')
 	local r={}
 	for power=0,maxPower do
 		local bit=2^power

@@ -9,6 +9,7 @@ InitObjectClass(UPK_Mover, "UPK_Mover")
 UniversalProcessKit.addModule("mover",UPK_Mover)
 
 function UPK_Mover:new(nodeId,parent)
+	printFn('UPK_Mover:new(',nodeId,', ',parent,')')
 	local self = UniversalProcessKit:new(nodeId,parent, UPK_Mover_mt)
 	registerObjectClassName(self, "UPK_Mover")
 	
@@ -22,18 +23,18 @@ function UPK_Mover:new(nodeId,parent)
 	
 	local moveAtFillTypesArr = getArrayFromUserAttribute(nodeId, "fillTypes")
 	for _,fillType in pairs(UniversalProcessKit.fillTypeNameToInt(moveAtFillTypesArr)) do
-		self:print('fillType is '..tostring(fillType))
+		self:printAll('fillType is ',fillType)
 		local flbs = self:getFillLevelBubbleShellFromFillType(fillType)
-		self:print('flbs is '..tostring(flbs))
+		self:printAll('flbs is ',flbs)
 		if flbs~=nil and flbs~=self then
 			flbs:registerOnFillLevelChangeFunc(self,"onFillLevelChange")
 		end
-		self:print('accepting fillType '..tostring(fillType))
+		self:printAll('accepting fillType ',fillType)
 		self.moveAtFillTypes[fillType] = true
 		self.fillLevelsCopy[fillType] = self:getFillLevel(fillType)
 		self.maxCapacity = mathmax(self.maxCapacity, self:getCapacity(fillType) or 0)
-		self:print('fillLevel is '..tostring(self:getFillLevel(fillType)))
-		self:print('capacity is '..tostring(self:getCapacity(fillType)))
+		self:printAll('fillLevel is ',self:getFillLevel(fillType))
+		self:printAll('capacity is ',self:getCapacity(fillType))
 	end
 	
 	self.fillTypeChoiceMax = getStringFromUserAttribute(nodeId, "fillTypeChoice", "max")=="max"
@@ -115,17 +116,18 @@ function UPK_Mover:new(nodeId,parent)
 	
 	self.showingType = self.startVisibilityAt<=self.stopVisibilityAt
 	
-	self:print('loaded Mover successfully')
+	self:printFn('UPK_Mover:new done')
    
    	return self
 end
 
 function UPK_Mover:delete()
+	self:printFn('UPK_Mover:delete()')
 	UPK_Mover:superClass().delete(self)
 end
 
 function UPK_Mover:postLoad()
-	self:print('UPK_Mover:postLoad()')
+	self:printFn('UPK_Mover:postLoad()')
 	UPK_Mover:superClass().postLoad(self)
 	for fillType,_ in pairs(self.fillLevelsCopy) do
 		local fillLevel = self:getFillLevel(fillType) or 0
@@ -136,11 +138,11 @@ end;
 
 function UPK_Mover:onFillLevelChange(deltaFillLevel, newFillLevel, fillType) -- to be overwritten
 	
-	self:print('UPK_Mover:onFillLevelChange('..tostring(deltaFillLevel)..', '..tostring(newFillLevel)..', '..tostring(fillType)..')')
+	self:printFn('UPK_Mover:onFillLevelChange(',deltaFillLevel,', ',newFillLevel,', ',fillType,')')
 	
 	if self.moveAtFillTypes[fillType]==true and self.isEnabled then		
 		self.fillLevelsCopy[fillType] = newFillLevel -- self:getFillLevel(fillType) -- may not be newFillLevel in fifo or filo
-		self:print('self.fillLevelsCopy[fillType] '..tostring(self.fillLevelsCopy[fillType]))
+		self:printAll('self.fillLevelsCopy[fillType] '..tostring(self.fillLevelsCopy[fillType]))
 		local fillLevel = 0
 		if self.fillTypeChoiceMax then
 			fillLevel = max(self.fillLevelsCopy) or 0
@@ -149,38 +151,38 @@ function UPK_Mover:onFillLevelChange(deltaFillLevel, newFillLevel, fillType) -- 
 		end
 
 		if fillLevel ~= self.currentFillLevel then
-			self:print('fillLevel = '..tostring(fillLevel))
+			self:printAll('fillLevel = ',fillLevel)
 			-- move
 			if self.useMoving then
 				if fillLevel <= self.startMovingAt then -- startMovingAt included in posLower
-					self:print('fillLevel <= self.startMovingAt')
+					self:printAll('fillLevel <= self.startMovingAt')
 					self.pos=self.posLower
 				elseif fillLevel > self.stopMovingAt then
-					self:print('fillLevel > self.stopMovingAt')
+					self:printAll('fillLevel > self.stopMovingAt')
 					self.pos=self.posHigher
 				else
-					self:print('getRatio()')
+					self:printAll('getRatio()')
 					local ratio=self:getRatio("pos",self.movingType,fillLevel,self.startMovingAt,self.stopMovingAt)
 					self.pos=self.posMin+(self.posMax-self.posMin)*ratio
 				end
-				self:print('want to move shape to y='..tostring(self.pos[2]))
+				self:printAll('want to move shape to y=',self.pos[2])
 				UniversalProcessKit.setTranslation(self.nodeId,unpack(self.pos))
 			end
 			
 			-- scale
 			if self.useScaling then
 				if fillLevel <= self.startScalingAt then -- startScalingAt included in scaleLower
-					self:print('fillLevel <= self.startScalingAt')
+					self:printAll('fillLevel <= self.startScalingAt')
 					self.scale=self.scaleLower
 				elseif fillLevel > self.stopScalingAt then
-					self:print('fillLevel > self.stopScalingAt')
+					self:printAll('fillLevel > self.stopScalingAt')
 					self.scale=self.scaleHigher
 				else
-					self:print('getRatio()')
+					self:printAll('getRatio()')
 					local ratio=self:getRatio("scale",self.scalingType,fillLevel,self.startScalingAt,self.stopScalingAt)
 					self.scale=self.scaleMin+(self.scaleMax-self.scaleMin)*ratio
 				end
-				self:print('want to scale shape to y='..tostring(self.scale[2]))
+				self:printAll('want to scale shape to y=',self.scale[2])
 				setScale(self.nodeId,unpack(self.scale))
 			end
 		
@@ -216,6 +218,7 @@ function UPK_Mover:onFillLevelChange(deltaFillLevel, newFillLevel, fillType) -- 
 end
 
 function UPK_Mover:getRatio(use,type,fillLevel,minFillLevel,maxFillLevel)
+	self:printFn('UPK_Mover:getRatio(',use,',',type,', ',fillLevel,', ',minFillLevel,', ',maxFillLevel,')')
 	if minFillLevel==nil or maxFillLevel==nil or minFillLevel<0 or maxFillLevel<0 then
 		return 0
 	end

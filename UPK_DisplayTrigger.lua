@@ -12,6 +12,7 @@ local countriesUsingCommas={"al", "ad", "ao", "ar", "am", "at", "az", "by", "be"
 local isCountryUsingComma=isInTable(countriesUsingCommas,g_languageShort)
 
 function UPK_DisplayTrigger:new(nodeId, parent)
+	printFn('UPK_DisplayTrigger:new(',nodeId,', ',parent,')')
 	local self = UniversalProcessKit:new(nodeId, parent, UPK_DisplayTrigger_mt)
 	registerObjectClassName(self, "UPK_DisplayTrigger")
 	
@@ -49,17 +50,18 @@ function UPK_DisplayTrigger:new(nodeId, parent)
 
 	self:addTrigger()
 
-	self:print('loaded DisplayTrigger successfully')
+	self:printFn('UPK_DisplayTrigger:new done')
 
 	return self
 end
 
 function UPK_DisplayTrigger:delete()
+	self:printFn('UPK_DisplayTrigger:delete()')
 	UPK_DisplayTrigger:superClass().delete(self)
 end
 
 function UPK_DisplayTrigger:triggerUpdate(vehicle,isInTrigger)
-	--self:print('UPK_DisplayTrigger:triggerUpdate('..tostring(vehicle)..','..tostring(isInTrigger)..')')
+	self:printFn('UPK_DisplayTrigger:triggerUpdate(',vehicle,',',isInTrigger,')')
 	--self:print('entitiesInTrigger = '..tostring(self.entitiesInTrigger))
 	if self.entitiesInTrigger>0 then
 		--self:print('UniversalProcessKitListener.addUpdateable()')
@@ -71,7 +73,7 @@ function UPK_DisplayTrigger:triggerUpdate(vehicle,isInTrigger)
 end
 
 function UPK_DisplayTrigger:update(dt)
-	--self:print('UPK_DisplayTrigger:update('..tostring(dt)..')')
+	self:printAll('UPK_DisplayTrigger:update(',dt,')')
 	if self.isEnabled and self:getShowInfo() then
 		--self:print('enable printing')
 		if self.heading~=nil then

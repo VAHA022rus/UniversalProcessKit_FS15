@@ -9,6 +9,7 @@ InitObjectClass(UPK_ParkTrigger, "UPK_ParkTrigger")
 UniversalProcessKit.addModule("parktrigger",UPK_ParkTrigger)
 
 function UPK_ParkTrigger:new(nodeId, parent)
+	printFn('UPK_ParkTrigger:new(',nodeId,', ',parent,')')
 	local self = UniversalProcessKit:new(nodeId, parent, UPK_ParkTrigger_mt)
 	registerObjectClassName(self, "UPK_ParkTrigger")
 	
@@ -19,13 +20,13 @@ function UPK_ParkTrigger:new(nodeId, parent)
 	
 	self:addTrigger()
 	
-	self:print('loaded ParkTrigger successfully')
+	self:printFn('UPK_ParkTrigger:new done')
 	
 	return self
 end
 
 function UPK_ParkTrigger:triggerUpdate(vehicle,isInTrigger)
-	self:print('UPK_ParkTrigger:triggerUpdate('..tostring(vehicle)..', '..tostring(isInTrigger)..')')
+	self:printFn('UPK_ParkTrigger:triggerUpdate(',vehicle,', ',isInTrigger,')')
 	if self.isEnabled and vehicle~=nil then
 		if isInTrigger then
 			vehicle.nonTabbable = true

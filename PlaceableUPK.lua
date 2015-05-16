@@ -4,6 +4,7 @@ PlaceableUPK_mt = Class(PlaceableUPK, Placeable)
 InitObjectClass(PlaceableUPK, "PlaceableUPK")
 
 function PlaceableUPK:new(isServer, isClient, customMt)
+	printFn('PlaceableUPK:new(',isServer,', ',isClient,', ',customMt,')')
 	local self = Placeable:new(isServer, isClient, customMt or PlaceableUPK_mt)
 	registerObjectClassName(self, "PlaceableUPK")
 	self.isServer=isServer
@@ -19,6 +20,7 @@ function PlaceableUPK:new(isServer, isClient, customMt)
 end
 
 function PlaceableUPK:load(xmlFilename, x, y, z, rx, ry, rz, ...)
+	printFn('PlaceableUPK:load(',xmlFilename,', ',x,', ',y,', ',z,', ',rx,', ',ry,', ',rz,', ...)')
     if not PlaceableUPK:superClass().load(self, xmlFilename, x, y, z, rx, ry, rz, ...) then
 		return false
     end
@@ -26,7 +28,7 @@ function PlaceableUPK:load(xmlFilename, x, y, z, rx, ry, rz, ...)
 end
 
 function PlaceableUPK:finalizePlacement(...)
-	--print('PlaceableUPK:finalizePlacement(...)')
+	printFn('PlaceableUPK:finalizePlacement(...)')
     PlaceableUPK:superClass().finalizePlacement(self, ...)
 	
 	--[[
@@ -42,11 +44,14 @@ function PlaceableUPK:finalizePlacement(...)
 				UniversalProcessKit.adjustToTerrainHeight(self.base.nodeId)
 			end
 			self.base:findChildren(self.nodeId)
+		else
+			printErr('Error: Failed to init base - this upk mod will not work')
 		end
 	end
 end
 
 function PlaceableUPK:delete()
+	printFn('PlaceableUPK:delete()')
 	if self.base~=nil and type(self.base)=="table" then
 		self.base:delete()
 	end
@@ -54,11 +59,12 @@ function PlaceableUPK:delete()
 end
 
 function PlaceableUPK:loadFromAttributesAndNodes(xmlFile, key, resetVehicles)
+	printFn('PlaceableUPK:loadFromAttributesAndNodes(',xmlFile,', ',key,', ',resetVehicles,')')
 	if not PlaceableUPK:superClass().loadFromAttributesAndNodes(self, xmlFile, key, resetVehicles) then
 		return false
 	end
 	
-	if self.base~=nil then
+	if self.base~=nil and type(self.base)=="table" then
 		self.base:loadFromAttributesAndNodes(xmlFile, key)
 	end
 	
@@ -66,6 +72,7 @@ function PlaceableUPK:loadFromAttributesAndNodes(xmlFile, key, resetVehicles)
 end
 
 function PlaceableUPK:getSaveAttributesAndNodes(nodeIdent)
+	printFn('PlaceableUPK:getSaveAttributesAndNodes(',nodeIdent,')')
 	local attributes, nodes = PlaceableUPK:superClass().getSaveAttributesAndNodes(self, nodeIdent)
 
 	if self.base~=nil and type(self.base)=="table" then
@@ -78,25 +85,26 @@ function PlaceableUPK:getSaveAttributesAndNodes(nodeIdent)
 end
 
 function PlaceableUPK:getNextObjectSyncId()
-	print('PlaceableUPK:getNextObjectSyncId()')
+	printFn('PlaceableUPK:getNextObjectSyncId()')
 	local syncId = self.nextSyncId
 	self.nextSyncId = syncId + 1
 	return syncId
 end
 
 function PlaceableUPK:registerObjectToSync(object)
-	print('PlaceableUPK:registerObjectToSync('..tostring(object))
+	printFn('PlaceableUPK:registerObjectToSync(',object,')')
 	local syncId = self:getNextObjectSyncId()
 	table.insert(self.upkObjects, syncId, object)
 	object.syncId=syncId
 end
 
 function PlaceableUPK:getObjectToSync(syncId)
+	printFn('PlaceableUPK:getObjectToSync(',syncId,')')
 	return self.upkObjects[syncId]
 end
 
 function PlaceableUPK:writeStream(streamId, connection)
-	print('PlaceableUPK:writeStream('..tostring(streamId)..', '..tostring(connection)..')')
+	printFn('PlaceableUPK:writeStream(',streamId,', ',connection,')')
 	PlaceableUPK:superClass().writeStream(self, streamId, connection)
 	for i=1,(self.nextSyncId-1) do
 		self.upkObjects[i]:writeStream(streamId, connection)
@@ -104,7 +112,7 @@ function PlaceableUPK:writeStream(streamId, connection)
 end
 
 function PlaceableUPK:readStream(streamId, connection)
-	print('PlaceableUPK:readStream('..tostring(streamId)..', '..tostring(connection)..')')
+	printFn('PlaceableUPK:readStream(',streamId,', ',connection,')')
 	PlaceableUPK:superClass().readStream(self, streamId, connection)
 	for i=1,(self.nextSyncId-1) do
 		self.upkObjects[i]:readStream(streamId, connection)
@@ -112,7 +120,7 @@ function PlaceableUPK:readStream(streamId, connection)
 end
 
 function PlaceableUPK:writeUpdateStream(streamId, connection, dirtyMask)
-	print('PlaceableUPK.writeUpdateStream('..tostring(self)..', '..tostring(streamId)..', '..tostring(connection)..')')
+	printFn('PlaceableUPK:writeUpdateStream(',streamId,', ',connection,', ',dirtyMask,')')
 	PlaceableUPK:superClass().writeUpdateStream(self, streamId, connection, dirtyMask)
 	if not connection:getIsServer() then
 		local objectsToSync = {}
@@ -121,7 +129,7 @@ function PlaceableUPK:writeUpdateStream(streamId, connection, dirtyMask)
 				table.insert(objectsToSync,i)
 			end
 		end
-		print('want to sync '..tostring(#objectsToSync)..' objects')
+		printAll('want to sync '..tostring(#objectsToSync)..' objects')
 		streamWriteIntN(streamId, #objectsToSync, 12)
 		for i=1,#objectsToSync do
 			local object = self.upkObjects[objectsToSync[i]]
@@ -156,17 +164,17 @@ function PlaceableUPK:writeUpdateStream(streamId, connection, dirtyMask)
 end
 
 function PlaceableUPK:readUpdateStream(streamId, timestamp, connection)
-	print('PlaceableUPK.readUpdateStream('..tostring(self)..', '..tostring(streamId)..', '..tostring(connection)..')')
+	printFn('PlaceableUPK:readUpdateStream(',streamId,', ',timestamp,', ',connection,')')
 	PlaceableUPK:superClass().readUpdateStream(self, streamId, timestamp, connection)
 	if connection:getIsServer() then
 		local nrObjectsToSync = streamReadIntN(streamId, 12)
-		print('reading '..tostring(nrObjectsToSync)..' objects')
+		printAll('reading '..tostring(nrObjectsToSync)..' objects')
 		if nrObjectsToSync>0 then
 			for i=1,nrObjectsToSync do
 				local objectSyncId = streamReadIntN(streamId, 12)
-				print('reading sync object with syncId '..tostring(objectSyncId))
+				printAll('reading sync object with syncId '..tostring(objectSyncId))
 				local objectDirtyFlag = streamReadIntN(streamId, 12)
-				print('reading sync object with dirtyFlag '..tostring(objectDirtyFlag))
+				printAll('reading sync object with dirtyFlag '..tostring(objectDirtyFlag))
 				local object = self.upkObjects[objectSyncId]
 				local syncall=bitAND(objectDirtyFlag, object.syncAllDirtyFlag)~=0
 				object:readUpdateStream(streamId, connection, objectDirtyFlag, syncall)
@@ -175,4 +183,5 @@ function PlaceableUPK:readUpdateStream(streamId, timestamp, connection)
 	end
 end
 
+registerPlaceableType("placeableUPK", PlaceableUPK)
 

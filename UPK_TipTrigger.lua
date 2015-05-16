@@ -7,11 +7,13 @@ UPK_TipTriggerObject_mt = Class(UPK_TipTriggerObject, Object)
 InitObjectClass(UPK_TipTriggerObject, "UPK_TipTriggerObject")
 
 function UPK_TipTriggerObject:new(isServer, isClient)
+	printFn('UPK_TipTriggerObject:new(',isServer,', ',isClient,')')
 	local self = Object:new(isServer, isClient, UPK_TipTriggerObject_mt)
 	registerObjectClassName(self, "UPK_TipTriggerObject")
 	return self
 end
 function UPK_TipTriggerObject:load(tipTrigger, networkNode)
+	printFn('UPK_TipTriggerObject:load(',tipTrigger,', ',networkNode,')')
 	self.tipTrigger = tipTrigger
 	if g_server ~= nil then
 		g_server.objectIds[self.tipTrigger] = self.id
@@ -21,21 +23,23 @@ function UPK_TipTriggerObject:load(tipTrigger, networkNode)
 	end
 end
 function UPK_TipTriggerObject:getTipInfoForTrailer(trailer, tipReferencePointIndex)
-	print('UPK_TipTriggerObject:getTipInfoForTrailer()')
+	printFn('UPK_TipTriggerObject:getTipInfoForTrailer(',trailer,', ',tipReferencePointIndex,')')
 	local isAllowed, minDistance, bestPoint = self.tipTrigger:getTipInfoForTrailer(trailer, tipReferencePointIndex)
-	print('isAllowed: '..tostring(isAllowed)..', minDistance: '..tostring(minDistance)..', bestPoint: '..tostring(bestPoint))
+	printAll('isAllowed: ',isAllowed,', minDistance: ',minDistance,', bestPoint: ',bestPoint)
 	return isAllowed, minDistance, bestPoint
 end
 function UPK_TipTriggerObject:updateTrailerTipping(trailer, fillDelta, fillType)
+	printFn('UPK_TipTriggerObject:updateTrailerTipping(',trailer,', ',fillDelta,', ',fillType,')')
 	self.tipTrigger:updateTrailerTipping(trailer, fillDelta, fillType)
 end
 function UPK_TipTriggerObject:getTipDistanceFromTrailer(trailer, tipReferencePointIndex)
-	print('UPK_TipTriggerObject:getTipDistanceFromTrailer()')
+	printFn('UPK_TipTriggerObject:getTipDistanceFromTrailer(',trailer,', ',tipReferencePointIndex,')')
 	local returnDistance, bestPoint = self.tipTrigger:getTipDistanceFromTrailer(trailer, tipReferencePointIndex)
-	print('returnDistance: '..tostring(returnDistance)..', bestPoint: '..tostring(bestPoint))
+	printAll('returnDistance: ',returnDistance,', bestPoint: ',bestPoint)
 	return returnDistance, bestPoint
 end
 function UPK_TipTriggerObject:delete()
+	printFn('UPK_TipTriggerObject:delete()')
 	if g_server ~= nil then
 		g_server.objectIds[self.tipTrigger] = nil
 	else
@@ -45,43 +49,43 @@ function UPK_TipTriggerObject:delete()
 	UPK_TipTriggerObject:superClass().delete(self)
 end
 function UPK_TipTriggerObject:writeStream(streamId, connection)
-	print('UPK_TipTriggerObject:writeStream')
+	printFn('UPK_TipTriggerObject:writeStream(',streamId,', ',connection,')')
 	if not connection:getIsServer() then -- in connection with client
 		if self.tipTrigger~=nil then
 			streamWriteBool(streamId, true)
 			streamWriteInt32(streamId, self.id)
 			local syncObj = self.tipTrigger.syncObj
 			local syncObjId = networkGetObjectId(syncObj)
-			print('syncObjId: '..tostring(syncObjId))
+			printAll('syncObjId: ',syncObjId)
 			streamWriteInt32(streamId, syncObjId)
 			local syncId = self.tipTrigger.syncId
-			print('syncId: '..tostring(syncId))
+			printAll('syncId: ',syncId)
 			streamWriteInt32(streamId, syncId)
 		else
 			streamWriteBool(streamId, false)
-			print('no self.tipTrigger')
+			printAll('no self.tipTrigger')
 		end
 	end
 end
 function UPK_TipTriggerObject:readStream(streamId, connection)
-	print('UPK_TipTriggerObject:readStream')
+	printFn('UPK_TipTriggerObject:readStream(',streamId,', ',connection,')')
 	if connection:getIsServer() then -- in connection with server
 		local hasTipTrigger = streamReadBool(streamId)
 		if hasTipTrigger then
 			local networkNode = streamReadInt32(streamId)
 			local syncObjId = streamReadInt32(streamId)
-			print('syncObjId: '..tostring(syncObjId))
+			printAll('syncObjId: ',syncObjId)
 			local syncObj = networkGetObject(syncObjId)
 			local syncId = streamReadInt32(streamId)
-			print('syncId: '..tostring(syncId))
+			printAll('syncId: ',syncId)
 			if syncObj~=nil then
 				g_client:addObject(self, networkNode or self.id)
 				local tipTrigger = syncObj:getObjectToSync(syncId)
 				self:load(tipTrigger, networkNode)
-				print('self.tipTrigger: '..tostring(self.tipTrigger))
+				printAll('self.tipTrigger: ',self.tipTrigger)
 			end
 		else
-			print('no self.tipTrigger')
+			printAll('no self.tipTrigger')
 		end		
 	end
 end
@@ -92,6 +96,7 @@ InitObjectClass(UPK_TipTrigger, "UPK_TipTrigger")
 UniversalProcessKit.addModule("tiptrigger",UPK_TipTrigger)
 
 function UPK_TipTrigger:new(nodeId, parent)
+	printFn('UPK_TipTrigger:new(',nodeId,', ',parent,')')
 	local self = UniversalProcessKit:new(nodeId, parent, UPK_TipTrigger_mt)
 	registerObjectClassName(self, "UPK_TipTrigger")
 	
@@ -101,7 +106,7 @@ function UPK_TipTrigger:new(nodeId, parent)
 	
 	local acceptedFillTypesArr = getArrayFromUserAttribute(nodeId, "acceptedFillTypes")
 	for _,fillType in pairs(UniversalProcessKit.fillTypeNameToInt(acceptedFillTypesArr)) do
-		self:print('accepting '..tostring(UniversalProcessKit.fillTypeIntToName[fillType])..' ('..tostring(fillType)..')')
+		self:printInfo('accepting '..tostring(UniversalProcessKit.fillTypeIntToName[fillType])..' ('..tostring(fillType)..')')
 		self.acceptedFillTypes[fillType] = true
 		--self.fillTypesConversionMatrix = self.fillTypesConversionMatrix + FillTypesConversionMatrix:new(fillType)
 	end
@@ -151,7 +156,7 @@ function UPK_TipTrigger:new(nodeId, parent)
 	self.useAddIfTipping = false
 	local addIfTippingArr = getArrayFromUserAttribute(nodeId, "addIfTipping")
 	for _,fillType in pairs(UniversalProcessKit.fillTypeNameToInt(addIfTippingArr)) do
-		self:print('add if tipping '..tostring(UniversalProcessKit.fillTypeIntToName[fillType])..' ('..tostring(fillType)..')')
+		self:printInfo('add if tipping '..tostring(UniversalProcessKit.fillTypeIntToName[fillType])..' ('..tostring(fillType)..')')
 		self.addIfTipping[fillType] = true
 		self.useAddIfTipping = true
 	end
@@ -160,7 +165,7 @@ function UPK_TipTrigger:new(nodeId, parent)
 	self.useRemoveIfTipping = false
 	local removeIfTippingArr = getArrayFromUserAttribute(nodeId, "removeIfTipping")
 	for _,fillType in pairs(UniversalProcessKit.fillTypeNameToInt(removeIfTippingArr)) do
-		self:print('remove if tipping '..tostring(UniversalProcessKit.fillTypeIntToName[fillType])..' ('..tostring(fillType)..')')
+		self:printInfo('remove if tipping '..tostring(UniversalProcessKit.fillTypeIntToName[fillType])..' ('..tostring(fillType)..')')
 		self.removeIfTipping[fillType] = true
 		self.useRemoveIfTipping = true
 	end
@@ -198,12 +203,13 @@ function UPK_TipTrigger:new(nodeId, parent)
 	end
 
 
-	self:print('loaded TipTrigger successfully')
+	self:printFn('UPK_TipTrigger:new done')
 	
 	return self
 end
 
 function UPK_TipTrigger:delete()
+	self:printFn('UPK_TipTrigger:delete()')
 	if self.syncTipTriggerObject~=nil then
 		self.syncTipTriggerObject:unregister()
 		if g_server ~= nil then
@@ -223,14 +229,17 @@ function UPK_TipTrigger:delete()
 end
 
 function UPK_TipTrigger:registerUpkTipTrigger()
+	self:printFn('UPK_TipTrigger:registerUpkTipTrigger()')
 	table.insert(g_upkTipTrigger,self)
 end
 
 function UPK_TipTrigger:unregisterUpkTipTrigger()
+	self:printFn('UPK_TipTrigger:unregisterUpkTipTrigger()')
 	removeValueFromTable(g_upkTipTrigger,self)
 end
 
 function UPK_TipTrigger:getRevenuePerLiter(fillType)
+	self:printFn('UPK_TipTrigger:getRevenuePerLiter(',fillType,')')
 	if self.revenuesPerLiterAdjusted[fillType]~=nil then
 		return self.revenuesPerLiterAdjusted[fillType]
 	end
@@ -248,14 +257,14 @@ function UPK_TipTrigger:getRevenuePerLiter(fillType)
 end
 
 function UPK_TipTrigger:updateTrailerTipping(trailer, fillDelta, fillType)
-	--self:print('UPK_TipTrigger:updateTrailerTipping')
+	self:printFn('UPK_TipTrigger:updateTrailerTipping(',trailer,', ',fillDelta,', ',fillType,')')
 	if self.isServer then
 		if type(trailer)=="table" and fillDelta~=nil then
 			local toomuch=0
 			if fillDelta < 0 and fillType~=nil then
-				self:print('fillDelta: '..tostring(fillDelta))
+				self:printAll('fillDelta: ',fillDelta)
 				local fill = self:addFillLevel(-fillDelta,fillType)
-				self:print('fill: '..tostring(fill))
+				self:printAll('fill: ',fill)
 				
 				local revenuePerLiter = self:getRevenuePerLiter(fillType)
 				if fill~=0 then
@@ -279,12 +288,12 @@ function UPK_TipTrigger:updateTrailerTipping(trailer, fillDelta, fillType)
 					end
 				end
 				
-				self:print('fill: '..tostring(fill))
+				self:printAll('fill: ',fill)
 				toomuch = fillDelta + fill -- max 0
 			end
-			self:print('toomuch: '..tostring(toomuch))
+			self:printAll('toomuch: ',toomuch)
 			if toomuch<=-0.00000001 then
-				self:print('end tipping')
+				self:printAll('end tipping')
 				trailer:onEndTip()
 				trailer:setFillLevel(trailer:getFillLevel(fillType)-toomuch, fillType) -- put sth back
 			end
@@ -293,7 +302,7 @@ function UPK_TipTrigger:updateTrailerTipping(trailer, fillDelta, fillType)
 end
 
 function UPK_TipTrigger:getTipInfoForTrailer(trailer, tipReferencePointIndex)
-	self:print('UPK_TipTrigger:getTipInfoForTrailer')
+	self:printFn('UPK_TipTrigger:getTipInfoForTrailer(',trailer,', ',tipReferencePointIndex,')')
 	--if trailer.currentTipTrigger==self then
 		local minDistance, bestPoint = self:getTipDistanceFromTrailer(trailer, tipReferencePointIndex)
 		local trailerFillType = trailer.currentFillType
@@ -301,17 +310,17 @@ function UPK_TipTrigger:getTipInfoForTrailer(trailer, tipReferencePointIndex)
 			self.acceptedFillTypes[trailerFillType] and
 			self:allowFillType(trailerFillType)
 		
-		self:print('isAllowed: '..tostring(isAllowed))
+		self:printAll('isAllowed: ',isAllowed)
 		--self:print('self.acceptedFillTypes[trailerFillType]: '..tostring(self.acceptedFillTypes[trailerFillType]))
 		--self:print('self:allowFillType(trailerFillType): '..tostring(self:allowFillType(trailerFillType)))
-		self:print('minDistance: '..tostring(minDistance))
+		self:printAll('minDistance: ',minDistance)
 		return isAllowed, minDistance, bestPoint
 		--end
 	--return false,math.huge,nil
 end
 
 function UPK_TipTrigger:getTipDistanceFromTrailer(trailer, tipReferencePointIndex)
-	self:print('UPK_TipTrigger:getTipDistanceFromTrailer')
+	self:printFn('UPK_TipTrigger:getTipDistanceFromTrailer(',trailer,', ',tipReferencePointIndex,')')
 	local minDistance = math.huge
 	local returnDistance = math.huge
 	local bestPoint=tipReferencePointIndex
@@ -336,6 +345,7 @@ function UPK_TipTrigger:getTipDistanceFromTrailer(trailer, tipReferencePointInde
 end
 
 function UPK_TipTrigger:getTipDistance(trailer,tipReferencePointIndex)
+	self:printFn('UPK_TipTrigger:getTipDistance(',trailer,', ',tipReferencePointIndex,')')
 	local pointNodeX, pointNodeY, pointNodeZ = getWorldTranslation(trailer.tipReferencePoints[tipReferencePointIndex].node)
 	self.raycastTriggerFound = false
 	-- looks on top of the reference point if it overlaps with the trigger
@@ -348,6 +358,7 @@ function UPK_TipTrigger:getTipDistance(trailer,tipReferencePointIndex)
 end
 
 function UPK_TipTrigger:findMyNodeRaycastCallback(transformId, x, y, z, distance)
+	self:printFn('UPK_TipTrigger:findMyNodeRaycastCallback(',transformId,', ',x,', ',y,', ',z,', ',distance,')')
 	if transformId==self.nodeId then
 		self.raycastTriggerFound = true
 		return false
@@ -357,7 +368,7 @@ end
 
 -- show text if the filltype of the trailer is not accepted
 function UPK_TipTrigger:getNoAllowedText(trailer)
-	-- self:print('UPK_TipTrigger:getNoAllowedText('..tostring(trailer)..')')
+	self:printFn('UPK_TipTrigger:getNoAllowedText(',trailer,')')
 	
 	local trailerFillType = trailer.currentFillType
 	local fillTypeName = self.i18n[UniversalProcessKit.fillTypeIntToName[trailerFillType]]
@@ -365,9 +376,9 @@ function UPK_TipTrigger:getNoAllowedText(trailer)
 	
 	local flbs=self:getFillLevelBubbleShellFromFillType(trailerFillType)
 		
-	self:print('fillType '..tostring(fillType))
-	self:print('trailerFillType '..tostring(trailerFillType))
-	self:print('newFillType '..tostring(newFillType))
+	self:printAll('fillType ',fillType)
+	self:printAll('trailerFillType ',trailerFillType)
+	self:printAll('newFillType ',newFillType)
 	
 	if flbs~=nil and trailerFillType~=Fillable.FILLTYPE_UNKNOWN and self.showCapacityReachedWarning then
 		local fillLevel = flbs:getFillLevel(trailerFillType)
@@ -394,10 +405,10 @@ function UPK_TipTrigger:getNoAllowedText(trailer)
 end
 
 function UPK_TipTrigger:triggerUpdate(vehicle,isInTrigger)
-	self:print('UPK_TipTrigger:triggerUpdate('..tostring(vehicle)..','..tostring(isInTrigger)..')')
+	self:printFn('UPK_TipTrigger:triggerUpdate(',vehicle,',',isInTrigger,')')
 	if self.isEnabled then
 		if UniversalProcessKit.isVehicleType(vehicle, UniversalProcessKit.VEHICLE_TIPPER) then
-			self:print('vehicle is tipper')
+			self:printAll('vehicle is tipper')
 			if isInTrigger then
 				--if vehicle.upk_currentTipTrigger==nil then
 				--	vehicle.upk_currentTipTrigger={}

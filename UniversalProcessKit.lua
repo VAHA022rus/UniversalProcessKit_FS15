@@ -4,7 +4,8 @@ local UniversalProcessKit_mt = ClassUPK(UniversalProcessKit);
 InitObjectClass(UniversalProcessKit, "UniversalProcessKit");
 
 function UniversalProcessKit:onCreate(id)
-	print('UniversalProcessKit:onCreate('..tostring(id)..')')
+	printFn('UniversalProcessKit:onCreate('..tostring(id)..')')
+	
 	local upkbase = OnCreateUPK:new(g_server ~= nil, g_client ~= nil)
 	if upkbase==false or upkbase~=nil then
 		upkbase:load(id)
@@ -15,28 +16,11 @@ function UniversalProcessKit:onCreate(id)
 	end
 end;
 
-function UniversalProcessKit:print(string, debug)
-	if debug==nil then
-		debug=debugMode
-	end
-	if debug then
-		if type(string)=="string" then
-			local msg=string
-			if self.nodeId~=nil or self.id~=nil then
-				msg='[nid='..tostring(self.nodeId)..' oid='..tostring(self.id)..'] '..msg
-			end
-			if debug then
-				msg='DEBUG '..msg
-			end
-			local signature=tostring(self.i18nNameSpace or '(unnamed)')..': '..tostring(self.name)
-			_g.print(' ['..tostring(signature)..'] '..msg)
-		end
-	end
-end;
-
 function UniversalProcessKit:new(nodeId, parent, customMt)
+	printFn('UniversalProcessKit:new('..tostring(nodeId)..', '..tostring(parent)..', '..tostring(customMt)..')')
+	
 	if nodeId==nil then
-		print('Error: UniversalProcessKit:new() called with id=nil')
+		printErr('Error: UniversalProcessKit:new() called with id=nil')
 		return false
 	end
 
@@ -117,7 +101,7 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 			local capacity=tonumber(capacitiesArr[i])
 			local fillType=unpack(UniversalProcessKit.fillTypeNameToInt(capacitiesArr[i+1]))
 			if capacity~=nil and fillType~=nil then
-				print('adding capacity of '..tostring(capacity)..' to '..tostring(fillType))
+				printInfo('adding capacity of '..tostring(capacity)..' to '..tostring(fillType))
 				capacities[fillType]=capacity
 			end
 		end
@@ -126,7 +110,7 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 	self.capacities = FillLevelBubbleCapacities:new(self.p_capacity, capacities)
 
 	for k,v in pairs(self.capacities) do
-		print('capacity of '..tostring(k)..': '..tostring(v))
+		printAll('capacity of '..tostring(k)..': '..tostring(v))
 	end
 
 	-- set metatable
@@ -172,20 +156,20 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 	-- fill types conversion matrix
 
 	local fillTypesConversionMatrixStrStr = getStringFromUserAttribute(nodeId, "convertFillTypes", "")
-	self:print('fillTypesConversionMatrixStrStr: '..tostring(fillTypesConversionMatrixStrStr))
+	self:printInfo('fillTypesConversionMatrixStrStr: '..tostring(fillTypesConversionMatrixStrStr))
 	local fillTypesConversionMatrixStrArr = gmatch(fillTypesConversionMatrixStrStr..',','(.-),')
 	for _,fillTypesConversionMatrixStr in pairs(fillTypesConversionMatrixStrArr) do
 		if fillTypesConversionMatrixStr~=nil and fillTypesConversionMatrixStr~="" then
-			self:print('dealing with '..tostring(fillTypesConversionMatrixStr))
+			self:printAll('dealing with '..tostring(fillTypesConversionMatrixStr))
 			self.fillTypesConversionMatrix = self.fillTypesConversionMatrix + FillTypesConversionMatrix:new(UniversalProcessKit.fillTypeNameToInt(gmatch(fillTypesConversionMatrixStr,'%S+')))
 		end
 	end
 
-	print('self.fillTypesConversionMatrix is '..tostring(self.fillTypesConversionMatrix))
+	printAll('self.fillTypesConversionMatrix is '..tostring(self.fillTypesConversionMatrix))
 	
 	for k,v in pairs(self.fillTypesConversionMatrix) do
 		for l,w in pairs(v) do
-			print('adding '..tostring(l)..' (incoming) to '..tostring(k)..' (stored) ends up as '..tostring(w))
+			printInfo('adding '..tostring(l)..' (incoming) to '..tostring(k)..' (stored) ends up as '..tostring(w))
 		end
 	end
 	
@@ -204,7 +188,7 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 	for _,flb in pairs(self.p_flbs) do
 		flb.capacities = self.capacities
 		for k,v in pairs(flb.capacities) do
-			print('capacity of '..tostring(k)..': '..tostring(v))
+			printInfo('capacity of '..tostring(k)..': '..tostring(v))
 		end
 		flb.fillTypesConversionMatrix = self.fillTypesConversionMatrix
 		flb:registerOnFillLevelChangeFunc(self,"p_onFillLevelChange")
@@ -242,10 +226,10 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 		local iconStr = getStringFromUserAttribute(nodeId, "MapHotspotIcon")
 		if iconStr~=nil then
 			if self.i18nNameSpace==nil then
-				self:print('you need to set the modName-UserAttribute to use MapHotspotIcon')
+				self:printInfo('you need to set the modName-UserAttribute to use MapHotspotIcon')
 			else
 				self.MapHotspotIcon = g_modNameToDirectory[self.i18nNameSpace]..iconStr
-				self:print('using \"'..tostring(self.MapHotspotIcon)..'\" as MapHotspotIcon')
+				self:printInfo('using \"'..tostring(self.MapHotspotIcon)..'\" as MapHotspotIcon')
 			end
 		else
 			self.MapHotspotIcon = Utils.getFilename(mapHotspotIcons["TipPlace"], getAppBasePath())
@@ -267,10 +251,10 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 	end
 	
 	
-	print('loaded module '..tostring(self.name)..' with id '..tostring(nodeId))
+	printAll('loaded module '..tostring(self.name)..' with id '..tostring(nodeId))
 	
-	print('self.placeable '..tostring(self.placeable))
-	print('getBoolFromUserAttribute(nodeId, "adjustToTerrainHeight", false) '..tostring(getBoolFromUserAttribute(nodeId, "adjustToTerrainHeight", false)))
+	printAll('self.placeable '..tostring(self.placeable))
+	printAll('getBoolFromUserAttribute(nodeId, "adjustToTerrainHeight", false) '..tostring(getBoolFromUserAttribute(nodeId, "adjustToTerrainHeight", false)))
 	
 	if getBoolFromUserAttribute(nodeId, "adjustToTerrainHeight", false) and self.placeable then
 		UniversalProcessKit.adjustToTerrainHeight(nodeId)
@@ -284,20 +268,22 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 end;
 
 function UniversalProcessKit:findChildrenLoopFunc(childId)
+	self:printFn('UniversalProcessKit:findChildrenLoopFunc('..tostring(childId)..')')	
+	
 	local type = getStringFromUserAttribute(childId, "type")
-	self:print('UserAttribute type is '..tostring(type))
+	self:printInfo('UserAttribute type is '..tostring(type))
 	if type~=nil and UniversalProcessKit.ModuleTypes[type]~=nil then
 		childName=Utils.getNoNil(getName(childId),"")
-		self:print('found module '..childName..' of type '..tostring(type)..' and id '..tostring(childId))
+		self:printInfo('found module '..childName..' of type '..tostring(type)..' and id '..tostring(childId))
 		local module=UniversalProcessKit.ModuleTypes[type]:new(childId,self)
 		if module~=nil and module~=false then
-			--if debugMode then
+			--if debugMode then -- not true/false anymore
 			--	module=debugObject(module)
 			--end
 			table.insert(self.kids,module)
 			module:findChildren(childId)
 		else
-			self:print('couldnt load module of type '..tostring(type)..' and id '..tostring(childId))
+			self:printErr('couldnt load module of type '..tostring(type)..' and id '..tostring(childId))
 			self:findChildren(childId)
 		end
 	else
@@ -310,21 +296,24 @@ function UniversalProcessKit:findChildrenLoopFunc(childId)
 end
 
 function UniversalProcessKit:findChildren(id)
+	self:printFn('UniversalProcessKit:findChildren('..tostring(id)..')')	
 	loopThruChildren(id,"findChildrenLoopFunc",self)
 end;
 
 function UniversalProcessKit:findChildrenShapesLoopFunc(childId)
+	self:printFn('UniversalProcessKit:findChildrenShapesLoopFunc('..tostring(childId)..')')
 	table.insert(self.childrenShapes,childId)
 	self:findChildrenShapes(childId)
 	return true
 end;
 
 function UniversalProcessKit:findChildrenShapes(id)
+	self:printFn('UniversalProcessKit:findChildrenShapes('..tostring(id)..')')
 	loopThruChildren(id,"findChildrenShapesLoopFunc",self)
 end;
 
 function UniversalProcessKit:delete()
-	print('delete module '..tostring(self.name)..' with nid '..tostring(self.nodeId))
+	printFn('delete module '..tostring(self.name)..' with nid '..tostring(self.nodeId))
 
 	self.isEnabled = false
 
@@ -350,28 +339,193 @@ function UniversalProcessKit:delete()
 	unregisterObjectClassName(self)
 end;
 
+function UniversalProcessKit:getActionUserAttributes(actionName, defaultEnableChildren, defaultDisableChildren)
+	self:printFn('UniversalProcessKit:getActionUserAttributes(',actionName,', ',defaultEnableChildren,', ',defaultDisableChildren,')')
+	
+	if self.actions==nil then
+		self.actions={}
+	end
+	
+	if type(actionName)~="string" or strlen(actionName)==0 or self.actions[actionName]~=nil then
+		self:printErr('faulty actionName')
+		return
+	end
+	
+	local nodeId = self.nodeId
+	
+	local actions_mt = {
+		__index = function(t,k)
+			rawset(t,k,false)
+			return false
+		end
+	}
+	self.actions[actionName] = {}
+	setmetatable(self.actions[actionName],actions_mt)
+	
+	
+	local enableChildrenAction = 'enableChildren'..actionName
+	local disableChildrenAction = 'disableChildren'..actionName
+	
+	local emptyFillTypesAction = 'emptyFillTypes'..actionName
+	local topUpFillTypesAction = 'topUpFillTypes'..actionName
+	
+	local addAction = 'add'..actionName
+	local removeAction = 'remove'..actionName
+	
+	local showAction = 'show'..actionName
+	local hideAction = 'hide'..actionName
+	
+	local showChildrenAction = 'showChildren'..actionName
+	local hideChildrenAction = 'hideChildren'..actionName
+	
+	local action = self.actions[actionName]
+	
+	action['enableChildren'] = getBoolFromUserAttribute(nodeId, enableChildrenAction, defaultEnableChildren or false)
+	action['disableChildren'] = getBoolFromUserAttribute(nodeId, disableChildrenAction, defaultDisableChildren or false)
+	
+	if action['enableChildren'] then
+		action['disableChildren'] = false
+	end
+	
+	action['emptyFillTypes'] = {}
+	local arr = getArrayFromUserAttribute(nodeId, emptyFillTypesAction)
+	for i=1,#arr do
+		local fillType = unpack(UniversalProcessKit.fillTypeNameToInt(arr[i]))
+		table.insert(action['emptyFillTypes'],fillType)
+		action['hasEmptyFillTypes'] = true
+	end
+	
+	action['topUpFillTypes'] = {}
+	local arr = getArrayFromUserAttribute(nodeId, topUpFillTypesAction)
+	for i=1,#arr do
+		local fillType = unpack(UniversalProcessKit.fillTypeNameToInt(arr[i]))
+		table.insert(action['topUpFillTypes'],fillType)
+		action['hasTopUpFillTypes'] = true
+	end
+	
+	action['add'] = {}
+	local arr = getArrayFromUserAttribute(nodeId, addAction)
+	for i=1,#arr,2 do
+		local amount = tonumber(arr[i])
+		local fillType = unpack(UniversalProcessKit.fillTypeNameToInt(arr[i+1]))
+		if type(amount)=="number" and amount>0 and type(fillType)=="number" then
+			action['add'][fillType] = amount
+			action['hasAdd'] = true
+		end
+	end
+	
+	action['remove'] = {}
+	local arr=getArrayFromUserAttribute(nodeId, removeAction)
+	for i=1,#arr,2 do
+		local amount = tonumber(arr[i])
+		local fillType = unpack(UniversalProcessKit.fillTypeNameToInt(arr[i+1]))
+		if type(amount)=="number" and amount>0 and type(fillType)=="number" then
+			action['remove'][fillType] = -amount
+			action['hasRemove'] = true
+		end
+	end
+	
+	action['show'] = getBoolFromUserAttribute(nodeId, showAction, false)
+	action['hide'] = getBoolFromUserAttribute(nodeId, hideAction, false)
+	
+	if action['show'] then
+		action['hide'] = false
+	end
+	
+	action['showChildren'] = getBoolFromUserAttribute(nodeId, showChildrenAction, false)
+	action['hideChildren'] = getBoolFromUserAttribute(nodeId, hideChildrenAction, false)
+	
+	if action['showChildren'] then
+		action['hideChildren'] = false
+	end
+end
+
+function UniversalProcessKit:operateAction(actionName, alreadySent)
+	self:printFn('UniversalProcessKit:operateAction('..tostring(actionName)..','..tostring(alreadySent)..')')
+	
+	if type(actionName)~="string" or strlen(actionName)==0 or self.actions[actionName]==nil then
+		self:printErr('faulty actionName')
+		return
+	end
+		
+	local action = self.actions[actionName]
+	
+	if self.isServer then
+		if action['hasEmptyFillTypes'] then
+			for i=1,#action['emptyFillTypes'] do
+				self:setFillLevel(0,action['emptyFillTypes'][i])
+			end
+		end
+		if action['hasTopUpFillTypes'] then
+			for i=1,#action['topUpFillTypes'] do
+				local fillType = action['emptyFillTypes'][i]
+				local capacity = self:getCapacity(fillType)
+				if capacity<math.huge then
+					self:setFillLevel(capacity,fillType)
+				end
+			end
+		end
+		if action['hasAdd'] then
+			self:printAll('hasAddAction')
+			self:addFillLevels(action['add'])
+		end
+		if action['hasRemove'] then
+			self:printAll('hasRemoveAction')
+			self:addFillLevels(action['remove'])
+		end
+	end
+	
+	if action['show'] then
+		self:printAll('show')
+		self:setEnableChildren(true, alreadySent)
+	end
+	if action['hide'] then
+		self:printAll('hide')
+		self:setEnableChildren(false, alreadySent)
+	end
+	
+	if action['showChildren'] then
+		self:printAll('show children')
+		self:setEnableChildren(true, alreadySent)
+	end
+	if action['hideChildren'] then
+		self:printAll('hide children')
+		self:setEnableChildren(false, alreadySent)
+	end
+	
+	if action['enableChildren'] then
+		self:printAll('enable children')
+		self:setEnableChildren(true, alreadySent)
+	end
+	if action['disableChildren'] then
+		self:printAll('disable children')
+		self:setEnableChildren(false, alreadySent)
+	end	
+end
 
 function UniversalProcessKit:update(dt)
+	self:printFn('UniversalProcessKit:update('..tostring(dt)..')')
 	-- do sth with time (ms)
 	-- requieres UniversalProcessKitListener.addUpdateable(self)
 	-- and UniversalProcessKitListener.removeUpdateable(self)
 end;
 
 function UniversalProcessKit:registerOnFillLevelChangeFunc(obj,func)
-	print('UniversalProcessKit:registerOnFillLevelChangeFunc('..tostring(obj)..', '..tostring(func)..')')
+	self:printFn('UniversalProcessKit:registerOnFillLevelChangeFunc('..tostring(obj)..', '..tostring(func)..')')
 	if type(obj)=="table" and obj~=self and type(func)=="string" and type(obj[func])=="function" then
 		self.onFillLevelChangeFuncs[obj]=func
 	end
 end
 
 function UniversalProcessKit:unregisterOnFillLevelChangeFunc(obj)
+	self:printFn('UniversalProcessKit:unregisterOnFillLevelChangeFunc('..tostring(obj)..')')
 	if type(obj)=="table" then
 		self.onFillLevelChangeFuncs[obj]=nil
 	end
 end
 
 function UniversalProcessKit:p_onFillLevelChange(deltaFillLevel, newFillLevel, fillType) -- do sth with syncing
-	self:print('UniversalProcessKit:p_onFillLevelChange('..tostring(deltaFillLevel)..', '..tostring(newFillLevel)..', '..tostring(fillType)..')')
+	self:printFn('UniversalProcessKit:p_onFillLevelChange('..tostring(deltaFillLevel)..', '..tostring(newFillLevel)..', '..tostring(fillType)..')')
 	
 	if self.isServer then
 		table.insert(self.fillLevelsToSync,{fillLevel=newFillLevel,fillType=fillType})
@@ -385,10 +539,11 @@ function UniversalProcessKit:p_onFillLevelChange(deltaFillLevel, newFillLevel, f
 end
 
 function UniversalProcessKit:onFillLevelChange(deltaFillLevel, newFillLevel, fillType) -- to be overwritten
-	self:print('UniversalProcessKit:onFillLevelChange('..tostring(deltaFillLevel)..', '..tostring(newFillLevel)..', '..tostring(fillType)..')')
+	self:printFn('UniversalProcessKit:onFillLevelChange('..tostring(deltaFillLevel)..', '..tostring(newFillLevel)..', '..tostring(fillType)..')')
 end
 
 function UniversalProcessKit:getFillLevelBubbleShellFromFillType(fillType)
+	self:printFn('UniversalProcessKit:getFillLevelBubbleShellFromFillType('..tostring(fillType)..')')
 	if self.storageType==UPK_Storage.SEPARATE and fillType~=nil then
 		local newFillType=self.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN][fillType] or fillType
 		local flb=self.p_flbs[newFillType]
@@ -406,7 +561,7 @@ function UniversalProcessKit:getFillLevelBubbleShellFromFillType(fillType)
 end
 
 function UniversalProcessKit:getFillLevel(fillType)
-	--self:print('UniversalProcessKit:getFillLevel('..tostring(fillType)..')')
+	self:printFn('UniversalProcessKit:getFillLevel('..tostring(fillType)..')')
 	if fillType~=nil then
 		if UniversalProcessKit.isSpecialFillType(fillType) then
 			return UniversalProcessKitEnvironment.flbs[fillType].fillLevel
@@ -436,7 +591,7 @@ function UniversalProcessKit:getFillLevel(fillType)
 end
 
 function UniversalProcessKit:getCapacity(fillType)
-	--self:print('UniversalProcessKit:getCapacity('..tostring(fillType)..')')
+	self:printFn('UniversalProcessKit:getCapacity('..tostring(fillType)..')')
 	if self.storageType==UPK_Storage.SEPARATE and fillType~=nil then
 		local newFillType=self.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN][fillType] or fillType
 		local flb=self.p_flbs[newFillType]
@@ -452,6 +607,7 @@ function UniversalProcessKit:getCapacity(fillType)
 end
 
 function UniversalProcessKit:getFillType() -- for single, fifo and filo
+	self:printFn('UniversalProcessKit:getFillType()')
 	if self.storageType==UPK_Storage.SEPARATE then
 		if self.parent~=nil then
 			return self.parent:getFillType()
@@ -462,16 +618,16 @@ function UniversalProcessKit:getFillType() -- for single, fifo and filo
 end
 
 function UniversalProcessKit:resetFillLevelIfNeeded()
+	self:printFn('UniversalProcessKit:resetFillLevelIfNeeded()')
 end
 
 function UniversalProcessKit:allowFillType(fillType, allowEmptying) -- also check for capacity
-	self:print('UniversalProcessKit:allowFillType('..tostring(fillType)..')')
+	self:printFn('UniversalProcessKit:allowFillType('..tostring(fillType)..', '..tostring(allowEmptying)..')')
 	if fillType~=nil then
 		local newFillType=self.fillTypesConversionMatrix[UniversalProcessKit.FILLTYPE_UNKNOWN][fillType] or fillType
 		if UniversalProcessKit.isSpecialFillType(newFillType) then
 			return true
 		elseif self.storageType==UPK_Storage.SEPARATE then
-			self:print('self.storageType==UPK_Storage.SEPARATE')
 			local flb=self.p_flbs[newFillType]
 			if flb~=nil then
 				return flb.fillLevel < flb.capacity
@@ -481,9 +637,7 @@ function UniversalProcessKit:allowFillType(fillType, allowEmptying) -- also chec
 				end
 			end
 		elseif self.storageType==UPK_Storage.SINGLE then
-			self:print('self.storageType==UPK_Storage.SINGLE')
 			local myFillType=self.fillType
-			self:print('myFillType = '..tostring(myFillType))
 			newFillType=self.fillTypesConversionMatrix[myFillType][fillType]
 			if myFillType==newFillType then
 				return self.fillLevel < self.capacity
@@ -498,6 +652,7 @@ function UniversalProcessKit:allowFillType(fillType, allowEmptying) -- also chec
 end
 
 function UniversalProcessKit:setFillLevel(newFillLevel, fillType, force)
+	self:printFn('UniversalProcessKit:setFillLevel('..tostring(newFillLevel)..', '..tostring(fillType)..', '..tostring(force)..')')
 	if fillType~=nil then
 		newFillType=self.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN][fillType] or fillType
 		if UniversalProcessKit.isSpecialFillType(newFillType) then -- should not happen
@@ -510,7 +665,7 @@ function UniversalProcessKit:setFillLevel(newFillLevel, fillType, force)
 end
 
 function UniversalProcessKit:addFillLevel(deltaFillLevel, fillType)
-	self:print('UniversalProcessKit:addFillLevel('..tostring(deltaFillLevel)..', '..tostring(fillType)..')')
+	self:printFn('UniversalProcessKit:addFillLevel('..tostring(deltaFillLevel)..', '..tostring(fillType)..')')
 	if fillType~=nil then
 		fillType=self.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN][fillType] or fillType
 	end
@@ -527,6 +682,7 @@ function UniversalProcessKit:addFillLevels(fillLevelsArr)
 end
 
 function UniversalProcessKit:getUniqueFillType()
+	self:printFn('UniversalProcessKit:getUniqueFillType()')
 	local currentFillType=Fillable.FILLTYPE_UNKNOWN
 	for _,v in pairs(self:getAcceptedFillTypes()) do
 		fillLevel=self.fillLevels[v]
@@ -538,6 +694,7 @@ function UniversalProcessKit:getUniqueFillType()
 end;
 
 function UniversalProcessKit:getAcceptedFillTypes()
+	self:printFn('UniversalProcessKit:getAcceptedFillTypes()')
 	local r={}
 	for k,v in pairs(UniversalProcessKit.fillTypeIntToName) do
 		if self.acceptedFillTypes[k] then
@@ -549,7 +706,7 @@ end;
 
 -- show or hide an icon on the mini map
 function UniversalProcessKit:showMapHotspot(on,alreadySent)
-	self:print('UniversalProcessKit:showMapHotspot('..tostring(on)..', '..tostring(alreadySent)..')')
+	self:printFn('UniversalProcessKit:showMapHotspot('..tostring(on)..', '..tostring(alreadySent)..')')
 	self.appearsOnMap=on
 	if on==true and self.mapHotspot == nil then
 		
@@ -563,8 +720,8 @@ function UniversalProcessKit:showMapHotspot(on,alreadySent)
 		]]--
 		
 		local widthHeightRatio = g_currentMission.syncBackgroundOverlay.height
-		self:print('widthHeightRatio = '..tostring(widthHeightRatio))
-		self:print('g_currentMission.ingameMap.mapWidth = '..tostring(g_currentMission.ingameMap.mapWidth))
+		self:printInfo('widthHeightRatio = '..tostring(widthHeightRatio))
+		self:printInfo('g_currentMission.ingameMap.mapWidth = '..tostring(g_currentMission.ingameMap.mapWidth))
 		local iconSize = 0.015625 --g_currentMission.ingameMap.mapWidth / 10
 		local x,_,z = unpack(self.wpos)
 		self.mapHotspot = g_currentMission.ingameMap:createMapHotspot(nil, self.MapHotspotIcon, x, z, iconSize, iconSize * widthHeightRatio, false, false, false, 0, true)
@@ -579,7 +736,7 @@ function UniversalProcessKit:showMapHotspot(on,alreadySent)
 end;
 
 function UniversalProcessKit:setEnable(isEnabled,alreadySent)
-	self:print('UniversalProcessKit:setEnable('..tostring(isEnabled)..')')
+	self:printFn('UniversalProcessKit:setEnable('..tostring(isEnabled)..', '..tostring(alreadySent)..')')
 	if isEnabled~=nil then
 		self.isEnabled=isEnabled
 		if not alreadySent then
@@ -588,10 +745,10 @@ function UniversalProcessKit:setEnable(isEnabled,alreadySent)
 	end
 	if self.useMapHotspot then
 		if self.isEnabled or self.showMapHotSpotIfDisabled then
-			self:print('self.isEnabled or self.showMapHotSpotIfDisabled')
+			self:printAll('self.isEnabled or self.showMapHotSpotIfDisabled')
 			self:showMapHotspot(true,true)
 		else
-			self:print('not (self.isEnabled or self.showMapHotSpotIfDisabled)')
+			self:printAll('not (self.isEnabled or self.showMapHotSpotIfDisabled)')
 			self:showMapHotspot(false,true)
 		end
 	end
@@ -599,21 +756,21 @@ function UniversalProcessKit:setEnable(isEnabled,alreadySent)
 end;
 
 function UniversalProcessKit:setEnableChildren(isEnabled,alreadySent)
-	self:print('UniversalProcessKit:setEnableChildren('..tostring(isEnabled)..')')
+	self:printFn('UniversalProcessKit:setEnableChildren('..tostring(isEnabled)..', '..tostring(alreadySent)..')')
 	for i=1,#self.kids do
 		self.kids[i]:setEnable(isEnabled,alreadySent)
 	end
 end;
 
 function UniversalProcessKit:postLoad()
-	self:print('UniversalProcessKit:postLoad()')
+	self:printFn('UniversalProcessKit:postLoad()')
 	-- initial fill levels
 	if self.isServer and self.base.timesSaved==0 then
 		local initialFillLevelsArr = getArrayFromUserAttribute(self.nodeId, "initialFillLevels")
 		for i=1,#initialFillLevelsArr,2 do
 			local fillLevel=tonumber(initialFillLevelsArr[i])
 			local fillType=unpack(UniversalProcessKit.fillTypeNameToInt(initialFillLevelsArr[i+1]))
-			self:print('want to initially add '..tostring(fillLevel)..' to '..tostring(fillType))
+			self:printAll('want to initially add '..tostring(fillLevel)..' to '..tostring(fillType))
 			if fillLevel~=nil and fillType~=nil then
 				self:addFillLevel(fillLevel, fillType)
 			end
@@ -622,27 +779,27 @@ function UniversalProcessKit:postLoad()
 end;
 
 function UniversalProcessKit:loadFromAttributesAndNodes(xmlFile, key)
-	self:print('calling UniversalProcessKit:loadFromAttributesAndNodes for id '..tostring(self.nodeId))
+	self:printFn('UniversalProcessKit:loadFromAttributesAndNodes('..tostring(xmlFile)..', '..tostring(key)..')')
 	key=key.."."..self.name
 
 	local fillLevelsStr = getXMLString(xmlFile, key .. "#fillLevels")
-	self:print('read save fillLevels '..tostring(fillLevelsStr))
+	self:printInfo('read save fillLevels '..tostring(fillLevelsStr))
 	local fillLevelsArr = gmatch(fillLevelsStr, "%S+")
 	for i=1,#fillLevelsArr,2 do
 		local fillLevel=tonumber(fillLevelsArr[i])
 		local fillType=unpack(UniversalProcessKit.fillTypeNameToInt(fillLevelsArr[i+1]))
-		self:print('want to add saved '..tostring(fillLevel)..' to '..tostring(fillType))
+		self:printInfo('want to add saved '..tostring(fillLevel)..' to '..tostring(fillType))
 		if fillLevel~=nil and fillType~=nil then
 			self:addFillLevel(fillLevel, fillType) -- should be good for fifo and filo
 		end
 	end
 	
 	local isEnabled = getXMLBool(xmlFile, key .. "#isEnabled")
-	self:print('read from save file: isEnabled = '..tostring(isEnabled)..' ('..type(isEnabled)..')')
+	self:printInfo('read from save file: isEnabled = '..tostring(isEnabled)..' ('..type(isEnabled)..')')
 	self:setEnable(Utils.getNoNil(getXMLBool(xmlFile, key .. "#isEnabled"), true), true)
 	
 	local appearsOnMap = getXMLBool(xmlFile, key .. "#showMapHotspot")
-	self:print('read from save file: showMapHotspot = '..tostring(appearsOnMap)..' ('..type(appearsOnMap)..')')
+	self:printInfo('read from save file: showMapHotspot = '..tostring(appearsOnMap)..' ('..type(appearsOnMap)..')')
 	self:showMapHotspot(Utils.getNoNil(getXMLBool(xmlFile, key .. "#showMapHotspot"), getBoolFromUserAttribute(self.nodeId, "showMapHotspot", false)), true)
 	self.entitiesInTriggerLoaded = getXMLInt(xmlFile, key .. "#entitiesInTrigger") or 0
 	self:loadExtraNodes(xmlFile, key)
@@ -655,7 +812,7 @@ function UniversalProcessKit:loadFromAttributesAndNodes(xmlFile, key)
 end;
 
 function UniversalProcessKit:getSaveAttributesAndNodes(nodeIdent)
-	self:print('calling UniversalProcessKit:getSaveAttributesAndNodes for id '..tostring(self.nodeId))
+	self:printFn('UniversalProcessKit:getSaveAttributesAndNodes('..tostring(nodeIdent)..')')
 	local attributes=""
 		
 	local nodes = "<"..tostring(self.name)
@@ -666,7 +823,7 @@ function UniversalProcessKit:getSaveAttributesAndNodes(nodeIdent)
 		extraNodes=extraNodes.." isEnabled=\"false\""
 	end
 	
-	self:print('save to file: showMapHotspot = '..tostring(self.appearsOnMap))
+	self:printInfo('save to file: showMapHotspot = '..tostring(self.appearsOnMap))
 	extraNodes=extraNodes.." showMapHotspot=\""..tostring(self.appearsOnMap).."\""
 	
 	local fillLevels = ""
@@ -695,7 +852,7 @@ function UniversalProcessKit:getSaveAttributesAndNodes(nodeIdent)
 		end
 	end
 	
-	self:print('fillLevels: '..tostring(fillLevels))
+	self:printInfo('fillLevels: '..tostring(fillLevels))
 	
 	if fillLevels~="" then
 		extraNodes = extraNodes.." fillLevels=\"" .. tostring(fillLevels) .. "\""
@@ -731,18 +888,20 @@ function UniversalProcessKit:getSaveAttributesAndNodes(nodeIdent)
 		nodes = nodes .. extraNodes ..">\n" .. "\t" .. nodesKids .. "\n" .. "</"..tostring(self.name)..">"
 	end
 	
-	self:print('nodes: '..tostring(nodes))
+	self:printInfo('nodes: '..tostring(nodes))
 	
 	return attributes, nodes
 end;
 
 -- use this function to load your extra Nodes (YourClass:loadExtraNodes)
 function UniversalProcessKit:loadExtraNodes(xmlFile, key)
+	self:printFn('UniversalProcessKit:loadExtraNodes('..tostring(xmlFile)..', '..tostring(key)..')')
 	return true
 end;
 
 -- use this function to save your own values (YourClass:getSaveExtraNodes)
 function UniversalProcessKit:getSaveExtraNodes(nodeIdent)
+	self:printFn('UniversalProcessKit:getSaveExtraNodes('..tostring(nodeIdent)..')')
 	return ""
 end;
 

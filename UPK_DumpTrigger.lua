@@ -7,6 +7,7 @@ InitObjectClass(UPK_DumpTrigger, "UPK_DumpTrigger")
 UniversalProcessKit.addModule("dumptrigger",UPK_DumpTrigger)
 
 function UPK_DumpTrigger:new(nodeId, parent)
+	printFn('UPK_DumpTrigger:new(',nodeId,', ',parent,')')
 	local self = UniversalProcessKit:new(nodeId, parent, UPK_DumpTrigger_mt)
 	registerObjectClassName(self, "UPK_DumpTrigger")
 
@@ -16,7 +17,7 @@ function UPK_DumpTrigger:new(nodeId, parent)
 	
 	local acceptedFillTypesArr = getArrayFromUserAttribute(nodeId, "acceptedFillTypes")
 	for _,fillType in pairs(UniversalProcessKit.fillTypeNameToInt(acceptedFillTypesArr)) do
-		self:print('accepting '..tostring(UniversalProcessKit.fillTypeIntToName[fillType])..' ('..tostring(fillType)..')')
+		self:printInfo('accepting '..tostring(UniversalProcessKit.fillTypeIntToName[fillType])..' ('..tostring(fillType)..')')
 		self.acceptedFillTypes[fillType] = true
 		--self.fillTypesConversionMatrix = self.fillTypesConversionMatrix + FillTypesConversionMatrix:new(fillType)
 	end
@@ -27,7 +28,7 @@ function UPK_DumpTrigger:new(nodeId, parent)
 	self.useAddIfDumping = false
 	local addIfDumpingArr = getArrayFromUserAttribute(nodeId, "addIfDumping")
 	for _,fillType in pairs(UniversalProcessKit.fillTypeNameToInt(addIfDumpingArr)) do
-		self:print('add if dumping '..tostring(UniversalProcessKit.fillTypeIntToName[fillType])..' ('..tostring(fillType)..')')
+		self:printAll('add if dumping '..tostring(UniversalProcessKit.fillTypeIntToName[fillType])..' ('..tostring(fillType)..')')
 		self.addIfDumping[fillType] = true
 		self.useAddIfDumping = true
 	end
@@ -36,7 +37,7 @@ function UPK_DumpTrigger:new(nodeId, parent)
 	self.useRemoveIfDumping = false
 	local removeIfDumpingArr = getArrayFromUserAttribute(nodeId, "removeIfDumping")
 	for _,fillType in pairs(UniversalProcessKit.fillTypeNameToInt(removeIfDumpingArr)) do
-		self:print('remove if dumping '..tostring(UniversalProcessKit.fillTypeIntToName[fillType])..' ('..tostring(fillType)..')')
+		self:printAll('remove if dumping '..tostring(UniversalProcessKit.fillTypeIntToName[fillType])..' ('..tostring(fillType)..')')
 		self.removeIfDumping[fillType] = true
 		self.useRemoveIfDumping = true
 	end
@@ -97,47 +98,51 @@ function UPK_DumpTrigger:new(nodeId, parent)
 	
 	local trigger_fillable = 8388608
 	if bitAND(collisionMask_new,trigger_fillable)==0 then
-		self:print('Warning: the dumptrigger shape has to be have the collision mask of a fillable object (fixed)')
+		self:printInfo('Warning: the dumptrigger shape has to have the collision mask of a fillable object (fixed)')
 		collisionMask_new = collisionMask_new + trigger_fillable
 	end
 	
 	if collisionMask_new ~= collisionMask_old then
-		self:print('Warning: set collisionMask to '..tostring(collisionMask_new)..' (you may want to fix that)')
+		self:printInfo('Warning: set collisionMask to '..tostring(collisionMask_new)..' (you may want to fix that)')
 		setCollisionMask(nodeId,collisionMask_new)
 	end
 	
-	self:print('loaded DumpTrigger successfully')
+	self:printFn('UPK_DumpTrigger:new done')
 
 	return self
 end
 
 function UPK_DumpTrigger:delete()
+	self:printFn('UPK_DumpTrigger:delete()')
 	g_currentMission.nodeToVehicle[self.nodeId]=nil
 	g_currentMission.objectToTrailer[self.nodeId]=nil
 	UPK_DumpTrigger:superClass().delete(self)
 end
 
 function UPK_DumpTrigger:getAllowFillFromAir()
-	--self:print('UPK_DumpTrigger:getAllowFillFromAir')
+	self:printFn('UPK_DumpTrigger:getAllowFillFromAir()')
 	return self.isEnabled
 end
 
 function UPK_DumpTrigger:getIsAttachedTo(combine)
+	self:printFn('UPK_DumpTrigger:getIsAttachedTo(',combine,')')
 	return false
 end
 
 function UPK_DumpTrigger:getAllowShovelFillType(fillType)
+	self:printFn('UPK_DumpTrigger:getAllowShovelFillType(',fillType,')')
 	return self.isEnabled and self:allowFillType(fillType)
 end
 
 function UPK_DumpTrigger:resetFillLevelIfNeeded(fillType)
+	self:printFn('UPK_DumpTrigger:resetFillLevelIfNeeded(',fillType,')')
 	self.interestedInFillType = fillType
 end
 
 UPK_DumpTrigger.getRevenuePerLiter = UPK_TipTrigger.getRevenuePerLiter
 
 function UPK_DumpTrigger:setFillLevel(newFillLevel, fillType)
-	--self:print('UPK_DumpTrigger:setFillLevel('..tostring(newFillLevel)..', '..tostring(fillType)..')')
+	self:printFn('UPK_DumpTrigger:setFillLevel(',newFillLevel,', ',fillType,')')
 	local oldFillLevel = self:getFillLevel(fillType)
 	local deltaFillLevel = self:addFillLevel(newFillLevel - oldFillLevel, fillType)
 	self.interestedInFillType = nil

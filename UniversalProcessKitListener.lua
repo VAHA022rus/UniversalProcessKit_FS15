@@ -14,11 +14,9 @@ UniversalProcessKitListener.updateablesSecondOrder = {}
 UniversalProcessKitListener.dtsum = 0
 UniversalProcessKitListener.postLoadObjects = {}
 
-print('UniversalProcessKitListener.postLoadObjects is '..tostring(UniversalProcessKitListener.postLoadObjects))
-
-
-
 function UniversalProcessKitListener.loadMap(name)
+	printFn('UniversalProcessKitListener.loadMap('..tostring(name)..')')
+	
 	--cleanup at map loaded
 	--[[
 	for filltypeName,fillType in pairs(Fillable.fillTypeNameToInt) do
@@ -126,6 +124,8 @@ function UniversalProcessKitListener.loadMap(name)
 end
 
 function UniversalProcessKitListener.deleteMap(name)
+	printFn('UniversalProcessKitListener.deleteMap('..tostring(name)..')')
+	
 	UniversalProcessKitListener.removeMinuteChangeListener(UniversalProcessKitEnvironment)
 	UniversalProcessKitListener.removeHourChangeListener(UniversalProcessKitEnvironment)
 	
@@ -137,6 +137,7 @@ function UniversalProcessKitListener.deleteMap(name)
 end
 
 function UniversalProcessKitListener.addUpdateable(obj)
+	printFn('UniversalProcessKitListener.addUpdateable('..tostring(obj)..')')
 	if not UniversalProcessKitListener.updateables[obj] then
 		table.insert(UniversalProcessKitListener.updateablesOrder,obj)
 		UniversalProcessKitListener.updateables[obj]=true
@@ -144,6 +145,7 @@ function UniversalProcessKitListener.addUpdateable(obj)
 end
 
 function UniversalProcessKitListener.removeUpdateable(obj)
+	printFn('UniversalProcessKitListener.removeUpdateable('..tostring(obj)..')')
 	if UniversalProcessKitListener.updateables[obj] then
 		removeValueFromTable(UniversalProcessKitListener.updateablesOrder,obj)
 		UniversalProcessKitListener.updateables[obj]=nil
@@ -151,6 +153,7 @@ function UniversalProcessKitListener.removeUpdateable(obj)
 end
 
 function UniversalProcessKitListener:update(dt)
+	printAll('UniversalProcessKitListener:update('..tostring(dt)..')')
 	UniversalProcessKitListener.dtsum = UniversalProcessKitListener.dtsum+dt
 	if UniversalProcessKitListener.dtsum >= 1000 then
 		UniversalProcessKitListener.dtsum = UniversalProcessKitListener.dtsum-1000
@@ -180,6 +183,7 @@ end
 -- day
 
 function UniversalProcessKitListener.addDayChangeListener(obj)
+	printFn('UniversalProcessKitListener.addDayChangeListener('..tostring(obj)..')')
 	if not UniversalProcessKitListener.updateablesDay[obj] then
 		table.insert(UniversalProcessKitListener.updateablesDayOrder,obj)
 		UniversalProcessKitListener.updateablesDay[obj]=true
@@ -187,6 +191,7 @@ function UniversalProcessKitListener.addDayChangeListener(obj)
 end
 
 function UniversalProcessKitListener.removeDayChangeListener(obj)
+	printFn('UniversalProcessKitListener.removeDayChangeListener('..tostring(obj)..')')
 	if UniversalProcessKitListener.updateablesDay[obj] then
 		removeValueFromTable(UniversalProcessKitListener.updateablesDayOrder,obj)
 		UniversalProcessKitListener.updateablesDay[obj]=nil
@@ -194,6 +199,7 @@ function UniversalProcessKitListener.removeDayChangeListener(obj)
 end
 
 function UniversalProcessKitListener:dayChanged()
+	printFn('UniversalProcessKitListener:dayChanged()')
 	for i=1,#UniversalProcessKitListener.updateablesDayOrder do
 		local obj=UniversalProcessKitListener.updateablesDayOrder[i]
 		if UniversalProcessKitListener.updateablesDay[obj] then
@@ -205,6 +211,7 @@ end
 -- hour
 
 function UniversalProcessKitListener.addHourChangeListener(obj)
+	printFn('UniversalProcessKitListener.addHourChangeListener('..tostring(obj)..')')
 	if not UniversalProcessKitListener.updateablesHour[obj] then
 		table.insert(UniversalProcessKitListener.updateablesHourOrder,obj)
 		UniversalProcessKitListener.updateablesHour[obj]=true
@@ -212,6 +219,7 @@ function UniversalProcessKitListener.addHourChangeListener(obj)
 end
 
 function UniversalProcessKitListener.removeHourChangeListener(obj)
+	printFn('UniversalProcessKitListener.removeHourChangeListener('..tostring(obj)..')')
 	if UniversalProcessKitListener.updateablesHour[obj] then
 		removeValueFromTable(UniversalProcessKitListener.updateablesHourOrder,obj)
 		UniversalProcessKitListener.updateablesHour[obj]=nil
@@ -219,6 +227,7 @@ function UniversalProcessKitListener.removeHourChangeListener(obj)
 end
 
 function UniversalProcessKitListener:hourChanged()
+	printFn('UniversalProcessKitListener:hourChanged()')
 	for i=1,#UniversalProcessKitListener.updateablesHourOrder do
 		local obj=UniversalProcessKitListener.updateablesHourOrder[i]
 		if UniversalProcessKitListener.updateablesHour[obj] then
@@ -230,6 +239,7 @@ end
 -- minute
 
 function UniversalProcessKitListener.addMinuteChangeListener(obj)
+	printFn('UniversalProcessKitListener.addMinuteChangeListener('..tostring(obj)..')')
 	if not UniversalProcessKitListener.updateablesMinute[obj] then
 		table.insert(UniversalProcessKitListener.updateablesMinuteOrder,obj)
 		UniversalProcessKitListener.updateablesMinute[obj]=true
@@ -237,6 +247,7 @@ function UniversalProcessKitListener.addMinuteChangeListener(obj)
 end
 
 function UniversalProcessKitListener.removeMinuteChangeListener(obj)
+	printFn('UniversalProcessKitListener.removeMinuteChangeListener('..tostring(obj)..')')
 	if UniversalProcessKitListener.updateablesMinute[obj] then
 		removeValueFromTable(UniversalProcessKitListener.updateablesMinuteOrder,obj)
 		UniversalProcessKitListener.updateablesMinute[obj]=nil
@@ -244,6 +255,7 @@ function UniversalProcessKitListener.removeMinuteChangeListener(obj)
 end
 
 function UniversalProcessKitListener:minuteChanged()
+	printFn('UniversalProcessKitListener:minuteChanged()')
 	for i=1,#UniversalProcessKitListener.updateablesMinuteOrder do
 		local obj=UniversalProcessKitListener.updateablesMinuteOrder[i]
 		if UniversalProcessKitListener.updateablesMinute[obj] then
@@ -255,6 +267,7 @@ end
 -- second
 
 function UniversalProcessKitListener.addSecondChangeListener(obj)
+	printFn('UniversalProcessKitListener.addSecondChangeListener('..tostring(obj)..')')
 	if not UniversalProcessKitListener.updateablesSecond[obj] then
 		table.insert(UniversalProcessKitListener.updateablesSecondOrder,obj)
 		UniversalProcessKitListener.updateablesSecond[obj]=true
@@ -262,6 +275,7 @@ function UniversalProcessKitListener.addSecondChangeListener(obj)
 end
 
 function UniversalProcessKitListener.removeSecondChangeListener(obj)
+	printFn('UniversalProcessKitListener.removeSecondChangeListener('..tostring(obj)..')')
 	if UniversalProcessKitListener.updateablesSecond[obj] then
 		removeValueFromTable(UniversalProcessKitListener.updateablesSecondOrder,obj)
 		UniversalProcessKitListener.updateablesSecond[obj]=nil
@@ -269,6 +283,7 @@ function UniversalProcessKitListener.removeSecondChangeListener(obj)
 end
 
 function UniversalProcessKitListener.secondChanged()
+	printFn('UniversalProcessKitListener:secondChanged()')
 	for i=1,#UniversalProcessKitListener.updateablesSecondOrder do
 		local obj=UniversalProcessKitListener.updateablesSecondOrder[i]
 		if UniversalProcessKitListener.updateablesSecond[obj] then
@@ -280,24 +295,23 @@ end
 -- post load
 
 function UniversalProcessKitListener.registerPostLoadObject(obj)
-	print('UniversalProcessKitListener.postLoadObjects is '..tostring(UniversalProcessKitListener.postLoadObjects))
+	printFn('UniversalProcessKitListener.registerPostLoadObject('..tostring(obj)..')')
 	table.insert(UniversalProcessKitListener.postLoadObjects,obj)
 end
 
 function UniversalProcessKitListener.keyEvent(self,unicode,sym,modifier,isDown)
-	--print('UniversalProcessKitListener.keyEvent('..tostring(unicode)..','..tostring(sym)..','..tostring(modifier)..','..tostring(isDown)..')')
+	printAll('UniversalProcessKitListener.keyEvent('..tostring(unicode)..','..tostring(sym)..','..tostring(modifier)..','..tostring(isDown)..')')
 	-- player spawner
 
 	if InputBinding.isPressed(InputBinding.UPK_PLAYERTELEPORT) then
-		print("Teleport pressed")
+		printAll("Teleport pressed")
 		UPK_PlayerSpawner.togglePlayerSpawner(1)
 	elseif InputBinding.isPressed(InputBinding.UPK_PLAYERTELEPORT_BACK) then
-		print("Teleport back pressed")
+		printAll("Teleport back pressed")
 		UPK_PlayerSpawner.togglePlayerSpawner(-1)
 	end
 end
-	
-local function emptyFunc() end
+
 UniversalProcessKitListener.mouseEvent=emptyFunc
 UniversalProcessKitListener.draw=emptyFunc
 

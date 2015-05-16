@@ -8,6 +8,7 @@ InitObjectClass(UPK_LiquidManureFillTrigger, "UPK_LiquidManureFillTrigger")
 UniversalProcessKit.addModule("liquidmanurefilltrigger",UPK_LiquidManureFillTrigger)
 
 function UPK_LiquidManureFillTrigger:new(nodeId, parent)
+	printFn('UPK_LiquidManureFillTrigger:new(',nodeId,', ',parent,')')
 	local self = UniversalProcessKit:new(nodeId, parent, UPK_LiquidManureFillTrigger_mt)
 	registerObjectClassName(self, "UPK_LiquidManureFillTrigger")
 	
@@ -29,7 +30,7 @@ function UPK_LiquidManureFillTrigger:new(nodeId, parent)
 	self.useAddIfFilling = false
 	local addIfFillingArr = getArrayFromUserAttribute(nodeId, "addIfFilling")
 	for _,fillType in pairs(UniversalProcessKit.fillTypeNameToInt(addIfFillingArr)) do
-		self:print('add if filling '..tostring(UniversalProcessKit.fillTypeIntToName[fillType])..' ('..tostring(fillType)..')')
+		self:printInfo('add if filling '..tostring(UniversalProcessKit.fillTypeIntToName[fillType])..' ('..tostring(fillType)..')')
 		self.addIfFilling[fillType] = true
 		self.useAddIfFilling = true
 	end
@@ -38,7 +39,7 @@ function UPK_LiquidManureFillTrigger:new(nodeId, parent)
 	self.useRemoveIfFilling = false
 	local removeIfFillingArr = getArrayFromUserAttribute(nodeId, "removeIfFilling")
 	for _,fillType in pairs(UniversalProcessKit.fillTypeNameToInt(removeIfFillingArr)) do
-		self:print('remove if filling '..tostring(UniversalProcessKit.fillTypeIntToName[fillType])..' ('..tostring(fillType)..')')
+		self:printInfo('remove if filling '..tostring(UniversalProcessKit.fillTypeIntToName[fillType])..' ('..tostring(fillType)..')')
 		self.removeIfFilling[fillType] = true
 		self.useRemoveIfFilling = true
 	end
@@ -67,17 +68,18 @@ function UPK_LiquidManureFillTrigger:new(nodeId, parent)
 	
 	self:addTrigger()
 	
-	self:print('loaded LiquidManureFillTrigger successfully')
+	self:printFn('UPK_LiquidManureFillTrigger:now done')
 	
     return self
 end
 
 function UPK_LiquidManureFillTrigger:delete()
+	self:printFn('UPK_LiquidManureFillTrigger:delete()')
 	UPK_LiquidManureFillTrigger:superClass().delete(self)
 end
 
 function UPK_LiquidManureFillTrigger:triggerUpdate(vehicle,isInTrigger)
-	--self:print('UPK_LiquidManureFillTrigger:triggerUpdate('..tostring(vehicle)..', '..tostring(isInTrigger)..')')
+	self:printFn('UPK_LiquidManureFillTrigger:triggerUpdate(',vehicle,', ',isInTrigger,')')
 	if self.isEnabled and self.isClient then
 		if self.allowedVehicles[UniversalProcessKit.VEHICLE_LIQUIDMANURETRAILER] and UniversalProcessKit.isVehicleType(vehicle, UniversalProcessKit.VEHICLE_LIQUIDMANURETRAILER) then
 			--self:print('recognized liquid manure trailer')

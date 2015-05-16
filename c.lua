@@ -37,20 +37,7 @@ _g.UniversalProcessKitStorageController={};
 -- basic functions ---------------
 ----------------------------------
 
-function _m.print(string, debug)
-	if debug==nil then
-		debug=debugMode
-	end
-	if debug then
-		if type(string)=="string" then
-			local msg=string
-			if debug then
-				msg='DEBUG '..msg
-			end
-			_g.print(' [UPK] '..msg)
-		end
-	end
-end;
+function emptyFunc() end
 
 function UniversalProcessKit.InitEventClass(classObject,className)
 	if _g[className]~=classObject then

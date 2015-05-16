@@ -8,6 +8,7 @@ InitObjectClass(UPK_GasStationTrigger, "UPK_GasStationTrigger")
 UniversalProcessKit.addModule("gasstationtrigger",UPK_GasStationTrigger)
 
 function UPK_GasStationTrigger:new(nodeId, parent)
+	printFn('UPK_GasStationTrigger:new(',nodeId,', ',parent,')')
 	local self = UniversalProcessKit:new(nodeId, parent, UPK_GasStationTrigger_mt)
 	registerObjectClassName(self, "UPK_GasStationTrigger")
 	
@@ -29,7 +30,7 @@ function UPK_GasStationTrigger:new(nodeId, parent)
 	self.useAddIfFilling = false
 	local addIfFillingArr = getArrayFromUserAttribute(nodeId, "addIfFilling")
 	for _,fillType in pairs(UniversalProcessKit.fillTypeNameToInt(addIfFillingArr)) do
-		self:print('add if filling '..tostring(UniversalProcessKit.fillTypeIntToName[fillType])..' ('..tostring(fillType)..')')
+		self:printInfo('add if filling '..tostring(UniversalProcessKit.fillTypeIntToName[fillType])..' ('..tostring(fillType)..')')
 		self.addIfFilling[fillType] = true
 		self.useAddIfFilling = true
 	end
@@ -38,7 +39,7 @@ function UPK_GasStationTrigger:new(nodeId, parent)
 	self.useRemoveIfFilling = false
 	local removeIfFillingArr = getArrayFromUserAttribute(nodeId, "removeIfFilling")
 	for _,fillType in pairs(UniversalProcessKit.fillTypeNameToInt(removeIfFillingArr)) do
-		self:print('remove if filling '..tostring(UniversalProcessKit.fillTypeIntToName[fillType])..' ('..tostring(fillType)..')')
+		self:printInfo('remove if filling '..tostring(UniversalProcessKit.fillTypeIntToName[fillType])..' ('..tostring(fillType)..')')
 		self.removeIfFilling[fillType] = true
 		self.useRemoveIfFilling = true
 	end
@@ -69,17 +70,18 @@ function UPK_GasStationTrigger:new(nodeId, parent)
 	
 	self:addTrigger()
 	
-	self:print('loaded GasStationTrigger successfully')
+	self:printFn('UPK_GasStationTrigger:now done')
 	
     return self
 end
 
 function UPK_GasStationTrigger:delete()
+	self:printFn('UPK_GasStationTrigger:delete()')
 	UPK_GasStationTrigger:superClass().delete(self)
 end
 
 function UPK_GasStationTrigger:triggerUpdate(vehicle,isInTrigger)
-	--self:print('UPK_GasStationTrigger:triggerUpdate('..tostring(vehicle)..', '..tostring(isInTrigger)..')')
+	self:printFn('UPK_GasStationTrigger:triggerUpdate(',vehicle,', ',isInTrigger,')')
 	if self.isEnabled and self.isClient and vehicle~=nil then
 		if isInTrigger then
 			--self:print('is in trigger')
@@ -104,7 +106,7 @@ UPK_GasStationTrigger.getFillLevel = UPK_FillTrigger.getFillLevel
 UPK_GasStationTrigger.getPricePerLiter = UPK_FillTrigger.getPricePerLiter
 
 function UPK_GasStationTrigger:fillFuel(trailer, deltaFillLevel) -- tippers, shovels etc
-	--self:print('UPK_GasStationTrigger:fillFuel('..tostring(trailer)..', '..tostring(deltaFillLevel)..')')
+	self:printFn('UPK_GasStationTrigger:fillFuel(',trailer,', ',deltaFillLevel,')')
 	if self.isServer and self.isEnabled then
 		if UniversalProcessKit.isVehicleType(trailer, UniversalProcessKit.VEHICLE_MOTORIZED) then
 			return UPK_FillTrigger.fillMotorized(self, trailer, deltaFillLevel)
@@ -115,6 +117,7 @@ function UPK_GasStationTrigger:fillFuel(trailer, deltaFillLevel) -- tippers, sho
 end
 
 function UPK_GasStationTrigger:getIsActivatable(trailer)
+	self:printFn('UPK_GasStationTrigger:getIsActivatable(',trailer,')')
 	--self:print('trailer:allowFillType(self.fillFillType, false) '..tostring(trailer:allowFillType(self.fillFillType, false)))
 	--self:print('self:getFillLevel(self.fillFillType) '..tostring(self:getFillLevel(self.fillFillType)))
 	if UniversalProcessKit.isVehicleType(trailer, UniversalProcessKit.VEHICLE_MOTORIZED) then

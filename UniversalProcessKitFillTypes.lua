@@ -84,23 +84,24 @@ UniversalProcessKit.specialFillTypes = {"money", -- "other"
 						
 
 function UniversalProcessKit.addFillType(name,index)
+	printFn('UniversalProcessKit.addFillType('..tostring(name)..', '..tostring(index)..')')
 	if type(name)=="table" then
 		for k,v in pairs(name) do
 			UniversalProcessKit.addFillType(v)
 		end
 	elseif type(name)=="string" then
 		if name=="single" or name=="fifo" or name=="filo" then
-			print('Warning: filltypes cannot be named single, fifo or filo')
+			printErr('Warning: filltypes cannot be named single, fifo or filo')
 		elseif UniversalProcessKit.fillTypeNameToInt[name]==nil then
 			local index=index or UniversalProcessKit.NUM_FILLTYPES
 			if UniversalProcessKit.fillTypeIntToName[index]~=nil then
 				UniversalProcessKit.addFillType(name,index+1)
 			else
 				if isInTable(specialFillTypes,name) then
-					print("Notice: filltype labeled \""..tostring(name).."\" is not part of the game economy")
+					printInfo("Notice: filltype labeled \""..tostring(name).."\" is not part of the game economy")
 				end
 				UniversalProcessKit['FILLTYPE_'..string.upper(name)]=index
-				print("Notice: adding "..tostring(name).." ("..tostring(index)..") to fillTypes")
+				printInfo("Notice: adding "..tostring(name).." ("..tostring(index)..") to fillTypes")
 				rawset(UniversalProcessKit.fillTypeIntToName,index,name)
 				rawset(UniversalProcessKit.fillTypeNameToInt,name,index)
 				UniversalProcessKit.NUM_FILLTYPES=UniversalProcessKit.NUM_FILLTYPES+1
@@ -114,8 +115,15 @@ function UniversalProcessKit.addFillType(name,index)
 end;
 
 function UniversalProcessKit.registerFillType(name, hudFilename)
-	Fillable.registerFillType(name, nil, nil, true, hudFilename)
-	UniversalProcessKit.addFillType(name)
+	printFn('UniversalProcessKit.registerFillType('..tostring(name)..', '..tostring(hudFilename)..')')
+	hudFilename = string.gsub(hudFilename,'//','/')
+	hudFilename = string.gsub(hudFilename,'\\\\','\\')
+	if fileExists(hudFilename) then
+		Fillable.registerFillType(name, nil, nil, true, hudFilename)
+		UniversalProcessKit.addFillType(name)
+	else
+		printErr('Error: file '..tostring(hudFilename)..' does not exists - fill type '..tostring(name)..' not added')
+	end
 end;
 
 local isSpecialFillType_mt = {

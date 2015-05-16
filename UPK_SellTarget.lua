@@ -8,12 +8,13 @@ InitObjectClass(UPK_SellTarget, "UPK_SellTarget")
 UniversalProcessKit.addModule("selltarget",UPK_SellTarget)
 
 function UPK_SellTarget:new(nodeId, parent)
+	printFn('UPK_SellTarget:new(',nodeId,', ',parent,')')
 	local self = UniversalProcessKit:new(nodeId, parent, UPK_SellTarget_mt)
 	registerObjectClassName(self, "UPK_SellTarget")
 	
-	self:print('loaded SellTarget successfully')
-	
 	UniversalProcessKitListener.addUpdateable(self)
+	
+	self:print('UPK_SellTarget:new done')
 	
 	return self
 end
@@ -23,6 +24,7 @@ function UPK_SellTarget:delete()
 end
 
 function UPK_SellTarget:update(dt)
+	self:printAll('UPK_SellTarget:update(',dt,')')
 	if self.placeable~=nil and g_gui.currentGuiName=="PlacementScreen" then
 		local diffx,diffy,diffz = unpack(self.wpos - {getWorldTranslation(g_placementScreen.camera)})
 		if diffx<200 and diffy<200 and diffz<200 then

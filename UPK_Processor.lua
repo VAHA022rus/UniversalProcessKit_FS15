@@ -8,6 +8,7 @@ InitObjectClass(UPK_Processor, "UPK_Processor")
 UniversalProcessKit.addModule("processor",UPK_Processor)
 
 function UPK_Processor:new(nodeId, parent)
+	printFn('UPK_Processor:new(',nodeId,', ',parent,')')
 	local self = UniversalProcessKit:new(nodeId, parent, UPK_Processor_mt)
 	registerObjectClassName(self, "UPK_Processor")
 	
@@ -23,13 +24,13 @@ function UPK_Processor:new(nodeId, parent)
 		local productionHoursStrings = getStringFromUserAttribute(nodeId, "productionHours", "0-23")
 		local productionHoursStringArr = Utils.splitString(",",productionHoursStrings)
 		for _,v in pairs(productionHoursStringArr) do
-			self:print(v)
+			self:printAll(v)
 			local productionHoursArr = Utils.splitString("-",v)
 			local lowerHour = mathmin(mathmax(tonumber(productionHoursArr[1]),0),23)
 			local upperHour = mathmin(mathmax(tonumber(productionHoursArr[2]),lowerHour),23)
 			if lowerHour~=nil and upperHour~=nil then
 				for i=lowerHour,upperHour do
-					self:print('produce sth at hour '..tostring(i))
+					self:printInfo('produce sth at hour '..tostring(i))
 					self.productionHours[i]=true
 				end
 			end
@@ -46,7 +47,7 @@ function UPK_Processor:new(nodeId, parent)
 	for i=1,#prerequisiteArr,2 do
 		local amount=tonumber(prerequisiteArr[i])
 		local type=unpack(UniversalProcessKit.fillTypeNameToInt(prerequisiteArr[i+1]))
-		self:print('productionPrerequisite: '..tostring(amount)..' of '..tostring(prerequisiteArr[i+1])..' ('..tostring(type)..')')
+		self:printInfo('productionPrerequisite: '..tostring(amount)..' of '..tostring(prerequisiteArr[i+1])..' ('..tostring(type)..')')
 		if amount~=nil and type~=nil then
 			self.productionPrerequisite[type]=amount
 			self.hasProductionPrerequisite=true
@@ -58,13 +59,13 @@ function UPK_Processor:new(nodeId, parent)
 	local outcomeVariation=getNumberFromUserAttribute(nodeId, "outcomeVariation")
 	if outcomeVariation~=nil then
 		if outcomeVariation < 0 then
-			self:print('Error: outcomeVariation cannot be lower than 0',true)
+			self:printErr('Error: outcomeVariation cannot be lower than 0',true)
 			return false
 		elseif outcomeVariation>1 and outcomeVariation<=100 then
-			self:print('Warning: outcomeVariation is not between 0 and 1')
+			self:printInfo('Warning: outcomeVariation is not between 0 and 1')
 			outcomeVariation=outcomeVariation/100
 		elseif outcomeVariation>100 then
-			self:print('Warning: outcomeVariation is not between 0 and 1')
+			self:printInfo('Warning: outcomeVariation is not between 0 and 1')
 			outcomeVariation=0
 		end
 	else
@@ -75,7 +76,7 @@ function UPK_Processor:new(nodeId, parent)
 	if self.outcomeVariation>0 then
 		self.outcomeVariationType = getStringFromUserAttribute(nodeId, "outcomeVariationType", "uniform")
 		if self.outcomeVariationType=="normal" and (self.productsPerSecond>0 or self.productsPerMinute>0) then
-			self:print('Notice: Its not recommended to use normal distributed outcome variation for productsPerSecond and productsPerMinute')
+			self:printInfo('Notice: Its not recommended to use normal distributed outcome variation for productsPerSecond and productsPerMinute')
 		end
 	end
 	
@@ -139,9 +140,9 @@ function UPK_Processor:new(nodeId, parent)
 	end
 	
 	self.enableChildrenIfProcessing = getBoolFromUserAttribute(nodeId, "enableChildrenIfProcessing", false)
-	self:print('enableChildrenIfProcessing = '..tostring(self.enableChildrenIfProcessing))
+	self:printAll('enableChildrenIfProcessing = ',self.enableChildrenIfProcessing)
 	self.disableChildrenIfProcessing = getBoolFromUserAttribute(nodeId, "disableChildrenIfProcessing", false)
-	self:print('disableChildrenIfProcessing = '..tostring(self.disableChildrenIfProcessing))
+	self:printAll('disableChildrenIfProcessing = ',self.disableChildrenIfProcessing)
 	
 	if self.enableChildrenIfProcessing then
 		self.disableChildrenIfProcessing = false
@@ -181,9 +182,9 @@ function UPK_Processor:new(nodeId, parent)
 	end
 	
 	self.enableChildrenIfNotProcessing = getBoolFromUserAttribute(nodeId, "enableChildrenIfNotProcessing", false)
-	self:print('enableChildrenIfNotProcessing = '..tostring(self.enableChildrenIfNotProcessing))
+	self:printAll('enableChildrenIfNotProcessing = ',self.enableChildrenIfNotProcessing)
 	self.disableChildrenIfNotProcessing = getBoolFromUserAttribute(nodeId, "disableChildrenIfNotProcessing", false)
-	self:print('disableChildrenIfNotProcessing = '..tostring(self.disableChildrenIfNotProcessing))
+	self:printAll('disableChildrenIfNotProcessing = ',self.disableChildrenIfNotProcessing)
 	
 	if self.enableChildrenIfNotProcessing then
 		self.disableChildrenIfNotProcessing = false
@@ -223,9 +224,9 @@ function UPK_Processor:new(nodeId, parent)
 	end
 	
 	self.enableChildrenIfProductionSkipped = getBoolFromUserAttribute(nodeId, "enableChildrenIfProductionSkipped", false)
-	self:print('enableChildrenIfProductionSkipped = '..tostring(self.enableChildrenIfProductionSkipped))
+	self:printAll('enableChildrenIfProductionSkipped = ',self.enableChildrenIfProductionSkipped)
 	self.disableChildrenIfProductionSkipped = getBoolFromUserAttribute(nodeId, "disableChildrenIfProductionSkipped", false)
-	self:print('disableChildrenIfProductionSkipped = '..tostring(self.disableChildrenIfProductionSkipped))
+	self:printAll('disableChildrenIfProductionSkipped = ',self.disableChildrenIfProductionSkipped)
 	
 	if self.enableChildrenIfProductionSkipped then
 		self.disableChildrenIfProductionSkipped = false
@@ -283,13 +284,13 @@ function UPK_Processor:new(nodeId, parent)
 	
 	self.dtsum=0
 	
-	self:print('loaded Processor successfully')
+	self:printFn('UPK_Processor:new done')
 	
 	return self
 end
 
 function UPK_Processor:delete()
-	print('UPK_Processor:delete()')
+	self:printFn('UPK_Processor:delete()')
 	if self.isServer then
 		if self.product~=nil and self.productsPerMinute>0 then
 			UniversalProcessKitListener.removeMinuteChangeListener(self)
@@ -305,12 +306,14 @@ function UPK_Processor:delete()
 end
 
 function UPK_Processor:loadExtraNodes(xmlFile, key)
+	self:printFn('UPK_Processor:loadExtraNodes(',xmlFile,', ',key,')')
 	self.bufferedProducts = Utils.getNoNil(getXMLFloat(xmlFile, key .. "#bufferedProducts"),0)
 	self.currentInterval = Utils.getNoNil(getXMLInt(xmlFile, key .. "#currentInterval"),1)
 	return true
 end
 
 function UPK_Processor:getSaveExtraNodes(nodeIdent)
+	self:printFn('UPK_Processor:getSaveExtraNodes(',nodeIdent,')')
 	local nodes=""
 	if self.bufferedProducts>0 then
 		nodes=nodes .. " bufferedProducts=\""..tostring(mathfloor(self.bufferedProducts*1000+0.5)/1000).."\""
@@ -322,6 +325,7 @@ function UPK_Processor:getSaveExtraNodes(nodeIdent)
 end
 
 function UPK_Processor:dayChanged()
+	self:printFn('UPK_Processor:dayChanged()')
 	if self:canProduce(true) then
 		self:produce(self.productsPerDay)
 	else
@@ -330,6 +334,7 @@ function UPK_Processor:dayChanged()
 end
 
 function UPK_Processor:hourChanged()
+	self:printFn('UPK_Processor:hourChanged()')
 	if self:canProduce() then
 		self:produce(self.productsPerHour)
 	else
@@ -338,6 +343,7 @@ function UPK_Processor:hourChanged()
 end
 
 function UPK_Processor:minuteChanged()
+	self:printFn('UPK_Processor:minuteChanged()')
 	if self:canProduce() then
 		self:produce(self.productsPerMinute)
 	else
@@ -346,6 +352,7 @@ function UPK_Processor:minuteChanged()
 end
 
 function UPK_Processor:secondChanged()
+	self:printFn('UPK_Processor:secondChanged()')
 	if self:canProduce() then
 		self:produce(self.productsPerSecond)
 	else
@@ -354,16 +361,17 @@ function UPK_Processor:secondChanged()
 end
 
 function UPK_Processor:canProduce(ignoreProductionHours)
+	self:printFn('UPK_Processor:canProduce(',ignoreProductionHours,')')
 	if self.productionHours[g_currentMission.environment.currentHour] or ignoreProductionHours then
 		local produce=self.productionProbability==1
 		if not produce then
 			local rnr = mathrandom()
 			produce = rnr<=self.productionProbability
-			self:print('random number: '..tostring(rnr)..' is smaller than pprb '..round(tostring(self.productionProbability),8)..'? '..tostring(produce))
+			self:printAll('random number: ',rnr,' is smaller than pprb ',round(self.productionProbability,8),'? ',produce)
 		end
 		if self.productionInterval>1 then
 			self.currentInterval = self.currentInterval % self.productionInterval + 1
-			self:print('self.currentInterval = '..tostring(self.currentInterval))
+			self:printAll('self.currentInterval = ',self.currentInterval)
 		end
 		if produce and self.currentInterval==1 then
 			return true
@@ -373,6 +381,7 @@ function UPK_Processor:canProduce(ignoreProductionHours)
 end
 
 function UPK_Processor:produce(processed)
+	self:printFn('UPK_Processor:produce(',processed,')')
 	if self.isServer and self.isEnabled then
 		if self.outcomeVariation~=0 then
 			if self.outcomeVariationType=="normal" then -- normal distribution
@@ -422,7 +431,7 @@ function UPK_Processor:produce(processed)
 		
 		if round(finalProducts,8)>0 then
 			local added = self:addFillLevel(finalProducts,self.product)
-			self:print('finalProducts: '..tostring(finalProducts)..', added: '..tostring(added))
+			self:printAll('finalProducts: ',finalProducts,', added: ',added)
 			if self.hasByproducts then
 				self:addFillLevels(self.byproducts*finalProducts)
 			end
@@ -450,11 +459,11 @@ function UPK_Processor:produce(processed)
 			
 			-- en/disableChildrenIfProcessing
 			if self.enableChildrenIfProcessing then
-				self:print('enable children')
+				self:printAll('enable children')
 				self:setEnableChildren(true)
 			end
 			if self.disableChildrenIfProcessing then
-				self:print('disable children')
+				self:printAll('disable children')
 				self:setEnableChildren(false)
 			end
 		else
@@ -482,11 +491,11 @@ function UPK_Processor:produce(processed)
 			
 			-- en/disableChildrenIfNotProcessing
 			if self.enableChildrenIfNotProcessing then
-				self:print('enable children')
+				self:printAll('enable children')
 				self:setEnableChildren(true)
 			end
 			if self.disableChildrenIfNotProcessing then
-				self:print('disable children')
+				self:printAll('disable children')
 				self:setEnableChildren(false)
 			end
 		end
@@ -516,11 +525,11 @@ function UPK_Processor:productionSkipped()
 
 	-- en/disableChildrenIfProductionSkipped
 	if self.enableChildrenIfProductionSkipped then
-		self:print('enable children')
+		self:printAll('enable children')
 		self:setEnableChildren(true)
 	end
 	if self.disableChildrenIfProductionSkipped then
-		self:print('disable children')
+		self:printAll('disable children')
 		self:setEnableChildren(false)
 	end
 end

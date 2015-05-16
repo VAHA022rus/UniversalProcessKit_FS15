@@ -8,6 +8,7 @@ InitObjectClass(UPK_Animator, "UPK_Animator")
 UniversalProcessKit.addModule("animator",UPK_Animator)
 
 function UPK_Animator:new(nodeId, parent)
+	printFn('UPK_Animator:new(',nodeId,', ',parent,')')
 	local self = UniversalProcessKit:new(nodeId, parent, UPK_Animator_mt)
 	registerObjectClassName(self, "UPK_Animator")
 	
@@ -27,16 +28,15 @@ function UPK_Animator:new(nodeId, parent)
 	if self.doMovement then
 		local dx,dy,dz = unpack(self.moveTo)
 		local distance = Utils.vector3Length(dx,dy,dz)
-		self:print('distance='..tostring(distance))
+		self:printAll('distance=',distance)
 		local factor=mathpi/(mathpi+(2-mathpi)*self.movementSpeedupPeriod+(2-mathpi)*self.movementSlowdownPeriod)
-		self:print('factor='..tostring(factor))
+		self:printAll('factor=',factor)
 		if factor==0 then
 			self.doMovement = false
 		else
 			self.movementMainSpeed = __c(dx,dy,dz)/self.movementDuration*factor
 		end
-		self:print('self.movementMainSpeed='..tostring(self.movementMainSpeed[1])..', '..tostring(self.movementMainSpeed[2])..
-			', '..tostring(self.movementMainSpeed[3]))
+		self:printAll('self.movementMainSpeed=',self.movementMainSpeed[1],', ',self.movementMainSpeed[2],', ',self.movementMainSpeed[3])
 		
 		self.tmpSteps["movement"]={}
 		self.tmpSteps["movement"][1] = self.movementMainSpeed * (self.movementDuration*self.movementSpeedupPeriod)/(mathpi/2)
@@ -92,11 +92,11 @@ function UPK_Animator:new(nodeId, parent)
 	self.doAnimation = self.animationClip~=nil
 	if self.doAnimation then
 		self.animCharacterSet = getAnimCharacterSet(nodeId)
-		self:print('self.animCharacterSet='..tostring(self.animCharacterSet))
+		self:printAll('self.animCharacterSet=',self.animCharacterSet)
 		if self.animCharacterSet ~= 0 then
 			self.animClipIndex = getAnimClipIndex(self.animCharacterSet,self.animationClip)
-			self:print('self.animationClip='..tostring(self.animationClip))
-			self:print('self.animClipIndex='..tostring(self.animClipIndex))
+			self:printAll('self.animationClip=',self.animationClip)
+			self:printAll('self.animClipIndex=',self.animClipIndex)
 			if self.animClipIndex >= 0 then
 				self.doAnimation=true
 			end
@@ -114,19 +114,20 @@ function UPK_Animator:new(nodeId, parent)
 	end
 	
 	if not self.doMovement and not self.doRotation and not self.doRotatePerSecond and not self.doAnimation then
-		self:print('Error: Neither movement, nor rotation, nor animation specified (correctly)')
-		self:print('loading Animator failed')
+		self:printErr('Error: Neither movement, nor rotation, nor animation specified (correctly)')
+		self:printInfo('loading Animator failed')
 		return false
 	end
 	
 	UniversalProcessKitListener.addUpdateable(self)
 	
-	self:print('loaded Animator successfully')
+	self:printFn('UPK_Animator:new done')
 	
 	return self
 end
 
 function UPK_Animator:writeStream(streamId, connection)
+	self:printFn('UPK_Animator:writeStream(',streamId,', ',connection,')')
 	if not connection:getIsServer() then -- in connection with client
 		if self.doMovement then
 			streamWriteFloat32(streamId, self.movementTime)
@@ -144,6 +145,7 @@ function UPK_Animator:writeStream(streamId, connection)
 end
 
 function UPK_Animator:readStream(streamId, connection)
+	self:printFn('UPK_Animator:readStream(',streamId,', ',connection,')')
 	if connection:getIsServer() then -- in connection with server
 		if self.doMovement then
 			self.movementTime = streamReadFloat32(streamId)
@@ -161,6 +163,7 @@ function UPK_Animator:readStream(streamId, connection)
 end
 
 function UPK_Animator:delete()
+	self:printFn('UPK_Animator:delete()')
 	if self.doRotatePerSecond then
 		UniversalProcessKitListener.removeHourChangeListener(self)
 	end
@@ -169,6 +172,7 @@ function UPK_Animator:delete()
 end
 
 function UPK_Animator:hourChanged()
+	self:printFn('UPK_Animator:hourChanged()')
 	if self.doRotatePerSecond then
 		local rx, ry, rz = getRotation(self.nodeId)
 		setRotation(self.nodeId, rx%(2*mathpi),ry%(2*mathpi),rz%(2*mathpi)) -- resets rotation to small numbers
@@ -176,6 +180,7 @@ function UPK_Animator:hourChanged()
 end
 
 function UPK_Animator:update(dt)
+	self:printAll('UPK_Animator:update(',dt,')')
 	if self.doMovement or self.doRotation or self.doRotatePerSecond then
 		local dts=dt/1000
 		if self.doMovement then
@@ -240,6 +245,7 @@ end
 ]]--
 
 function UPK_Animator:getTotalStep(type,time,speedupPeriod,slowdownPeriod,duration,mainSpeed)
+	self:printFn('UPK_Animator:getTotalStep(',type,',',time,',',speedupPeriod,',',slowdownPeriod,',',duration,',',mainSpeed,')')
 	if time < speedupPeriod * duration then
 		return (self.tmpSteps[type][1] * (1-mathcos(time/ (speedupPeriod * duration) * (mathpi/2))))
 	elseif time < ((1-slowdownPeriod) * duration) then
@@ -251,10 +257,11 @@ function UPK_Animator:getTotalStep(type,time,speedupPeriod,slowdownPeriod,durati
 end
 
 function UPK_Animator:postLoad()
+	self:printFn('UPK_Animator:postLoad()')
 	UPK_ActivatorTrigger:superClass().postLoad(self)
 	if self.rotateToWhenLoaded~=nil then
 		local rx, ry, rz = unpack(self.rotateToWhenLoaded)
-		self:print('set to saved rotation '..tostring(rx)..', '..tostring(ry)..', '..tostring(rz))
+		self:printAll('set to saved rotation ',rx,', ',ry,', ',rz)
 		UniversalProcessKit.setRotation(self.nodeId, rx, ry, rz)
 		self.rotateToWhenLoaded = nil
 	end
@@ -267,6 +274,7 @@ function UPK_Animator:postLoad()
 end
 
 function UPK_Animator:setEnable(isEnabled,alreadySent)
+	self:printFn('UPK_Animator:setEnable(',isEnabled,', ',alreadySent,')')
 	UPK_Animator:superClass().setEnable(self,isEnabled,alreadySent)
 	if self.isEnabled then
 		if self.doMovement and not self.rewindMovementOnDisable then
@@ -286,6 +294,7 @@ function UPK_Animator:setEnable(isEnabled,alreadySent)
 end;
 
 function UPK_Animator:loadExtraNodes(xmlFile, key)
+	self:printFn('UPK_Animator:loadExtraNodes(',xmlFile,', ',key,')')
 	if self.doAnimation then
 		local animTime=Utils.getNoNil(tonumber(getXMLFloat(xmlFile, key .. "#animTime")),0)
 		self:setAnimTime(animTime,true)
@@ -305,7 +314,7 @@ function UPK_Animator:loadExtraNodes(xmlFile, key)
 	if self.doRotatePerSecond then
 		local rotateToWhenLoaded = gmatch(getXMLString(xmlFile, key .. "#rotation"), "(%d+%.%d+)")
 		if type(rotateToWhenLoaded)=="table" and rotateToWhenLoaded[1]~=nil then
-			self:print('read saved rotation '..tostring(rotateToWhenLoaded[1])..', '..tostring(rotateToWhenLoaded[2])..', '..tostring(rotateToWhenLoaded[3]))
+			self:printAll('read saved rotation '..tostring(rotateToWhenLoaded[1])..', '..tostring(rotateToWhenLoaded[2])..', '..tostring(rotateToWhenLoaded[3]))
 			self.rotateToWhenLoaded = { tonumber(rotateToWhenLoaded[1]), tonumber(rotateToWhenLoaded[2]), tonumber(rotateToWhenLoaded[3]) }
 		end
 	end
@@ -313,6 +322,7 @@ function UPK_Animator:loadExtraNodes(xmlFile, key)
 end;
 
 function UPK_Animator:getSaveExtraNodes(nodeIdent)
+	self:printFn('UPK_Animator:getSaveExtraNodes(',nodeIdent,')')
 	local nodes=""
 	if false and self.doAnimation then -- didnt worked yet to save animation time
 		nodes=nodes.." animTrackEnabled=\""..tostring(self.animTrackEnabled).."\" animTime=\""..tostring(self:getAnimTime()).."\""
@@ -331,15 +341,18 @@ function UPK_Animator:getSaveExtraNodes(nodeIdent)
 end;
 
 function UPK_Animator:setAnimTime(animTime,alreadySent)
+	self:printFn('UPK_Animator:setAnimTime(',animTime,', ',alreadySent,')')
 	setAnimTrackTime(self.animCharacterSet, self.animClipIndex, animTime, true)
 	self.animTime=animTime
 end;
 
 function UPK_Animator:getAnimTime()
+	self:printFn('UPK_Animator:getAnimTime()')
 	return getAnimTrackTime(self.animCharacterSet, self.animClipIndex)
 end;
 
 function UPK_Animator:enableAnimTrack(alreadySent)
+	self:printFn('UPK_Animator:enableAnimTrack(',alreadySent,')')
 	if self.animTrackEnabled==false then
 		self.animTrackEnabled=true
 		if self.rewindAnimationOnDisable then
@@ -350,6 +363,7 @@ function UPK_Animator:enableAnimTrack(alreadySent)
 end;
 
 function UPK_Animator:disableAnimTrack(alreadySent)
+	self:printFn('UPK_Animator:disableAnimTrack(',alreadySent,')')
 	if self.animTrackEnabled==true then
 		self.animTrackEnabled=false
 		if self.rewindAnimationOnDisable then

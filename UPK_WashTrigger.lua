@@ -9,6 +9,7 @@ InitObjectClass(UPK_WashTrigger, "UPK_WashTrigger")
 UniversalProcessKit.addModule("washtrigger",UPK_WashTrigger)
 
 function UPK_WashTrigger:new(nodeId, parent)
+	printFn('UPK_WashTrigger:new(',nodeId,', ',parent,')')
 	local self = UniversalProcessKit:new(nodeId, parent, UPK_WashTrigger_mt)
 	registerObjectClassName(self, "UPK_WashTrigger")
 	
@@ -64,19 +65,20 @@ function UPK_WashTrigger:new(nodeId, parent)
 	
 	self:addTrigger()
 	
-	self:print('loaded WashTrigger successfully')
+	self:printFn('UPK_WashTrigger:new done')
 	
 	return self
 end
 
 function UPK_WashTrigger:postLoad()
+	self:printFn('UPK_WashTrigger:postLoad()')
 	UPK_WashTrigger:superClass().postLoad(self)
 	self:triggerUpdate(false,false)
 	self:update(30)
 end
 
 function UPK_WashTrigger:triggerUpdate(vehicle,isInTrigger)
-	self:print('UPK_WashTrigger:triggerUpdate')
+	self:printFn('UPK_WashTrigger:triggerUpdate(',vehicle,', ',isInTrigger,')')
 	if self.isEnabled and self.washPerSecond~=0 then
 		for k,v in pairs(self.allowedVehicles) do
 			if v and UniversalProcessKit.isVehicleType(vehicle, k) then
@@ -93,7 +95,7 @@ function UPK_WashTrigger:triggerUpdate(vehicle,isInTrigger)
 end
 
 function UPK_WashTrigger:update(dt)
-	--self:print('UPK_WashTrigger:update('..tostring(dt)..')')
+	self:printAll('UPK_WashTrigger:update(',dt,')')
 	
 	if self.entitiesInTrigger==0 then
 		if self.isServer then

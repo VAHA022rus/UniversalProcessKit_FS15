@@ -1,6 +1,7 @@
 -- by mor2000
 
 function UniversalProcessKit:writeStream(streamId, connection)
+	self:printFn('UniversalProcessKit:writeStream('..tostring(streamId)..', '..tostring(connection)..')')
 	if not connection:getIsServer() then -- in connection with client
 		local flbsToSync = {}
 		local nrFlbsToSync = 0
@@ -27,6 +28,7 @@ function UniversalProcessKit:writeStream(streamId, connection)
 end
 
 function UniversalProcessKit:readStream(streamId, connection)
+	self:printFn('UniversalProcessKit:readStream('..tostring(streamId)..', '..tostring(connection)..')')
 	if connection:getIsServer() then -- in connection with server
 		local nrFlbsToSync = streamReadInt8(streamId)
 		if nrFlbsToSync>0 then
@@ -48,22 +50,20 @@ function UniversalProcessKit:readStream(streamId, connection)
 			end
 		end
 		local isEnabled = streamReadBool(streamId)
-		self:print('streamReadBool: isEnabled = '..tostring(isEnabled))
 		self:setEnable(isEnabled, true)
 		local appearsOnMap = streamReadBool(streamId)
-		self:print('streamReadBool: showMapHotspot = '..tostring(appearsOnMap))
 		self:showMapHotspot(appearsOnMap, true)
 	end
 end
 
 function UniversalProcessKit:writeUpdateStream(streamId, connection, dirtyMask, syncall)
-	self:print('UniversalProcessKit:writeUpdateStream('..tostring(streamId)..', '..tostring(connection)..', '..tostring(dirtyMask)..', '..tostring(syncall)..')')
+	self:printFn('UniversalProcessKit:writeUpdateStream('..tostring(streamId)..', '..tostring(connection)..', '..tostring(dirtyMask)..', '..tostring(syncall)..')')
 	if not connection:getIsServer() then
 		if bitAND(dirtyMask,self.fillLevelDirtyFlag)~=0 or syncall then
 			nrFillLevelsToSync = #self.fillLevelsToSync
 			streamWriteIntN(streamId,nrFillLevelsToSync,8)
 			for i=1,nrFillLevelsToSync do
-				self:print('want to sync '..tostring(self.fillLevelsToSync[i].fillLevel)..' of '..tostring(self.fillLevelsToSync[i].fillType))
+				self:printInfo('want to sync '..tostring(self.fillLevelsToSync[i].fillLevel)..' of '..tostring(self.fillLevelsToSync[i].fillType))
 				streamWriteFloat32(streamId,self.fillLevelsToSync[i].fillLevel)
 				streamWriteIntN(streamId,self.fillLevelsToSync[i].fillType,17)
 			end
@@ -78,22 +78,23 @@ function UniversalProcessKit:writeUpdateStream(streamId, connection, dirtyMask, 
 end;
 
 function UniversalProcessKit:doAfterAllClientsAreSynced()
+	self:printFn('UniversalProcessKit:doAfterAllClientsAreSynced()')
 	self.dirtyMask = 0
 	self.fillLevelsToSync = {}
 end;
 
 function UniversalProcessKit:readUpdateStream(streamId, connection, dirtyMask, syncall)
-	self:print('UniversalProcessKit:readUpdateStream('..tostring(streamId)..', '..tostring(connection)..', '..tostring(dirtyMask)..', '..tostring(syncall)..')')
+	self:printFn('UniversalProcessKit:readUpdateStream('..tostring(streamId)..', '..tostring(connection)..', '..tostring(dirtyMask)..', '..tostring(syncall)..')')
 	if connection:getIsServer() then
-		self:print('self.fillLevelDirtyFlag '..tostring(self.fillLevelDirtyFlag))
-		self:print('dirtyMask '..tostring(dirtyMask))
-		self:print('bitAND(dirtyMask,self.fillLevelDirtyFlag)~=0 '..tostring(bitAND(dirtyMask,self.fillLevelDirtyFlag)~=0))
+		self:printAll('self.fillLevelDirtyFlag ',self.fillLevelDirtyFlag)
+		self:printAll('dirtyMask ',dirtyMask)
+		self:printAll('bitAND(dirtyMask,self.fillLevelDirtyFlag)~=0 '..(bitAND(dirtyMask,self.fillLevelDirtyFlag)~=0))
 		if bitAND(dirtyMask,self.fillLevelDirtyFlag)~=0 or syncall then
 			nrFillTypesToSync=streamReadIntN(streamId,8) or 0
 			for i=1,nrFillTypesToSync do
 				newFillLevel = streamReadFloat32(streamId)
 				fillType = UniversalProcessKit.fillTypeIntServerToClient[streamReadIntN(streamId,17)]
-				self:print('reading sync '..tostring(newFillLevel)..' of '..tostring(fillType))
+				self:printAll('reading sync ',newFillLevel,' of ',fillType)
 				local oldFillLevel = self:getFillLevel(fillType)
 				self:addFillLevel(newFillLevel - oldFillLevel, fillType)
 			end
@@ -110,12 +111,12 @@ function UniversalProcessKit:readUpdateStream(streamId, connection, dirtyMask, s
 end;
 
 function UniversalProcessKit:getNextDirtyFlag()
-	print('UniversalProcessKit:getNextDirtyFlag()')
+	self:printFn('UniversalProcessKit:getNextDirtyFlag()')
 	return Object.getNextDirtyFlag(self)
 end
 
 function UniversalProcessKit:raiseDirtyFlags(flag)
-	print('UniversalProcessKit:raiseDirtyFlags('..tostring(flag)..')')
+	self:printFn('UniversalProcessKit:raiseDirtyFlags('..tostring(flag)..')')
 	Object.raiseDirtyFlags(self,flag)
 	self.syncObj:raiseDirtyFlags(self.syncObj.objectsToSyncDirtyFlag)
 end
@@ -129,30 +130,24 @@ UPK_FillTypesSyncingObject_mt = Class(UPK_FillTypesSyncingObject, Object)
 InitObjectClass(UPK_FillTypesSyncingObject, "UPK_FillTypesSyncingObject")
 
 function UPK_FillTypesSyncingObject:new(isServer, isClient)
+	printFn('UPK_FillTypesSyncingObject:new('..tostring(isServer)..', '..tostring(isClient)..')')
 	local self = Object:new(isServer, isClient, UPK_FillTypesSyncingObject_mt)
 	registerObjectClassName(self, "UPK_FillTypesSyncingObject")
-	print('UPK_FillTypesSyncingObject id is '..tostring(self.id))
+	printInfo('UPK_FillTypesSyncingObject id is '..tostring(self.id))
 	self.fillTypeNamesToSyncDirtyFlag = self:getNextDirtyFlag()
 	self.fillTypeNamesToSync = {}
 	
 	return self
 end
 
-function UPK_FillTypesSyncingObject:load()
-end
-
-function UPK_FillTypesSyncingObject:update()
-	--print('UPK_FillTypesSyncingObject:update()')
-	--local serverId = g_client:getObjectId(self)
-	--print('serverId = '..tostring(serverId))
-	--print('self = '..tostring(self))
-end
+UPK_FillTypesSyncingObject.load = emptyFunc
+UPK_FillTypesSyncingObject.update = emptyFunc
 
 function UPK_FillTypesSyncingObject:delete()
-	print('UPK_FillTypesSyncingObject:delete()')
+	printFn('UPK_FillTypesSyncingObject:delete()')
 	if g_client ~= nil then
 		local serverId = g_client:getObjectId(self)
-		print('serverId = '..tostring(serverId))
+		printAll('serverId = '..tostring(serverId))
 	end
 	
 	
@@ -187,6 +182,7 @@ function UPK_FillTypesSyncingObject:delete()
 end
 
 function UPK_FillTypesSyncingObject:addFillTypeNameToSync(name)
+	printFn('UPK_FillTypesSyncingObject:addFillTypeNameToSync('..tostring(name)..')')
 	if type(name)=="string" and name ~= "" then
 		table.insert(self.fillTypeNamesToSync, name)
 		self:raiseDirtyFlags(self.fillTypeNamesToSyncDirtyFlag)
@@ -194,16 +190,16 @@ function UPK_FillTypesSyncingObject:addFillTypeNameToSync(name)
 end
 
 function UPK_FillTypesSyncingObject:writeStream(streamId, connection)
-	print('UPK_FillTypesSyncingObject:writeStream')
+	printFn('UPK_FillTypesSyncingObject:writeStream('..tostring(streamId)..', '..tostring(connection)..')')
 	if not connection:getIsServer() then -- in connection with client
-		print('serverId = '..tostring(self.id))
+		printInfo('serverId = '..tostring(self.id))
 		streamWriteInt32(streamId, self.id)
 		
 		local countFillTypes = 0
 		for fillType=32768,UniversalProcessKit.NUM_FILLTYPES do
 			local fillTypeName = UniversalProcessKit.fillTypeIntToName[fillType]
 			if fillTypeName~=nil then
-				print('I have fill type \"'..tostring(fillTypeName)..'\" to sync')
+				printInfo('I have fill type \"'..tostring(fillTypeName)..'\" to sync')
 				countFillTypes = countFillTypes + 1
 			end
 		end
@@ -219,13 +215,13 @@ function UPK_FillTypesSyncingObject:writeStream(streamId, connection)
 end
 
 function UPK_FillTypesSyncingObject:readStream(streamId, connection)
-	print('UPK_FillTypesSyncingObject:readStream')
+	printFn('UPK_FillTypesSyncingObject:readStream('..tostring(streamId)..', '..tostring(connection)..')')
 	if connection:getIsServer() then -- in connection with server
 		local networkNode = streamReadInt32(streamId)
 		g_client:finishRegisterObject(self, networkNode or self.id)
 		local serverId = g_client:getObjectId(self)
-		print('serverId = '..tostring(serverId))
-		print('g_client.tempClientCreatingObjects[serverId] = '..tostring(g_client.tempClientCreatingObjects[serverId]))
+		printInfo('serverId = '..tostring(serverId))
+		printInfo('g_client.tempClientCreatingObjects[serverId] = '..tostring(g_client.tempClientCreatingObjects[serverId]))
 		
 		
 		local countFillTypes = streamReadInt16(streamId)
@@ -233,7 +229,7 @@ function UPK_FillTypesSyncingObject:readStream(streamId, connection)
 			local fillTypeServer = streamReadIntN(streamId, 17)
 			local fillTypeName = streamReadString(streamId)
 			local fillTypeClient = UniversalProcessKit.fillTypeNameToInt[fillTypeName]
-			print('got fill type \"'..tostring(fillTypeName)..'\" with # '..tostring(fillTypeServer)..' from server, mine is '..
+			printInfo('got fill type \"'..tostring(fillTypeName)..'\" with # '..tostring(fillTypeServer)..' from server, mine is '..
 					tostring(fillTypeClient))
 			if fillTypeServer ~= fillTypeClient then
 				if fillTypeClient == nil then
@@ -252,7 +248,7 @@ function UPK_FillTypesSyncingObject:readStream(streamId, connection)
 end
 
 function UPK_FillTypesSyncingObject:writeUpdateStream(streamId, connection, dirtyMask)
-	print('UPK_FillTypesSyncingObject:writeUpdateStream')
+	printFn('UPK_FillTypesSyncingObject:writeUpdateStream('..tostring(streamId)..', '..tostring(connection)..', '..tostring(dirtyMask)..')')
 	if not connection:getIsServer() then -- in connection with client
 		local fillTypeNamesToSyncNr = #self.fillTypeNamesToSync
 		streamWriteInt16(streamId, fillTypeNamesToSyncNr)
@@ -267,14 +263,14 @@ function UPK_FillTypesSyncingObject:writeUpdateStream(streamId, connection, dirt
 end
 
 function UPK_FillTypesSyncingObject:readUpdateStream(streamId, timestamp, connection)
-	print('UPK_FillTypesSyncingObject:readUpdateStream')
+	printFn('UPK_FillTypesSyncingObject:readUpdateStream('..tostring(streamId)..', '..tostring(timestamp)..', '..tostring(connection)..')')
 	if connection:getIsServer() then -- in connection with server
 		local fillTypeNamesToSyncNr = streamReadInt16(streamId)
 		for i=1,fillTypeNamesToSyncNr do
 			local fillTypeServer = streamReadIntN(streamId, 17)
 			local fillTypeName = streamReadString(streamId)
 			local fillTypeClient = UniversalProcessKit.fillTypeNameToInt[fillTypeName]
-			print('got fill type \"'..tostring(fillTypeName)..'\" with # '..tostring(fillTypeServer)..' from server, mine is '..
+			printAll('got fill type \"'..tostring(fillTypeName)..'\" with # '..tostring(fillTypeServer)..' from server, mine is '..
 					tostring(fillTypeClient))
 			if fillTypeServer ~= fillTypeClient then
 				if fillTypeClient == nil then

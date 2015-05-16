@@ -8,6 +8,7 @@ InitObjectClass(UPK_WaterFillTrigger, "UPK_WaterFillTrigger")
 UniversalProcessKit.addModule("waterfilltrigger",UPK_WaterFillTrigger)
 
 function UPK_WaterFillTrigger:new(id, parent)
+	printFn('UPK_WaterFillTrigger:new(',nodeId,', ',parent,')')
 	local self = UniversalProcessKit:new(id, parent, UPK_WaterFillTrigger_mt)
 	registerObjectClassName(self, "UPK_WaterFillTrigger")
 	
@@ -29,7 +30,7 @@ function UPK_WaterFillTrigger:new(id, parent)
 	self.useAddIfFilling = false
 	local addIfFillingArr = getArrayFromUserAttribute(nodeId, "addIfFilling")
 	for _,fillType in pairs(UniversalProcessKit.fillTypeNameToInt(addIfFillingArr)) do
-		self:print('add if filling '..tostring(UniversalProcessKit.fillTypeIntToName[fillType])..' ('..tostring(fillType)..')')
+		self:printInfo('add if filling '..tostring(UniversalProcessKit.fillTypeIntToName[fillType])..' ('..tostring(fillType)..')')
 		self.addIfFilling[fillType] = true
 		self.useAddIfFilling = true
 	end
@@ -38,7 +39,7 @@ function UPK_WaterFillTrigger:new(id, parent)
 	self.useRemoveIfFilling = false
 	local removeIfFillingArr = getArrayFromUserAttribute(nodeId, "removeIfFilling")
 	for _,fillType in pairs(UniversalProcessKit.fillTypeNameToInt(removeIfFillingArr)) do
-		self:print('remove if filling '..tostring(UniversalProcessKit.fillTypeIntToName[fillType])..' ('..tostring(fillType)..')')
+		self:printInfo('remove if filling '..tostring(UniversalProcessKit.fillTypeIntToName[fillType])..' ('..tostring(fillType)..')')
 		self.removeIfFilling[fillType] = true
 		self.useRemoveIfFilling = true
 	end
@@ -67,17 +68,18 @@ function UPK_WaterFillTrigger:new(id, parent)
 	
 	self:addTrigger()
 	
-	self:print('loaded WaterFillTrigger successfully')
+	self:printFn('UPK_WaterFillTrigger:new done')
 	
     return self
 end
 
 function UPK_WaterFillTrigger:delete()
+	self:printFn('UPK_WaterFillTrigger:delete()')
 	UPK_WaterFillTrigger:superClass().delete(self)
 end
 
 function UPK_WaterFillTrigger:triggerUpdate(vehicle,isInTrigger)
-	--self:print('UPK_WaterFillTrigger:triggerUpdate('..tostring(vehicle)..', '..tostring(isInTrigger)..')')
+	self:printFn('UPK_WaterFillTrigger:triggerUpdate(',vehicle,', ',isInTrigger,')')
 	if self.isEnabled and self.isClient then
 		if self.allowedVehicles[UniversalProcessKit.VEHICLE_WATERTRAILER] and UniversalProcessKit.isVehicleType(vehicle, UniversalProcessKit.VEHICLE_WATERTRAILER) then
 			--self:print('recognized water trailer')

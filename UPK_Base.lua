@@ -9,7 +9,7 @@ InitObjectClass(UPK_Base, "UPK_Base")
 UniversalProcessKit.addModule("base",UPK_Base)
 
 function UPK_Base:new(nodeId, placeable, builtIn, syncObj)
-	print('UPK_Base:new')
+	printFn('UPK_Base:new(',nodeId,', ',placeable,', ',builtIn,', ',syncObj,')')
 	
 	local self = UniversalProcessKit:new(nodeId, nil, UPK_Base_mt)
 	registerObjectClassName(self, "UPK_Base")
@@ -28,7 +28,7 @@ function UPK_Base:new(nodeId, placeable, builtIn, syncObj)
 	
 	local upk=ModsUtil.modNameToMod["AAA_UniversalProcessKit"]
 	if upk==nil then
-		print('ERROR (YOUR FAULT): DO NOT RENAME THE UniversalProcessKit MOD FILE - NOTHING WILL WORK - it has to be "AAA_UniversalProcessKit"')
+		printErr('ERROR (YOUR FAULT): DO NOT RENAME THE UniversalProcessKit MOD FILE - NOTHING WILL WORK - it has to be "AAA_UniversalProcessKit"')
 		return false
 	end
 	
@@ -46,7 +46,7 @@ function UPK_Base:new(nodeId, placeable, builtIn, syncObj)
 			if v>(reqversion[k] or 0) then
 				break
 			elseif v<(reqversion[k] or 0) then
-				print('Error (your fault): the required upk version of this mod ('..tostring(UPKversion)..') doesnt fit your upk mod ('..tostring(upk.version)..')', true)
+				printErr('Error: the required upk version of this mod (',UPKversion,') doesnt fit your upk mod (',upk.version,')')
 				return false
 			end
 		end
@@ -78,12 +78,13 @@ function UPK_Base:new(nodeId, placeable, builtIn, syncObj)
 	}
 	setmetatable(self.i18n, i18n_mt)
 	
-	self:print('loaded Base successfully')
+	self:printInfo('UPK_Base:new done')
 	
 	return self
 end
 
 function UPK_Base:delete()
+	self:printFn('UPK_Base:delete()')
 	if self.builtIn then
 		g_currentMission:removeOnCreateLoadedObjectToSave(self)
 		if self.nodeId ~= 0 then
@@ -94,18 +95,17 @@ function UPK_Base:delete()
 end
 
 function UPK_Base:loadFromAttributesAndNodes(xmlFile, key)
-	self:print('calling UPK_Base:loadFromAttributesAndNodes for id '..tostring(self.nodeId))
+	self:printFn('UPK_Base:loadFromAttributesAndNodes(',xmlFile,', ',key,')')
 	
 	self.timesSaved = getXMLInt(xmlFile, key .. "#timesSaved") or 0
 	
-	self:print('times saved: '..tostring(self.timesSaved))
+	self:printAll('times saved: '..tostring(self.timesSaved))
 	
 	return UPK_Base:superClass().loadFromAttributesAndNodes(self, xmlFile, key)
 end;
 
 function UPK_Base:getSaveAttributesAndNodes(nodeIdent)
-	self:print('calling UPK_Base:getSaveAttributesAndNodes for id '..tostring(self.nodeId))
-	
+	self:printFn('UPK_Base:getSaveAttributesAndNodes(',nodeIdent,')')
 	local attributes, nodes = UPK_Base:superClass().getSaveAttributesAndNodes(self,nodeIdent)
 	
 	if nodes~="" then
