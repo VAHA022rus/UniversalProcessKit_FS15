@@ -14,7 +14,7 @@ function UPK_SellTarget:new(nodeId, parent)
 	
 	UniversalProcessKitListener.addUpdateable(self)
 	
-	self:print('UPK_SellTarget:new done')
+	self:printFn('UPK_SellTarget:new done')
 	
 	return self
 end

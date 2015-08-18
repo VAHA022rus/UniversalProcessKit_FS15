@@ -35,6 +35,7 @@ Bisher enthaltene Module:
 - playerspawner
 - processor
 - selltarget
+- sowingmachinefilltrigger
 - sprayerfilltrigger
 - switcher
 - tiptrigger
@@ -43,6 +44,68 @@ Bisher enthaltene Module:
 - waterfilltrigger
 
 ##Changelog
+
+__V0.9.12__
+
+neuer Modultyp: SowingMachineFillTrigger
+- createFillType
+- pricePerLiter
+- preferMapDefaultPrice
+- pricePerLiterMultiplier
+- fillOnlyWholeNumbers
+- statName
+
+FillTrigger
+- Fix für Miststreuer
+
+EmptyTrigger
+- Fix für Miststreuer
+
+- Beispielmod UPK_SowingMachineTest und UPK_ManureSpreaderTest hinzugefügt
+
+__V0.9.11__
+
+ActivatorTrigger:
+- neu: emptyFillTypesOnActivate
+- neu: addOnActivate
+- neu: removeOnActivate
+- neu: enableChildrenOnActivate
+- neu: disableChildrenOnActivate
+- neu: emptyFillTypesOnDeactivate
+- neu: addOnDeactivate
+- neu: removeOnDeactivate
+- neu: enableChildrenOnDeactivate
+- neu: disableChildrenOnDeactivate
+
+Switcher:
+- neu: mode: neben "switch", "stack" und "stackReverse" jetzt auch "material" und "silent"
+- neu: emptyFillTypesOnSwitchUp
+- neu: addOnSwitchUp
+- neu: removeOnSwitchUp
+- neu: enableChildrenOnSwitchUp
+- neu: disableChildrenOnSwitchUp
+- neu: emptyFillTypesOnSwitchDown
+- neu: addOnSwitchDown
+- neu: removeOnSwitchDown
+- neu: enableChildrenOnSwitchDown
+- neu: disableChildrenOnSwitchDown
+- Beispielmod UPK_SwitcherTest2. UPK_SwitcherTest3 hinzugefügt
+
+BaleTrigger:
+- neu: revenuePerLiter
+- neu: revenuesPerLiter
+
+PalletTrigger:
+- neu: revenuePerLiter
+- neu: revenuesPerLiter
+
+Sonstiges:
+- neu: placeableType (für XML): "AAA_UniversalProcessKit.placeableUPK" (statt jeweils eigene in der register.lua zu definieren)
+- placeableTypes der Beispielmods zu AAA_UniversalProcessKit.placeableUPK geändert, XML jeweils zu model.xml umbenannt
+
+- neu: Debug Modi: "0" gar nichts, "1" Fehler = default, "2" Infos (zum Testen für Modder), für Devs: "3" Funktionsaufrufe, "4" alles, "5" mehr als alles
+- neu: Console-Befehl "upkSetDebugMode X"
+
 
 __V0.9.10__
 

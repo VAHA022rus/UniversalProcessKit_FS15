@@ -215,6 +215,7 @@ function UPK_FillTrigger:update(dt)
 							 (k==UniversalProcessKit.VEHICLE_SHOVEL and not UniversalProcessKit.isVehicleType(trailer, UniversalProcessKit.VEHICLE_MIXERWAGONPICKUP)) or
 							 k==UniversalProcessKit.VEHICLE_SOWINGMACHINE or
 							 k==UniversalProcessKit.VEHICLE_WATERTRAILER or
+							 k==UniversalProcessKit.VEHICLE_MANURESPREADER or
 							 k==UniversalProcessKit.VEHICLE_MILKTRAILER or
 							 k==UniversalProcessKit.VEHICLE_LIQUIDMANURETRAILER or
 							 k==UniversalProcessKit.VEHICLE_SPRAYER or

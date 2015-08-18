@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="no" ?>
 <modDesc descVersion="21">
     <author>mor2000</author>
-    <version>0.9.11</version>
+    <version>0.9.12</version>
     <title>
         <en>AAA UniversalProcessKit</en>
         <de>AAA UniversalProcessKit</de>
@@ -48,10 +48,12 @@
 		<sourceFile filename="UPK_PlayerSpawner.lua"/>
 		<sourceFile filename="UPK_Processor.lua"/>
 		<sourceFile filename="UPK_SellTarget.lua"/>
+		<sourceFile filename="UPK_SowingMachineFillTrigger.lua"/>
 		<sourceFile filename="UPK_SprayerFillTrigger.lua"/>
 		<sourceFile filename="UPK_Switcher.lua"/>
 		<sourceFile filename="UPK_WashTrigger.lua"/>
 		<sourceFile filename="UPK_WaterFillTrigger.lua"/>
+		<sourceFile filename="UPK_WoodTrigger.lua"/>
 		<sourceFile filename="PlaceableUPK.lua" />
 		<sourceFile filename="OnCreateUPK.lua" />
     </extraSourceFiles>

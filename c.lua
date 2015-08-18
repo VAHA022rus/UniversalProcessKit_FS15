@@ -385,6 +385,7 @@ _g.UPK_ParkTrigger={}
 _g.UPK_Processor={}
 _g.UPK_Scaler={}
 _g.UPK_SellTarget={}
+_g.UPK_SowingMachineFillTrigger={}
 _g.UPK_SprayerFillTrigger={}
 _g.UPK_Storage={}
 _g.UPK_Switcher={}
@@ -394,6 +395,7 @@ _g.UPK_TipTriggerObject={}
 _g.UPK_TipTriggerActivatable={}
 _g.UPK_WashTrigger={}
 _g.UPK_WaterFillTrigger={}
+_g.UPK_WoodTrigger={}
 _g.PlaceableUPK={}
 _g.OnCreateUPK={}
 

@@ -64,6 +64,7 @@ function UniversalProcessKit.getVehicleType(vehicle)
 			vehicleType=vehicleType+UniversalProcessKit.VEHICLE_SPRAYER
 		end
 		if SpecializationUtil.hasSpecialization(ManureSpreader, vehicle.specializations) then
+			printAll('identified VEHICLE_MANURESPREADER')
 			vehicleType=vehicleType+UniversalProcessKit.VEHICLE_MANURESPREADER
 		end
 		if SpecializationUtil.hasSpecialization(FuelTrailer, vehicle.specializations) then

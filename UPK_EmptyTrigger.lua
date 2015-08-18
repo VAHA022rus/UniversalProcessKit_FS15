@@ -97,6 +97,7 @@ function UPK_EmptyTrigger:new(nodeId, parent)
 	self.allowedVehicles[UniversalProcessKit.VEHICLE_MILKTRAILER] = getBoolFromUserAttribute(nodeId, "allowMilkTrailer", self.emptyFillTypes[UniversalProcessKit.FILLTYPE_MILK] or false)
 	self.allowedVehicles[UniversalProcessKit.VEHICLE_LIQUIDMANURETRAILER] = getBoolFromUserAttribute(nodeId, "allowLiquidManureTrailer", self.emptyFillTypes[UniversalProcessKit.FILLTYPE_LIQUIDMANURE] or false)
 	self.allowedVehicles[UniversalProcessKit.VEHICLE_SPRAYER] = getBoolFromUserAttribute(nodeId, "allowSprayer", self.emptyFillTypes[UniversalProcessKit.FILLTYPE_FERTILIZER] or false)
+	self.allowedVehicles[UniversalProcessKit.VEHICLE_MANURESPREADER] = getBoolFromUserAttribute(nodeId, "allowManureSpreader", self.emptyFillTypes[UniversalProcessKit.FILLTYPE_MANURE] or false)
 	
 	self.allowedVehicles[UniversalProcessKit.VEHICLE_FUELTRAILER] = getBoolFromUserAttribute(nodeId, "allowFuelTrailer", self.emptyFillTypes[UniversalProcessKit.FILLTYPE_FUEL] or false)
 	self.allowedVehicles[UniversalProcessKit.VEHICLE_MOTORIZED] = getBoolFromUserAttribute(nodeId, "allowMotorized", false)
@@ -159,6 +160,7 @@ function UPK_EmptyTrigger:update(dt)
 						 vehicleType==UniversalProcessKit.VEHICLE_SHOVEL or
 						 vehicleType==UniversalProcessKit.VEHICLE_SOWINGMACHINE or
 						 vehicleType==UniversalProcessKit.VEHICLE_WATERTRAILER or
+						 vehicleType==UniversalProcessKit.VEHICLE_MANURESPREADER or
 						 vehicleType==UniversalProcessKit.VEHICLE_MILKTRAILER or
 						 vehicleType==UniversalProcessKit.VEHICLE_LIQUIDMANURETRAILER or
 						 vehicleType==UniversalProcessKit.VEHICLE_SPRAYER or
