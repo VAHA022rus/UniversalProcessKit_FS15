@@ -197,11 +197,10 @@ function UPK_Switcher:new(nodeId,parent)
 	return self
 end
 
---[[
 function UPK_Switcher:delete()
+	self:printFn('UPK_Switcher:delete()')
 	UPK_Switcher:superClass().delete(self)
 end
-]]--
 
 function UPK_Switcher:postLoad()
 	self:printFn('UPK_Switcher:postLoad()')

@@ -50,19 +50,7 @@ function UPK_FillTrigger:new(nodeId, parent)
 	
 	-- statName
 	
-	self.statName=getStringFromUserAttribute(nodeId, "statName")
-	local validStatName=false
-	if self.statName~=nil then
-		for _,v in pairs(FinanceStats.statNames) do
-			if self.statName==v then
-				validStatName=true
-				break
-			end
-		end
-	end
-	if not validStatName then
-		self.statName="other"
-	end
+	self.statName=getStatNameFromUserAttribute(nodeId)
 
 	-- spawn pallets
 	

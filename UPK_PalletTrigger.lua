@@ -59,19 +59,7 @@ function UPK_PalletTrigger:new(nodeId, parent)
 	
 	self.revenueMultiplier = getVectorFromUserAttribute(nodeId, "revenueMultiplier", "1 0.5 0.25")
 	
-	self.statName=getStringFromUserAttribute(nodeId, "statName")
-	local validStatName=false
-	if self.statName~=nil then
-		for _,v in pairs(FinanceStats.statNames) do
-			if self.statName==v then
-				validStatName=true
-				break
-			end
-		end
-	end
-	if not validStatName then
-		self.statName="other"
-	end
+	self.statName=getStatNameFromUserAttribute(nodeId)
 	
 	self.palletsInLine = {}
 	self.runningUpdate = false

@@ -234,19 +234,7 @@ function UPK_Processor:new(nodeId, parent)
 	
 	-- stat name
 	
-	self.statName=getStringFromUserAttribute(nodeId, "statName")
-	local validStatName=false
-	if self.statName~=nil then
-		for _,v in pairs(FinanceStats.statNames) do
-			if self.statName==v then
-				validStatName=true
-				break
-			end
-		end
-	end
-	if not validStatName then
-		self.statName="other"
-	end
+	self.statName=getStatNameFromUserAttribute(nodeId)
 	
 	if self.product==UniversalProcessKit.FILLTYPE_MONEY and self.statName~="other" then
 		if self.statName=="newVehiclesCost" then	

@@ -331,6 +331,12 @@ function UniversalProcessKit:delete()
 	UniversalProcessKitListener.removeHourChangeListener(self)
 	UniversalProcessKitListener.removeMinuteChangeListener(self)
 	UniversalProcessKitListener.removeSecondChangeListener(self)
+	
+	if self.registeredOnFillLevelChangeFuncs~=nil then
+		for _,obj in pairs(self.registeredOnFillLevelChangeFuncs) do
+			obj:unregisterOnFillLevelChangeFunc(self)
+		end
+	end
 
 	if self.addNodeObject and self.nodeId ~= 0 then
 		g_currentMission:removeNodeObject(self.nodeId)
@@ -458,7 +464,7 @@ function UniversalProcessKit:operateAction(actionName, alreadySent)
 		end
 		if action['hasTopUpFillTypes'] then
 			for i=1,#action['topUpFillTypes'] do
-				local fillType = action['emptyFillTypes'][i]
+				local fillType = action['topUpFillTypes'][i]
 				local capacity = self:getCapacity(fillType)
 				if capacity<math.huge then
 					self:setFillLevel(capacity,fillType)
@@ -512,7 +518,12 @@ end;
 
 function UniversalProcessKit:registerOnFillLevelChangeFunc(obj,func)
 	self:printFn('UniversalProcessKit:registerOnFillLevelChangeFunc('..tostring(obj)..', '..tostring(func)..')')
+	if obj.registeredOnFillLevelChangeFuncs==nil then
+		obj.registeredOnFillLevelChangeFuncs={}
+	end
 	if type(obj)=="table" and obj~=self and type(func)=="string" and type(obj[func])=="function" then
+		--self:printInfo('registered object successfully')
+		table.insert(obj.registeredOnFillLevelChangeFuncs,self)
 		self.onFillLevelChangeFuncs[obj]=func
 	end
 end

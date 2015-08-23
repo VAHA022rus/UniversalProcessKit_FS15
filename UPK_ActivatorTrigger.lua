@@ -61,7 +61,7 @@ function UPK_ActivatorTrigger:readStream(streamId, connection)
 	UPK_ActivatorTrigger:superClass().readStream(self, streamId, connection)
 	if connection:getIsServer() then
 		local isActive = streamReadBool(streamId)
-		self:print('read from stream self.isActive = '..tostring(isActive))
+		self:printInfo('read from stream self.isActive = '..tostring(isActive))
 		self:setIsActive(isActive,true)
 	end
 end;
@@ -70,7 +70,7 @@ function UPK_ActivatorTrigger:writeStream(streamId, connection)
 	self:printFn('UPK_ActivatorTrigger:writeStream(',streamId,', ',connection,')')
 	UPK_ActivatorTrigger:superClass().writeStream(self, streamId, connection)
 	if not connection:getIsServer() then
-		self:print('write to stream self.isActive = '..tostring(self.isActive))
+		self:printInfo('write to stream self.isActive = '..tostring(self.isActive))
 		streamWriteBool(streamId,self.isActive)
 	end
 end;

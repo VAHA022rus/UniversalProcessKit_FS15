@@ -45,6 +45,21 @@ Bisher enthaltene Module:
 
 ##Changelog
 
+__V0.10.1__
+
+neuer Modultyp: Comparator
+- formula
+- addOnTrue
+- removeOnTrue
+- emptyFillTypesOnTrue
+- topUpFillTypesOnTrue
+- addOnFalse
+- removeOnFalse
+- emptyFillTypesOnFalse
+- topUpFillTypesOnFalse
+
+- Beispielmod UPK_ComparatorTest hinzugefügt
+
 __V0.9.12__
 
 neuer Modultyp: SowingMachineFillTrigger

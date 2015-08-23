@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="no" ?>
 <modDesc descVersion="21">
     <author>mor2000</author>
-    <version>0.9.12</version>
+    <version>0.10.1</version>
     <title>
         <en>AAA UniversalProcessKit</en>
         <de>AAA UniversalProcessKit</de>
@@ -19,6 +19,7 @@
 	<extraSourceFiles>
 		<sourceFile filename="DEBUG.lua"/>
 		<sourceFile filename="c.lua"/>
+		<sourceFile filename="eval.lua"/>
 		<sourceFile filename="UniversalProcessKitConsole.lua"/>
 		<sourceFile filename="FillLevelBubble.lua"/>
 		<sourceFile filename="UniversalProcessKitEnvironment.lua"/>
@@ -36,6 +37,7 @@
 		<sourceFile filename="UPK_Animator.lua"/>
 		<sourceFile filename="UPK_BalerTrigger.lua"/>
 		<sourceFile filename="UPK_BaleTrigger.lua"/>
+		<sourceFile filename="UPK_Comparator.lua"/>
 		<sourceFile filename="UPK_DisplayTrigger.lua"/>
 		<sourceFile filename="UPK_DumpTrigger.lua"/>
 		<sourceFile filename="UPK_EntityTrigger.lua"/>

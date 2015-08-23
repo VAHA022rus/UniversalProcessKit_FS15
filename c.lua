@@ -136,6 +136,12 @@ function strlen(...)
 	return utf8Strlen(...)
 end
 
+function trim(str)
+	str=string.gsub(str,"^%s+", "")
+	str=string.gsub(str,"%s+$", "")
+	return str
+end
+
 function getMinMaxKeys(t)
 	if t==nil or type(t)~="table" then
 		return nil, nil
@@ -222,6 +228,27 @@ function getArrayFromUserAttribute(nodeId, attribute, default)
 	local arr=gmatch(str, "%S+")
 	return arr
 end;
+
+function getStatNameFromUserAttribute(nodeId, default)
+	statName=getStringFromUserAttribute(nodeId, "statName")
+	local validStatName=false
+	if statName~=nil then
+		for _,v in pairs(FinanceStats.statNames) do
+			if statName==v then
+				validStatName=true
+				break
+			end
+		end
+	end
+	if not validStatName then
+		if default==nil or type(default)~="string" then
+			statName="other"
+		else
+			statName=default
+		end
+	end
+	return statName
+end
 
 function removeValueFromTable(tbl, value, all)
 	local index={}
@@ -372,6 +399,7 @@ _g.UPK_BalerTrigger={}
 _g.UPK_Base={}
 _g.UPK_BuyTrigger={}
 _g.UPK_Conveyor={}
+_g.UPK_Comparator={}
 _g.UPK_DisplayTrigger={}
 _g.UPK_DumpTrigger={}
 _g.UPK_EmptyTrigger={}
@@ -398,6 +426,8 @@ _g.UPK_WaterFillTrigger={}
 _g.UPK_WoodTrigger={}
 _g.PlaceableUPK={}
 _g.OnCreateUPK={}
+
+_g.EvalFormula={}
 
 UPK_Storage.SEPARATE=1
 UPK_Storage.SINGLE=2

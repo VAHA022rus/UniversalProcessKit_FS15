@@ -67,19 +67,7 @@ function UPK_DumpTrigger:new(nodeId, parent)
 	self.revenuePerLiterMultiplier = getVectorFromUserAttribute(nodeId, "revenuePerLiterMultiplier", "1 0.5 0.25")
 	self.revenuesPerLiterAdjusted = {}
 	
-	self.statName=getStringFromUserAttribute(nodeId, "statName")
-	local validStatName=false
-	if self.statName~=nil then
-		for _,v in pairs(FinanceStats.statNames) do
-			if self.statName==v then
-				validStatName=true
-				break
-			end
-		end
-	end
-	if not validStatName then
-		self.statName="other"
-	end
+	self.statName=getStatNameFromUserAttribute(nodeId)
 	
 	-- dummies for combines
 	
