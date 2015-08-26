@@ -54,15 +54,12 @@ function UPK_Comparator:postLoad()
 	end
 	
 	local state=self.eval()
-	if self.base.timesSaved==0 then
-		if state~=self.state then
-			if state and not self.state then
-				self:printAll('OnTrue')
-				self:operateAction('OnTrue')
-			elseif not state and self.state then
-				self:printAll('OnFalse')
-				self:operateAction('OnFalse')
-			end
+	
+	if state~=self.state then
+		if state and not self.state then
+			self:operateActionSilent('OnTrue')
+		elseif not state and self.state then
+			self:operateActionSilent('OnFalse')
 		end
 	end
 	self.state=state

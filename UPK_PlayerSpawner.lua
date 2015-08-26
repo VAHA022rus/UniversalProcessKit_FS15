@@ -35,9 +35,8 @@ function UPK_PlayerSpawner:setEnable(isEnabled,alreadySent) -- ??
 end
 
 function UPK_PlayerSpawner.togglePlayerSpawner(delta)
-	self:printFn('UPK_PlayerSpawner.togglePlayerSpawner(',delta,')')
+	printFn('UPK_PlayerSpawner.togglePlayerSpawner(',delta,')')
 	local nrPlayerSpawner = #UPK_PlayerSpawner.spawner
-	self:printAll('nrPlayerSpawner ',nrPlayerSpawner)
 	if nrPlayerSpawner > 0 then
 		local index = UPK_PlayerSpawner.spawnerIndex
 		local found = false
@@ -48,21 +47,18 @@ function UPK_PlayerSpawner.togglePlayerSpawner(delta)
 			elseif index > nrPlayerSpawner then
 				index = 1
 			end
-			self:printAll('index ',index)
 			if UPK_PlayerSpawner.spawner[index].isEnabled then
 				found = true
 				break
 			end
 		end
 		if found then
-			self:printAll('next spawner found!')
-			self:printAll('index ',index)
 			UPK_PlayerSpawner.spawnerIndex = index
 			local spawner = UPK_PlayerSpawner.spawner[index]
 			local x, y, z = getWorldTranslation(spawner.nodeId)
-			local miny = getTerrainHeightAtWorldPos(g_currentMission.terrainRootNode, x, 0, z) + 0.5
+			local miny = getTerrainHeightAtWorldPos(g_currentMission.terrainRootNode, x, 0, z)
 			local dx, _, dz = localDirectionToWorld(spawner.nodeId, 0, 0, 1)
-			g_client:getServerConnection():sendEvent(PlayerTeleportEvent:new(x, mathmin(y,miny), z))
+			g_client:getServerConnection():sendEvent(PlayerTeleportEvent:new(x, mathmax(y,miny) + 1.0, z))
 			g_currentMission.player.rotY = Utils.getYRotationFromDirection(dx, dz) + math.pi
 		end
 	end

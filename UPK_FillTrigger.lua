@@ -28,26 +28,6 @@ function UPK_FillTrigger:new(nodeId, parent)
 	self.fillOnlyWholeNumbers = getBoolFromUserAttribute(nodeId, "fillOnlyWholeNumbers", false)
 	self.amountToFillOfVehicle = {}
 	
-	-- add/ remove if filling
-	
-	self.addIfFilling = {}
-	self.useAddIfFilling = false
-	local addIfFillingArr = getArrayFromUserAttribute(nodeId, "addIfFilling")
-	for _,fillType in pairs(UniversalProcessKit.fillTypeNameToInt(addIfFillingArr)) do
-		self:printInfo('add if filling '..tostring(UniversalProcessKit.fillTypeIntToName[fillType])..' ('..tostring(fillType)..')')
-		self.addIfFilling[fillType] = true
-		self.useAddIfFilling = true
-	end
-	
-	self.removeIfFilling = {}
-	self.useRemoveIfFilling = false
-	local removeIfFillingArr = getArrayFromUserAttribute(nodeId, "removeIfFilling")
-	for _,fillType in pairs(UniversalProcessKit.fillTypeNameToInt(removeIfFillingArr)) do
-		self:printInfo('remove if filling '..tostring(UniversalProcessKit.fillTypeIntToName[fillType])..' ('..tostring(fillType)..')')
-		self.removeIfFilling[fillType] = true
-		self.useRemoveIfFilling = true
-	end
-	
 	-- statName
 	
 	self.statName=getStatNameFromUserAttribute(nodeId)
@@ -107,7 +87,14 @@ function UPK_FillTrigger:new(nodeId, parent)
 	
 	self.dtsum=0
 	
-	self:printFn('UPK_FillTrigger:now done')
+	-- actions
+	self:getActionUserAttributes('IfFilling')
+	self.isFilling=nil
+	
+	self:getActionUserAttributes('IfFillingStarted')
+	self:getActionUserAttributes('IfFillingStopped')
+	
+	self:printFn('UPK_FillTrigger:new done')
 	
     return self
 end
@@ -160,10 +147,16 @@ function UPK_FillTrigger:update(dt)
 	end
 	
 	if self.isEnabled then
+		local isFilling=false
+		local addedTotally=0
 		if self.entitiesInTrigger==0 then
 			if self.palletFilename==nil then
 				self:printAll('UniversalProcessKitListener.removeUpdateable(',self,')')
 				UniversalProcessKitListener.removeUpdateable(self)
+				if self.isFilling==nil or self.isFilling then
+					self:operateAction('IfFillingStopped')
+					self.isFilling=false
+				end
 				return
 			else
 				self.dtsum=self.dtsum+dt
@@ -180,6 +173,11 @@ function UPK_FillTrigger:update(dt)
 						pallet:register()
 						pallet.fillType = self.fillFillType or self:getFillType() or UniversalProcessKit.FILLTYPE_UNKNOWN
 						UniversalProcessKitListener.removeUpdateable(self)
+						if self.isFilling==nil or self.isFilling then
+							self:operateAction('IfFillingStopped')
+							self.isFilling=false
+						end
+						return
 					else
 						self:triggerCallback(self.nodeId, pallet.nodeId, false, false, false, pallet.nodeId) -- needed?
 						pallet:delete()
@@ -188,9 +186,9 @@ function UPK_FillTrigger:update(dt)
 			end
 		else
 			for _,trailer in pairs(self.entities) do
+				local added = 0
 				--self:print('vehicle is '..tostring(trailer.upk_vehicleType))
 				local deltaFillLevel = floor(self.fillLitersPerSecond * 0.001 * dt,8)
-				local added = 0
 				for k,v in pairs(self.allowedVehicles) do
 					--self:print('checking for '..tostring(k)..': '..tostring(v))
 					if v and UniversalProcessKit.isVehicleType(trailer, k) then
@@ -212,27 +210,31 @@ function UPK_FillTrigger:update(dt)
 						elseif k==UniversalProcessKit.VEHICLE_MOTORIZED then
 							added = self:fillMotorized(trailer, deltaFillLevel)
 						end
+						addedTotally=addedTotally+added
+					end
+					if (not self.isFilling or not isFilling) and round(added,8)>0 then
+						isFilling=true
 					end
 				end
 				if self.allowPallets and trailer.isPallet and trailer.setFillLevel~=nil then
 					added = self:fillPallet(trailer, deltaFillLevel)
-				end
-				if added~=0 then
-					if self.useAddIfFilling then
-						for fillTypeToAdd,v in pairs(self.addIfFilling) do
-							if v then
-								self:addFillLevel(added,fillTypeToAdd)
-							end
-						end
+					if (not self.isFilling or not isFilling) and round(added,8)>0 then
+						isFilling=true
 					end
-					if self.useRemoveIfFilling then
-						for fillTypeToRemove,v in pairs(self.removeIfFilling) do
-							if v then
-								self:addFillLevel(-added,fillTypeToRemove)
-							end
-						end
-					end
+					addedTotally=addedTotally+added
 				end
+			end
+		end
+		if isFilling then
+			if not self.isFilling then
+				self:operateAction('IfFillingStarted',addedTotally)
+				self.isFilling=true
+			end
+			self:operateAction('IfFilling',addedTotally)
+		else
+			if self.isFilling then
+				self:operateAction('IfFillingStopped',addedTotally)
+				self.isFilling=false
 			end
 		end
 	end

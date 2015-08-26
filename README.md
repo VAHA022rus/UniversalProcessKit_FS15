@@ -45,6 +45,37 @@ Bisher enthaltene Module:
 
 ##Changelog
 
+__V0.10.2__
+
+Standard-UserAttributes:
+- loadI3D
+- prefixShapeNames
+
+Action-UserAttributes:
+- add..
+- remove..
+- show..
+- hide..
+- emptyFillTypes..
+- topUpFillTypes..
+- enableChildren..
+- disableChildren..
+
+Processor:
+- delayOutput
+- ..IfProduced
+- ..IfProductionStarted
+- ..IfProductionStopped
+
+FillTrigger:
+- ..IfFillingStarted
+- ..IfFillingStopped
+
+Beispielmods:
+- UPK_SoundTest
+- UPK_SoundTest2
+- UPK_FillTriggerTest3
+
 __V0.10.1__
 
 neuer Modultyp: Comparator

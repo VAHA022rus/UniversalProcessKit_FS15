@@ -18,8 +18,8 @@ function UPK_ActivatorTrigger:new(nodeId, parent)
 	
 	self.isActive=getBoolFromUserAttribute(nodeId, "isActive", false)
 	
-	self.activateText = returnNilIfEmptyString(self.i18n[getStringFromUserAttribute(nodeId, "activateTriggerText1")]) or "[activateText]"
-	self.deactivateText = returnNilIfEmptyString(self.i18n[getStringFromUserAttribute(nodeId, "activateTriggerText2")]) or "[deactivateText]"
+	self.activateText = returnNilIfEmptyString(self.i18n[getStringFromUserAttribute(nodeId, "activateText")]) or "[activateText]"
+	self.deactivateText = returnNilIfEmptyString(self.i18n[getStringFromUserAttribute(nodeId, "deactivateText")]) or "[deactivateText]"
 	
 	-- general mode
 	
@@ -54,6 +54,11 @@ function UPK_ActivatorTrigger:postLoad()
 	self:printFn('UPK_ActivatorTrigger:postLoad()')
 	UPK_ActivatorTrigger:superClass().postLoad(self)
 	self:triggerUpdate(false,false)
+	if self.isActive then
+		self:operateActionSilent('OnActivate')
+	else
+		self:operateActionSilent('OnDeactivate')
+	end
 end
 
 function UPK_ActivatorTrigger:readStream(streamId, connection)

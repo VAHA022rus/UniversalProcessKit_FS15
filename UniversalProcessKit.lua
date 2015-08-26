@@ -267,8 +267,51 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 	return self
 end;
 
-function UniversalProcessKit:findChildrenLoopFunc(childId)
+function UniversalProcessKit:findChildrenLoopFunc(childId,prefixShapeNames)
 	self:printFn('UniversalProcessKit:findChildrenLoopFunc('..tostring(childId)..')')	
+	
+	-- rename shapes
+	if prefixShapeNames==nil then
+		prefixShapeNames=""
+	end
+	local addPrefixShapeNames=getStringFromUserAttribute(childId, "prefixShapeNames","")
+	if addPrefixShapeNames~="" then	
+		prefixShapeNames=addPrefixShapeNames..prefixShapeNames
+	end
+	if prefixShapeNames~="" then
+		local shapeName=getName(childId)
+		printInfo('shape "'..tostring(shapeName)..'" renamed to "'..tostring(prefixShapeNames..shapeName)..'"')
+		setName(childId,prefixShapeNames..shapeName)
+	end
+	
+	-- load external i3d
+	local loadI3D=getStringFromUserAttribute(childId, "loadI3D")
+	if loadI3D~=nil then
+		
+		local a,_=string.find(loadI3D,"^[$%w_%/\\%.0-9]+%.i3d$")
+		if a==nil then
+			printErr('invalid filename "'..tostring(loadI3D)..'"')
+		else
+			local filename = getLongFilename(loadI3D,self.base.i18nNameSpace)
+			printInfo('filename is "'..tostring(filename)..'"')
+			local newNode = loadI3DFile(filename)
+			if newNode == 0 then
+				printErr('couldnt load file "'..tostring(filename)..'"')
+			else
+				local nrOfChildren=getNumOfChildren(newNode)
+				if nrOfChildren==0 then
+					printInfo('no shapes loadable out of file "'..tostring(filename)..'"')
+				end
+				for i=0,getNumOfChildren(newNode)-1 do
+					local linkShapeId = getChildAt(newNode, i)
+					if linkShapeId~=nil and linkShapeId~=0 then
+						link(childId, linkShapeId)
+					end
+				end
+				delete(newNode)
+			end
+		end
+	end
 	
 	local type = getStringFromUserAttribute(childId, "type")
 	self:printInfo('UserAttribute type is '..tostring(type))
@@ -281,23 +324,35 @@ function UniversalProcessKit:findChildrenLoopFunc(childId)
 			--	module=debugObject(module)
 			--end
 			table.insert(self.kids,module)
-			module:findChildren(childId)
+			module:findChildren(childId,prefixShapeNames)
 		else
 			self:printErr('couldnt load module of type '..tostring(type)..' and id '..tostring(childId))
-			self:findChildren(childId)
+			self:findChildren(childId,prefixShapeNames)
 		end
 	else
 		if getBoolFromUserAttribute(childId, "adjustToTerrainHeight", false) and self.placeable then
 			UniversalProcessKit.adjustToTerrainHeight(childId)
 		end
-		self:findChildren(childId)
+		self:findChildren(childId,prefixShapeNames)
 	end
 	return true
 end
 
-function UniversalProcessKit:findChildren(id)
-	self:printFn('UniversalProcessKit:findChildren('..tostring(id)..')')	
-	loopThruChildren(id,"findChildrenLoopFunc",self)
+function UniversalProcessKit:findChildren(id,prefixShapeNames)
+	self:printFn('UniversalProcessKit:findChildren('..tostring(id)..')')
+	local name=getName(id)
+	local a,b=string.find(name,"[%w_%.%/]+")
+	if string.sub(name,a,b)~=name or name=="" then
+		printInfo('name of shape "'..tostring(name)..'" (nodeId "'..tostring(id)..'") is not valid')
+	else
+		if self.base.shapeNamesToNodeIds[name]~=nil then
+			printInfo('name of shape "'..tostring(name)..'" already used')
+		else
+			self.base.shapeNamesToNodeIds[name]=id
+			printInfo('name of shape "'..tostring(name)..'" registered')
+		end
+	end
+	loopThruChildren(id,"findChildrenLoopFunc",self,prefixShapeNames)
 end;
 
 function UniversalProcessKit:findChildrenShapesLoopFunc(childId)
@@ -378,11 +433,9 @@ function UniversalProcessKit:getActionUserAttributes(actionName, defaultEnableCh
 	local addAction = 'add'..actionName
 	local removeAction = 'remove'..actionName
 	
+	-- show and hide shapes
 	local showAction = 'show'..actionName
 	local hideAction = 'hide'..actionName
-	
-	local showChildrenAction = 'showChildren'..actionName
-	local hideChildrenAction = 'hideChildren'..actionName
 	
 	local action = self.actions[actionName]
 	
@@ -409,51 +462,54 @@ function UniversalProcessKit:getActionUserAttributes(actionName, defaultEnableCh
 		action['hasTopUpFillTypes'] = true
 	end
 	
-	action['add'] = {}
+	action['add'] = __c()
 	local arr = getArrayFromUserAttribute(nodeId, addAction)
 	for i=1,#arr,2 do
 		local amount = tonumber(arr[i])
 		local fillType = unpack(UniversalProcessKit.fillTypeNameToInt(arr[i+1]))
 		if type(amount)=="number" and amount>0 and type(fillType)=="number" then
-			action['add'][fillType] = amount
+			action['add'][fillType] = (action['add'][fillType] or 0) + amount
 			action['hasAdd'] = true
 		end
 	end
 	
-	action['remove'] = {}
+	action['remove'] = __c()
 	local arr=getArrayFromUserAttribute(nodeId, removeAction)
 	for i=1,#arr,2 do
 		local amount = tonumber(arr[i])
 		local fillType = unpack(UniversalProcessKit.fillTypeNameToInt(arr[i+1]))
 		if type(amount)=="number" and amount>0 and type(fillType)=="number" then
-			action['remove'][fillType] = -amount
+			action['remove'][fillType] = (action['remove'][fillType] or 0) - amount
 			action['hasRemove'] = true
 		end
 	end
 	
-	action['show'] = getBoolFromUserAttribute(nodeId, showAction, false)
-	action['hide'] = getBoolFromUserAttribute(nodeId, hideAction, false)
+	-- shapes
+	local emptyArr = {}
 	
-	if action['show'] then
-		action['hide'] = false
+	action['show'] = getArrayFromUserAttribute(nodeId, showAction, emptyArr)
+	if action['show']~=emptyArr then
+		action['hasShow'] = true
 	end
 	
-	action['showChildren'] = getBoolFromUserAttribute(nodeId, showChildrenAction, false)
-	action['hideChildren'] = getBoolFromUserAttribute(nodeId, hideChildrenAction, false)
-	
-	if action['showChildren'] then
-		action['hideChildren'] = false
+	action['hide'] = getArrayFromUserAttribute(nodeId, hideAction, emptyArr)
+	if action['hide']~=emptyArr then
+		action['hasHide'] = true
 	end
 end
 
-function UniversalProcessKit:operateAction(actionName, alreadySent)
-	self:printFn('UniversalProcessKit:operateAction('..tostring(actionName)..','..tostring(alreadySent)..')')
+function UniversalProcessKit:operateAction(actionName, multiplier, alreadySent)
+	self:printFn('UniversalProcessKit:operateAction('..tostring(actionName)..','..tostring(multiplier)..','..tostring(alreadySent)..')')
 	
 	if type(actionName)~="string" or strlen(actionName)==0 or self.actions[actionName]==nil then
 		self:printErr('faulty actionName')
 		return
 	end
-		
+	
+	if multiplier==nil then
+		multiplier=1
+	end
+
 	local action = self.actions[actionName]
 	
 	if self.isServer then
@@ -472,31 +528,11 @@ function UniversalProcessKit:operateAction(actionName, alreadySent)
 			end
 		end
 		if action['hasAdd'] then
-			self:printAll('hasAddAction')
-			self:addFillLevels(action['add'])
+			self:addFillLevels(action['add']*multiplier)
 		end
 		if action['hasRemove'] then
-			self:printAll('hasRemoveAction')
-			self:addFillLevels(action['remove'])
+			self:addFillLevels(action['remove']*multiplier)
 		end
-	end
-	
-	if action['show'] then
-		self:printAll('show')
-		self:setEnableChildren(true, alreadySent)
-	end
-	if action['hide'] then
-		self:printAll('hide')
-		self:setEnableChildren(false, alreadySent)
-	end
-	
-	if action['showChildren'] then
-		self:printAll('show children')
-		self:setEnableChildren(true, alreadySent)
-	end
-	if action['hideChildren'] then
-		self:printAll('hide children')
-		self:setEnableChildren(false, alreadySent)
 	end
 	
 	if action['enableChildren'] then
@@ -507,6 +543,46 @@ function UniversalProcessKit:operateAction(actionName, alreadySent)
 		self:printAll('disable children')
 		self:setEnableChildren(false, alreadySent)
 	end	
+	
+	if action['show'] then
+		self.base:setVisibility(action['show'],true)
+	end
+	
+	if action['hide'] then
+		self.base:setVisibility(action['hide'],false)
+	end
+end
+
+function UniversalProcessKit:operateActionSilent(actionName, multiplier, alreadySent)
+	self:printFn('UniversalProcessKit:operateActionSilent('..tostring(actionName)..','..tostring(multiplier)..','..tostring(alreadySent)..')')
+	
+	if type(actionName)~="string" or strlen(actionName)==0 or self.actions[actionName]==nil then
+		self:printErr('faulty actionName')
+		return
+	end
+	
+	if multiplier==nil then
+		multiplier=1
+	end
+
+	local action = self.actions[actionName]
+	
+	if action['enableChildren'] then
+		self:printAll('enable children')
+		self:setEnableChildren(true, alreadySent)
+	end
+	if action['disableChildren'] then
+		self:printAll('disable children')
+		self:setEnableChildren(false, alreadySent)
+	end	
+	
+	if action['show'] then
+		self.base:setVisibility(action['show'],true)
+	end
+	
+	if action['hide'] then
+		self.base:setVisibility(action['hide'],false)
+	end
 end
 
 function UniversalProcessKit:update(dt)

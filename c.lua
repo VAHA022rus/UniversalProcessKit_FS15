@@ -209,7 +209,7 @@ function getStringFromUserAttribute(nodeId, attribute, default)
 		print('Warning from getStringFromUserAttribute: nodeId is nil')
 		return default
 	end
-	local str=Utils.getNoNil(getUserAttribute(nodeId, attribute), default)
+	local str=getUserAttribute(nodeId, attribute) or default
 	if str~=nil then
 		str=tostring(str)
 	end
@@ -219,7 +219,7 @@ end;
 function getArrayFromUserAttribute(nodeId, attribute, default)
 	if nodeId==nil then
 		print('Warning from getArrayFromUserAttribute: nodeId is nil')
-		return default
+		return default or {}
 	end
 	local str=getStringFromUserAttribute(nodeId, attribute)
 	if str==nil then
@@ -288,7 +288,7 @@ function returnNilIfEmptyString(str)
 	return str
 end;
 
-function loopThruChildren(id,loopFunction,obj)
+function loopThruChildren(id,loopFunction,obj,...)
 	--print('loopThruChildren nodeId '..tostring(id))
 	if id==nil or id==0 or type(obj)~="table" or type(loopFunction)~="string" then
 		return false
@@ -299,7 +299,7 @@ function loopThruChildren(id,loopFunction,obj)
 		for i=1,numChildren do
 			local childId = getChildAt(id, i-1)
 			if childId~=nil or childId~=0 then
-				if not obj[loopFunction](obj,childId) then
+				if not obj[loopFunction](obj,childId,...) then
 					--print('abort loopThruChildren')
 					return true
 				end
@@ -387,6 +387,25 @@ function getNormalDistributedRandomNumber() -- see http://de.wikipedia.org/wiki/
 	return u*p
 end;
 
+function getLongFilename(filename,modname)
+	if filename==nil then
+		printErr('filename ist empty')
+		return ""
+	end
+	printInfo('got filename "'..tostring(filename)..'"')
+	local filenamelen=string.len(filename)
+	local filenamesub=string.sub(filename,1,5)
+	if filenamesub=='$mods' then
+		return g_modsDirectory..string.sub(filename,7,filenamelen)
+	elseif filenamesub=='$data' then
+		return getAppBasePath()..'data/'..string.sub(filename,7,filenamelen)
+	end
+	if modname==nil then
+		return g_modsDirectory..filename;
+	end
+	return g_modsDirectory..modname..'/'..filename;
+end
+
 ----------------------------------
 -- classes and variables ---------
 ----------------------------------
@@ -470,7 +489,7 @@ local c_mt={
 		if type(key)=="number" and key>1 then
 			return arr[(key-1) % length(arr) +1]
 		end
-		return nil
+		return c_class[key]
 	end,
 	__add = function(lhs,rhs)
 		local arr={}
@@ -620,84 +639,91 @@ local c_mt={
 	end	
 }
 
+local c_class={}
+
+function c_class:min()
+	local nr=math.huge
+	local len=length(self)
+	if len>0 then
+		for i=1,len do
+			nr=mathmin(nr,self[i])
+		end
+		return nr
+	elseif len==0 then
+		for k,v in pairs(self) do
+			if type(self[k])=="number" then -- exclude functions
+				nr=mathmin(nr,v)
+			end
+		end
+		return nr
+	end
+	return nil
+end
+
+function c_class:max(returnKey)
+	local nr=-math.huge
+	local key
+	local len=length(self)
+	if len>0 then
+		for i=1,len do
+			nr=mathmax(nr,self[i])
+			key=i
+		end
+	elseif len==0 then
+		for k,v in pairs(self) do
+			if type(v)=="number" then -- exclude functions
+				nr=mathmax(nr,v)
+				key=k
+			end
+		end
+	end
+	if len>=0 then
+		if returnKey then
+			return key
+		else
+			return nr
+		end
+	end
+	return nil
+end
+
+function c_class:getValuesOf(keys)
+	if type(keys)~="table" then
+		keys={keys}
+	end
+	local values={}
+	for i=1,length(keys) do
+		values[keys[i]]=self[keys[i]]
+	end
+	return values
+end
+
+function c_class:zeroToNil()
+	local values=self
+	for i=1,length(self) do
+		if self[i]==0 then
+			--values
+		end
+	end
+	return values
+end
+
+function c_class:getKeysAreTrue()
+	local r={}
+	for k,v in pairs(self) do
+		if type(v)~="function" and v then
+			table.insert(r,k)
+		end
+	end
+	return r
+end
+
 function _g.__c(...)
 	local arr=...
 	if type(arr)~="table" then
 		arr={...}
 	end
 	setmetatable(arr,c_mt)
-	function arr:min()
-		local nr=math.huge
-		local len=length(self)
-		if len>0 then
-			for i=1,len do
-				nr=mathmin(nr,self[i])
-			end
-			return nr
-		elseif len==0 then
-			for k,v in pairs(self) do
-				if type(self[k])=="number" then -- exclude functions
-					nr=mathmin(nr,v)
-				end
-			end
-			return nr
-		end
-		return nil
-	end
-	function arr:max(returnKey)
-		local nr=-math.huge
-		local key
-		local len=length(self)
-		if len>0 then
-			for i=1,len do
-				nr=mathmax(nr,self[i])
-				key=i
-			end
-		elseif len==0 then
-			for k,v in pairs(self) do
-				if type(v)=="number" then -- exclude functions
-					nr=mathmax(nr,v)
-					key=k
-				end
-			end
-		end
-		if len>=0 then
-			if returnKey then
-				return key
-			else
-				return nr
-			end
-		end
-		return nil
-	end
-	function arr:getValuesOf(keys)
-		if type(keys)~="table" then
-			keys={keys}
-		end
-		local values={}
-		for i=1,length(keys) do
-			values[keys[i]]=self[keys[i]]
-		end
-		return values
-	end
-	function arr:zeroToNil()
-		local values=self
-		for i=1,length(self) do
-			if self[i]==0 then
-				--values
-			end
-		end
-		return values
-	end
-	function arr:getKeysAreTrue()
-		local r={}
-		for k,v in pairs(self) do
-			if type(v)~="function" and v then
-				table.insert(r,k)
-			end
-		end
-		return r
-	end
 	return arr
 end;
 
@@ -711,7 +737,7 @@ function _g.ClassUPK(members, baseClass)
 		setmetatable(members, {__index = baseClass})
 	end
 	
-	local mt = {
+	local ClassUPK_mt = {
 		__index = function(t,k)
 			if t.storageType==UPK_Storage.SEPARATE then
 				if k=="capacity" then
@@ -759,9 +785,9 @@ function _g.ClassUPK(members, baseClass)
 				if rhs.fillLevel<0 then
 					return lhs - {-rhs.fillLevel, rhs.fillType}
 				end
-				
+			
 				local newFillType = lhs.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN][rhs.fillType]
-								
+							
 				if UniversalProcessKit.isSpecialFillType(newFillType) then
 					added = UniversalProcessKitEnvironment.flbs[newFillType] + rhs.fillLevel
 				elseif lhs.storageType==UPK_Storage.SEPARATE then
@@ -832,9 +858,9 @@ function _g.ClassUPK(members, baseClass)
 				if rhs.fillLevel<0 then
 					return lhs + {-rhs.fillLevel, rhs.fillType}
 				end
-			
+		
 				local newFillType = lhs.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN][rhs.fillType]
-				
+			
 				if newFillType~=nil and UniversalProcessKit.isSpecialFillType(newFillType) then
 					added = UniversalProcessKitEnvironment.flbs[newFillType] - rhs.fillLevel
 				elseif lhs.storageType==UPK_Storage.SEPARATE then
@@ -874,6 +900,7 @@ function _g.ClassUPK(members, baseClass)
 		end
 	}
 	
+	-- extend members	
 	function members:class()
 		return members
 	end
@@ -895,7 +922,7 @@ function _g.ClassUPK(members, baseClass)
 		return ret
 	end
 	
-	return mt
+	return ClassUPK_mt
 end;
 
 ----------------------------------

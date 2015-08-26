@@ -78,6 +78,8 @@ function UPK_Base:new(nodeId, placeable, builtIn, syncObj)
 	}
 	setmetatable(self.i18n, i18n_mt)
 	
+	self.shapeNamesToNodeIds={}
+	
 	self:printInfo('UPK_Base:new done')
 	
 	return self
@@ -123,4 +125,27 @@ function UPK_Base:getSaveAttributesAndNodes(nodeIdent)
 	return attributes, nodes
 end;
 
+-- shapes
 
+function UPK_Base:setVisibility(name,show) -- show and hide
+	self:printFn('UPK_Base:setVisibility(',name,',',show,')')
+	
+	if type(name)=="table" then
+		for _,shapeName in pairs(name) do
+			self:setVisibility(shapeName,show)
+		end
+		return
+	end
+	
+	if name==nil or name=="" then
+		return false
+	end
+	
+	local shapeId=self.shapeNamesToNodeIds[name]
+	if shapeId==nil or shapeId==0 or type(shapeId)~="number" then
+		self:printErr('name of shape "'..tostring(name)..'" unknown and/or not valid')
+		return false
+	end
+	
+	setVisibility(shapeId,show)
+end
