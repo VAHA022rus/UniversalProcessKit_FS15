@@ -88,7 +88,7 @@ function UniversalProcessKit:readUpdateStream(streamId, connection, dirtyMask, s
 	if connection:getIsServer() then
 		self:printAll('self.fillLevelDirtyFlag ',self.fillLevelDirtyFlag)
 		self:printAll('dirtyMask ',dirtyMask)
-		self:printAll('bitAND(dirtyMask,self.fillLevelDirtyFlag)~=0 '..(bitAND(dirtyMask,self.fillLevelDirtyFlag)~=0))
+		self:printAll('bitAND(dirtyMask,self.fillLevelDirtyFlag)~=0 ',(bitAND(dirtyMask,self.fillLevelDirtyFlag)~=0))
 		if bitAND(dirtyMask,self.fillLevelDirtyFlag)~=0 or syncall then
 			nrFillTypesToSync=streamReadIntN(streamId,8) or 0
 			for i=1,nrFillTypesToSync do

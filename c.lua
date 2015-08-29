@@ -447,6 +447,7 @@ _g.PlaceableUPK={}
 _g.OnCreateUPK={}
 
 _g.EvalFormula={}
+_m.AudioSourceSample={}
 
 UPK_Storage.SEPARATE=1
 UPK_Storage.SINGLE=2
@@ -483,6 +484,8 @@ _g.g_upkTrigger={}
 
 -- keys left and right (same, only take matching keys into account) + - * /
 -- c({a=1,b=2,c=3}) + c({b=2,d=4}) = {b=4}
+
+c_class={}
 
 local c_mt={
 	__index=function(arr,key)
@@ -638,8 +641,6 @@ local c_mt={
 		return length(t)
 	end	
 }
-
-local c_class={}
 
 function c_class:min()
 	local nr=math.huge

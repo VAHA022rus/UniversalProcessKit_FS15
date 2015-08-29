@@ -42,8 +42,33 @@ Bisher enthaltene Module:
 - unspecified
 - washtrigger
 - waterfilltrigger
+- woodtrigger
 
 ##Changelog
+
+__V0.10.3__
+
+Action-UserAttributes:
+- play...
+
+WoodTrigger:
+- mode
+- revenuePerLiter
+- ignoreWood
+- useFirstWood
+- acceptedMinLength
+- acceptedMaxLength
+- delay
+- revenueMultiplier
+- statName
+- ..OnEnter
+- ..OnLeave
+- ..OnDelete
+- ..IfDissolved
+- ..IfSold
+
+Beispielmod:
+- UPK_WoodTriggerTest
 
 __V0.10.2__
 

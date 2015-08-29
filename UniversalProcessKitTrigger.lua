@@ -82,8 +82,8 @@ function UniversalProcessKit:getAllowedVehicles()
 	self.allowWalker = Utils.getNoNil(self.allowWalker, getBoolFromUserAttribute(self.nodeId, "allowWalker", true))
 	
 	self.allowBales = Utils.getNoNil(self.allowBales, getBoolFromUserAttribute(self.nodeId, "allowBales", false))
-	
 	self.allowPallets = Utils.getNoNil(self.allowPallets, getBoolFromUserAttribute(self.nodeId, "allowPallets", false))
+	self.allowWood = Utils.getNoNil(self.allowWood, getBoolFromUserAttribute(self.nodeId, "allowWood", false))
 	
 	for k,v in pairs(self.allowedVehicles) do
 		if not v then
@@ -112,7 +112,7 @@ function UniversalProcessKit:fitCollisionMaskToAllowedVehicles()
 	local trigger_tractor = 2097152
 	local trigger_combine = 4194304
 	local trigger_fillable = 8388608
-	local trigger_dynamic_objects = 16777216 -- bales, pallets
+	local trigger_dynamic_objects = 16777216 -- bales, pallets, logs
 	local trigger_attachment = 8192 -- cultivators, tedders, ...
 	local trigger_trafficVehicle = 33554432 -- doesnt seem to work right
 
@@ -158,8 +158,8 @@ function UniversalProcessKit:fitCollisionMaskToAllowedVehicles()
 		self:printInfo('Warning: allowTrafficVehicle is set to true but collisionMask was not fitting (fixed)')
 		collisionMask_new = collisionMask_new + trigger_trafficVehicle
 	end
-	if (self.allowBales or self.allowPallets) and bitAND(collisionMask_new,trigger_dynamic_objects)==0 then
-		self:printInfo('Warning: allowBales or allowPallets is set to true but collisionMask was not fitting (fixed)')
+	if (self.allowBales or self.allowPallets or self.allowWood) and bitAND(collisionMask_new,trigger_dynamic_objects)==0 then
+		self:printInfo('Warning: allowBales, allowPallets or allowWood is set to true but collisionMask was not fitting (fixed)')
 		collisionMask_new = collisionMask_new + trigger_dynamic_objects
 	end
 	
@@ -202,8 +202,8 @@ function UniversalProcessKit:fitCollisionMaskToAllowedVehicles()
 		self:printInfo('Warning: allowTrafficVehicle is set to false but collisionMask was not fitting (fixed)')
 		collisionMask_new = collisionMask_new - trigger_trafficVehicle
 	end
-	if not (self.allowBales or self.allowPallets) and bitAND(collisionMask_new,trigger_dynamic_objects)==1 then
-		self:printInfo('Warning: allowBales and allowPallets is set to false but collisionMask was not fitting (fixed)')
+	if not (self.allowBales or self.allowPallets or self.allowWood) and bitAND(collisionMask_new,trigger_dynamic_objects)==1 then
+		self:printInfo('Warning: allowBales, allowPallets and allowWood is set to false but collisionMask was not fitting (fixed)')
 		collisionMask_new = collisionMask_new - trigger_dynamic_objects
 	end
 	
@@ -281,6 +281,17 @@ function UniversalProcessKit:triggerCallback(triggerId, otherActorId, onEnter, o
 						self:triggerOnLeave(vehicle)
 					end
 					break
+				end
+			end
+		end
+		if self.allowWood then
+			local splitType = SplitUtil.splitTypes[getSplitType(otherActorId)]
+			self:printAll('splitType is ',splitType)
+			if splitType~=nil and splitType.woodChipsPerLiter>0 then
+				if onEnter then
+					self:triggerUpdate(otherActorId,true) -- a little different behavior for logs
+				elseif onLeave then
+					self:triggerUpdate(otherActorId,false)
 				end
 			end
 		end

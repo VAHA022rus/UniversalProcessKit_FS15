@@ -79,6 +79,7 @@ function UPK_Base:new(nodeId, placeable, builtIn, syncObj)
 	setmetatable(self.i18n, i18n_mt)
 	
 	self.shapeNamesToNodeIds={}
+	self.shapeNamesToAudioSamples={}
 	
 	self:printInfo('UPK_Base:new done')
 	
@@ -130,6 +131,10 @@ end;
 function UPK_Base:setVisibility(name,show) -- show and hide
 	self:printFn('UPK_Base:setVisibility(',name,',',show,')')
 	
+	if name==nil or name=="" then
+		return false
+	end
+	
 	if type(name)=="table" then
 		for _,shapeName in pairs(name) do
 			self:setVisibility(shapeName,show)
@@ -137,15 +142,34 @@ function UPK_Base:setVisibility(name,show) -- show and hide
 		return
 	end
 	
+	local shapeId=self.shapeNamesToNodeIds[name]
+	if shapeId==nil then
+		self:printErr('name of shape "'..tostring(name)..'" unknown and/or not valid')
+		return false
+	end
+
+	setVisibility(shapeId,show)
+end
+
+function UPK_Base:playSample(name) -- start and stop
+	self:printFn('UPK_Base:playSample(',name,')')
+	
 	if name==nil or name=="" then
 		return false
 	end
 	
-	local shapeId=self.shapeNamesToNodeIds[name]
-	if shapeId==nil or shapeId==0 or type(shapeId)~="number" then
-		self:printErr('name of shape "'..tostring(name)..'" unknown and/or not valid')
+	if type(name)=="table" then
+		for _,shapeName in pairs(name) do
+			self:playSample(shapeName)
+		end
+		return
+	end
+	
+	local audioSample=self.shapeNamesToAudioSamples[name]
+	if audioSample==nil then
+		self:printErr('name of audio source "'..tostring(name)..'" unknown and/or not valid')
 		return false
 	end
 	
-	setVisibility(shapeId,show)
+	audioSample:play()
 end

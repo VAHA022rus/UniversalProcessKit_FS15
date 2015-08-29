@@ -342,14 +342,19 @@ function UniversalProcessKit:findChildren(id,prefixShapeNames)
 	self:printFn('UniversalProcessKit:findChildren('..tostring(id)..')')
 	local name=getName(id)
 	local a,b=string.find(name,"[%w_%.%/]+")
-	if string.sub(name,a,b)~=name or name=="" then
-		printInfo('name of shape "'..tostring(name)..'" (nodeId "'..tostring(id)..'") is not valid')
+	if name=="" or a==nil or string.sub(name,a,b)~=name then
+		self:printInfo('name of shape "'..tostring(name)..'" (nodeId "'..tostring(id)..'") is not valid')
 	else
 		if self.base.shapeNamesToNodeIds[name]~=nil then
-			printInfo('name of shape "'..tostring(name)..'" already used')
+			self:printInfo('name of shape "'..tostring(name)..'" already used')
 		else
 			self.base.shapeNamesToNodeIds[name]=id
-			printInfo('name of shape "'..tostring(name)..'" registered')
+			
+			local audioSample=AudioSourceSample.new(id) -- test if node is audio source
+			if audioSample~=false then
+				self:printInfo('audio sample found')
+				self.base.shapeNamesToAudioSamples[name]=audioSample
+			end
 		end
 	end
 	loopThruChildren(id,"findChildrenLoopFunc",self,prefixShapeNames)
@@ -437,6 +442,9 @@ function UniversalProcessKit:getActionUserAttributes(actionName, defaultEnableCh
 	local showAction = 'show'..actionName
 	local hideAction = 'hide'..actionName
 	
+	-- play 1x audio sources
+	local playAction = 'play'..actionName
+	
 	local action = self.actions[actionName]
 	
 	action['enableChildren'] = getBoolFromUserAttribute(nodeId, enableChildrenAction, defaultEnableChildren or false)
@@ -496,6 +504,12 @@ function UniversalProcessKit:getActionUserAttributes(actionName, defaultEnableCh
 	if action['hide']~=emptyArr then
 		action['hasHide'] = true
 	end
+	
+	-- audio sources
+	action['play'] = getArrayFromUserAttribute(nodeId, playAction, emptyArr)
+	if action['play']~=emptyArr then
+		action['hasPlay'] = true
+	end
 end
 
 function UniversalProcessKit:operateAction(actionName, multiplier, alreadySent)
@@ -544,12 +558,16 @@ function UniversalProcessKit:operateAction(actionName, multiplier, alreadySent)
 		self:setEnableChildren(false, alreadySent)
 	end	
 	
-	if action['show'] then
+	if action['hasShow'] then
 		self.base:setVisibility(action['show'],true)
 	end
 	
-	if action['hide'] then
+	if action['hasHide'] then
 		self.base:setVisibility(action['hide'],false)
+	end
+	
+	if action['hasPlay'] then
+		self.base:playSample(action['play'])
 	end
 end
 
