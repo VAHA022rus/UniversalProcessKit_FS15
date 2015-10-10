@@ -85,26 +85,28 @@ function UPK_WoodTrigger:triggerUpdate(woodId,isInTrigger)
 		self:printAll('wood is: '..tostring(woodId))
 		self:printAll('isInTrigger is: '..tostring(isInTrigger))
 		if isInTrigger then
-			-- length
-			if self.useLength then
-				local lenX, lenY, lenZ, _ = getSplitShapeStats(woodId)
-				local length = mathmax(lenX,mathmax(lenY, lenZ))
-				self:printInfo('length of wood is ',length)
-				if length<self.acceptedMinLength or length>self.acceptedMaxLength then
-					return
+			if self.woodInTrigger[woodId]==nil then
+				-- length
+				if self.useLength then
+					local lenX, lenY, lenZ, _ = getSplitShapeStats(woodId)
+					local length = mathmax(lenX,mathmax(lenY, lenZ))
+					self:printInfo('length of wood is ',length)
+					if length<self.acceptedMinLength or length>self.acceptedMaxLength then
+						return
+					end
 				end
-			end
 
-			self.woodInTrigger[woodId]=true
-			self.nrWoodInTrigger = self.nrWoodInTrigger +1
-			table.insert(self.woodInLine,woodId)
-			if not self.runningUpdate and self.nrWoodInTrigger>self.ignoreWood then
-				self.dtsum = 0
-				if self.isServer then
-					UniversalProcessKitListener.addUpdateable(self)
+				self.woodInTrigger[woodId]=true
+				self.nrWoodInTrigger = self.nrWoodInTrigger +1
+				table.insert(self.woodInLine,woodId)
+				if not self.runningUpdate and self.nrWoodInTrigger>self.ignoreWood then
+					self.dtsum = 0
+					if self.isServer then
+						UniversalProcessKitListener.addUpdateable(self)
+					end
 				end
+				self:operateAction('OnEnter')
 			end
-			self:operateAction('OnEnter')
 		else
 			if self.woodInTrigger[woodId]~=nil then
 				self.woodInTrigger[woodId]=nil
@@ -132,32 +134,34 @@ function UPK_WoodTrigger:update(dt)
 
 				local woodId = self.woodInLine[woodIndex]
 				if type(woodId)=="number" and woodId>0 and self.woodInTrigger[woodId] then
-					local fillLevel = getVolume(woodId)*1000
 					local splitType = SplitUtil.splitTypes[getSplitType(woodId)]
-					local fillType = UniversalProcessKit.FILLTYPE_WOODCHIPS
+					if splitType~=nil then
+						local fillLevel = getVolume(woodId)*1000
+						local fillType = UniversalProcessKit.FILLTYPE_WOODCHIPS
 					
-					self:printAll('fillLevel of wood is ',fillLevel)
-					if self.mode=="dissolve" then
-						local added = self:addFillLevel(fillLevel*splitType.woodChipsPerLiter, fillType)
-						self:operateAction('IfDissolved',added)
-						self:deleteWood(woodId)
-					elseif self.mode=="delete" then
-						self:deleteWood(woodId)
-					elseif self.mode=="save" then
-						-- nothing yet
-					else
-						local difficulty = g_currentMission.missionStats.difficulty
-						local revenue = 0
-						if self.revenuesPerLiter[fillType]~=nil then
-							revenue = self.revenuesPerLiter[fillType] * fillLevel * self.revenueMultiplier[difficulty]
+						self:printAll('fillLevel of wood is ',fillLevel)
+						if self.mode=="dissolve" then
+							local added = self:addFillLevel(fillLevel*splitType.woodChipsPerLiter, fillType)
+							self:operateAction('IfDissolved',added)
+							self:deleteWood(woodId,woodIndex)
+						elseif self.mode=="delete" then
+							self:deleteWood(woodId,woodIndex)
+						elseif self.mode=="save" then
+							-- nothing yet
 						else
-							revenue = fillLevel * splitType.pricePerLiter * self.revenueMultiplier[difficulty]
+							local difficulty = g_currentMission.missionStats.difficulty
+							local revenue = 0
+							if self.revenuesPerLiter[fillType]~=nil then
+								revenue = self.revenuesPerLiter[fillType] * fillLevel * self.revenueMultiplier[difficulty]
+							else
+								revenue = fillLevel * splitType.pricePerLiter * self.revenueMultiplier[difficulty]
+							end
+							if revenue~=0 then
+								g_currentMission:addSharedMoney(revenue, self.statName)
+							end
+							self:operateAction('IfSold',fillLevel)
+							self:deleteWood(woodId,woodIndex)
 						end
-						if revenue~=0 then
-							g_currentMission:addSharedMoney(revenue, self.statName)
-						end
-						self:operateAction('IfSold',fillLevel)
-						self:deleteWood(woodId)
 					end
 				else
 					self.woodInTrigger[woodId]=nil
@@ -178,8 +182,8 @@ function UPK_WoodTrigger:update(dt)
 	end
 end
 
-function UPK_WoodTrigger:deleteWood(woodId)
-	self:printFn('UPK_WoodTrigger:deleteWood(',woodId,')')
+function UPK_WoodTrigger:deleteWood(woodId,woodIndex)
+	self:printFn('UPK_WoodTrigger:deleteWood(',woodId,',',woodIndex,')')
 	self.woodInTrigger[woodId]=nil
 	table.remove(self.woodInLine,woodIndex)
 	self.nrWoodInTrigger = self.nrWoodInTrigger -1

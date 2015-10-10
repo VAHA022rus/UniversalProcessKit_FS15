@@ -69,7 +69,7 @@ function UPK_BalerTrigger:triggerUpdate(vehicle,isInTrigger)
 			if v and UniversalProcessKit.isVehicleType(vehicle, k) then
 				if isInTrigger then
 					--self:print('UniversalProcessKitListener.addUpdateable('..tostring(self)..')')
-					UPK_BalerTrigger.getPickupNode(vehicle)
+					self:getPickupNode(vehicle)
 					if not self.isAdded then
 						UniversalProcessKitListener.addUpdateable(self)
 						self.isAdded = true
@@ -234,7 +234,7 @@ function UPK_BalerTrigger:findMyNodeRaycastCallback(transformId, x, y, z, distan
 	return true
 end
 
-function UPK_BalerTrigger.getPickupNode(vehicle)
+function UPK_BalerTrigger:getPickupNode(vehicle)
 	self:printFn('UPK_BalerTrigger.getPickupNode(',vehicle,')')
 	if vehicle.upk_pickupNode==nil then
 		if not UniversalProcessKit.isVehicleType(vehicle, UniversalProcessKit.VEHICLE_FORAGEWAGON) and
@@ -265,7 +265,7 @@ function UPK_BalerTrigger.getPickupNode(vehicle)
 		end
 		delete(xmlFile)
 	end
-	print('vehicle.upk_pickupNode = '..tostring(vehicle.upk_pickupNode))
+	self:printInfo('vehicle.upk_pickupNode = '..tostring(vehicle.upk_pickupNode))
 end
 
 UPK_BalerTrigger.getPricePerLiter = UPK_FillTrigger.getPricePerLiter

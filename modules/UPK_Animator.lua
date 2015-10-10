@@ -7,6 +7,9 @@ local UPK_Animator_mt = ClassUPK(UPK_Animator,UniversalProcessKit)
 InitObjectClass(UPK_Animator, "UPK_Animator")
 UniversalProcessKit.addModule("animator",UPK_Animator)
 
+UPK_Animator.EVENT_ANIMTIME=1
+UPK_Animator.EVENT_ANIMTRACKENABLED=2
+
 function UPK_Animator:new(nodeId, parent)
 	printFn('UPK_Animator:new(',nodeId,', ',parent,')')
 	local self = UniversalProcessKit:new(nodeId, parent, UPK_Animator_mt)
@@ -89,15 +92,15 @@ function UPK_Animator:new(nodeId, parent)
 	self.animationSpeed = getNumberFromUserAttribute(nodeId, "animationSpeed", 1)
 	self.rewindAnimationOnDisable = getBoolFromUserAttribute(nodeId, "rewindAnimationOnDisable", false)
 	self.animationClip = getStringFromUserAttribute(nodeId, "animationClip")
-	self.doAnimation = self.animationClip~=nil
-	if self.doAnimation then
+	self.doAnimation = false
+	if self.animationClip~=nil then
 		self.animCharacterSet = getAnimCharacterSet(nodeId)
 		self:printAll('self.animCharacterSet=',self.animCharacterSet)
 		if self.animCharacterSet ~= 0 then
 			self.animClipIndex = getAnimClipIndex(self.animCharacterSet,self.animationClip)
 			self:printAll('self.animationClip=',self.animationClip)
 			self:printAll('self.animClipIndex=',self.animClipIndex)
-			if self.animClipIndex >= 0 then
+			if self.animClipIndex~=nil and self.animClipIndex >= 0 then
 				self.doAnimation=true
 			end
 		end
@@ -105,6 +108,7 @@ function UPK_Animator:new(nodeId, parent)
 	self.animTrackEnabled=false
 	
 	if self.doAnimation then
+		enableAnimTrack(self.animCharacterSet, 0)
 		assignAnimTrackClip(self.animCharacterSet,0,self.animClipIndex)
 		setAnimTrackLoopState(self.animCharacterSet,0,self.animationLoop)
 		setAnimTrackBlendWeight(self.animCharacterSet, self.animClipIndex, 1)
@@ -130,16 +134,18 @@ function UPK_Animator:writeStream(streamId, connection)
 	self:printFn('UPK_Animator:writeStream(',streamId,', ',connection,')')
 	if not connection:getIsServer() then -- in connection with client
 		if self.doMovement then
-			streamWriteFloat32(streamId, self.movementTime)
+			streamWriteAuto(streamId, self.movementTime)
 		end
 		if self.doRotation then
-			streamWriteFloat32(streamId, self.rotationTime)
+			streamWriteAuto(streamId, self.rotationTime)
 		end
 		if self.doRotatePerSecond then
 			local rx, ry, rz = getRotation(self.nodeId)
-			streamWriteFloat32(streamId, rx)
-			streamWriteFloat32(streamId, ry)
-			streamWriteFloat32(streamId, rz)
+			streamWriteAuto(streamId, rx, ry, rz)
+		end
+		if self.doAnimation then
+			local animTime=getAnimTrackTime(self.animCharacterSet, self.animClipIndex)
+			streamWriteAuto(streamId, animTime)
 		end
 	end
 end
@@ -148,16 +154,17 @@ function UPK_Animator:readStream(streamId, connection)
 	self:printFn('UPK_Animator:readStream(',streamId,', ',connection,')')
 	if connection:getIsServer() then -- in connection with server
 		if self.doMovement then
-			self.movementTime = streamReadFloat32(streamId)
+			self.movementTime = streamReadAuto(streamId)
 		end
 		if self.doRotation then
-			self.rotationTime = streamReadFloat32(streamId)
+			self.rotationTime = streamReadAuto(streamId)
 		end
 		if self.doRotatePerSecond then
-			local rx = streamReadFloat32(streamId)
-			local ry = streamReadFloat32(streamId)
-			local rz = streamReadFloat32(streamId)
+			local rx, ry, rz = streamReadAuto(streamId)
 			UniversalProcessKit.setRotation(self.nodeId, rx, ry, rz)
+		end
+		if self.doAnimation then
+			local animTime=streamReadAuto(streamId)
 		end
 	end
 end
@@ -324,8 +331,9 @@ end;
 function UPK_Animator:getSaveExtraNodes(nodeIdent)
 	self:printFn('UPK_Animator:getSaveExtraNodes(',nodeIdent,')')
 	local nodes=""
-	if false and self.doAnimation then -- didnt worked yet to save animation time
-		nodes=nodes.." animTrackEnabled=\""..tostring(self.animTrackEnabled).."\" animTime=\""..tostring(self:getAnimTime()).."\""
+	if self.doAnimation then -- didnt worked yet to save animation time
+		local animTime=max(0,min(self:getAnimTime(),self.animDuration))
+		nodes=nodes..' animTrackEnabled="'..tostring(self.animTrackEnabled)..'" animTime="'..tostring(animTime)..'"'
 	end
 	if self.doMovement and self.movementTime~=0 then
 		nodes=nodes.." movementTime=\""..tostring(round(self.movementTime,4)).."\""
@@ -342,23 +350,56 @@ end;
 
 function UPK_Animator:setAnimTime(animTime,alreadySent)
 	self:printFn('UPK_Animator:setAnimTime(',animTime,', ',alreadySent,')')
-	setAnimTrackTime(self.animCharacterSet, self.animClipIndex, animTime, true)
+	setAnimTrackTime(self.animCharacterSet, self.animClipIndex, animTime)
+	if animTime>self.animDuration then
+		animTime=self.animDuration
+	end
+	if animTime<0 then
+		animTime=0
+	end
 	self.animTime=animTime
+	if not alreadySent then
+		self:sendEvent(UPK_Animator.EVENT_ANIMTIME,animTime)
+	end
 end;
+
+function UPK_Animator:eventCallback(eventType,...)
+	self:printFn('UPK_Animator:eventCallback(',eventType,'...)')
+	if eventType==UPK_Animator.EVENT_ANIMTIME then
+		self:printAll('UPK_Animator.EVENT_ANIMTIME')
+		local animTime=...
+		self:printAll(...)
+		self:setAnimTime(animTime,true)
+	elseif eventType==UPK_Animator.EVENT_ANIMTRACKENABLED then
+		self:printAll('UPK_Animator.EVENT_ANIMTRACKENABLED')
+		local animTrackEnabled=...
+		self:printAll(...)
+		if animTrackEnabled==true then
+			self:enableAnimTrack(alreadySent)
+		else
+			self:disableAnimTrack(alreadySent)
+		end
+	end
+end
 
 function UPK_Animator:getAnimTime()
 	self:printFn('UPK_Animator:getAnimTime()')
-	return getAnimTrackTime(self.animCharacterSet, self.animClipIndex)
+	local animTime=getAnimTrackTime(self.animCharacterSet, self.animClipIndex)
+	return animTime
 end;
 
 function UPK_Animator:enableAnimTrack(alreadySent)
 	self:printFn('UPK_Animator:enableAnimTrack(',alreadySent,')')
 	if self.animTrackEnabled==false then
 		self.animTrackEnabled=true
+		self:setAnimTime(self:getAnimTime(),true)
 		if self.rewindAnimationOnDisable then
 			setAnimTrackSpeedScale(self.animCharacterSet, self.animClipIndex, self.animationSpeed)
 		end
 		enableAnimTrack(self.animCharacterSet, self.animClipIndex)
+		if not alreadySent then
+			self:sendEvent(UPK_Animator.EVENT_ANIMTRACKENABLED,true)
+		end
 	end
 end;
 
@@ -367,10 +408,14 @@ function UPK_Animator:disableAnimTrack(alreadySent)
 	if self.animTrackEnabled==true then
 		self.animTrackEnabled=false
 		if self.rewindAnimationOnDisable then
+			self:setAnimTime(self:getAnimTime(),true)
 			setAnimTrackSpeedScale(self.animCharacterSet, self.animClipIndex, -self.animationSpeed)
 			enableAnimTrack(self.animCharacterSet, self.animClipIndex)
 		else
 			disableAnimTrack(self.animCharacterSet, self.animClipIndex)
+		end
+		if not alreadySent then
+			self:sendEvent(UPK_Animator.EVENT_ANIMTRACKENABLED,false)
 		end
 	end
 end;

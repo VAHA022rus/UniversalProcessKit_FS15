@@ -20,7 +20,7 @@ function OnCreateUPK:new(isServer, isClient)
 end
 
 function OnCreateUPK:load(id)
-	print('OnCreateUPK:load('..tostring(id)..')')
+	printFn('OnCreateUPK:load('..tostring(id)..')')
 	
 	if id==nil then
 		return false
@@ -47,7 +47,7 @@ function OnCreateUPK:delete()
 end
 
 function OnCreateUPK:loadFromAttributesAndNodes(xmlFile, key, resetVehicles)
-	print('OnCreateUPK:loadFromAttributesAndNodes()')
+	printFn('OnCreateUPK:loadFromAttributesAndNodes()')
 	if self.base~=nil then
 		self.base:loadFromAttributesAndNodes(xmlFile, key)
 	end
@@ -56,7 +56,7 @@ function OnCreateUPK:loadFromAttributesAndNodes(xmlFile, key, resetVehicles)
 end
 
 function OnCreateUPK:getSaveAttributesAndNodes(nodeIdent)
-	print('OnCreateUPK:getSaveAttributesAndNodes('..tostring(nodeIdent)..')')
+	printFn('OnCreateUPK:getSaveAttributesAndNodes('..tostring(nodeIdent)..')')
 	local attributes=""
 	local nodes=""
 	
@@ -70,14 +70,14 @@ function OnCreateUPK:getSaveAttributesAndNodes(nodeIdent)
 end
 
 function OnCreateUPK:getNextObjectSyncId()
-	print('OnCreateUPK:getNextObjectSyncId()')
+	printFn('OnCreateUPK:getNextObjectSyncId()')
 	local syncId = self.nextSyncId
 	self.nextSyncId = syncId + 1
 	return syncId
 end
 
 function OnCreateUPK:registerObjectToSync(object)
-	print('OnCreateUPK:registerObjectToSync('..tostring(object))
+	printFn('OnCreateUPK:registerObjectToSync(',object,')')
 	local syncId = self:getNextObjectSyncId()
 	table.insert(self.upkObjects, syncId, object)
 	object.syncId=syncId
@@ -88,7 +88,7 @@ function OnCreateUPK:getObjectToSync(syncId)
 end
 
 function OnCreateUPK:writeStream(streamId, connection)
-	print('OnCreateUPK:writeStream('..tostring(streamId)..', '..tostring(connection)..')')
+	printFn('OnCreateUPK:writeStream(',streamId,', ',connection,')')
 	OnCreateUPK:superClass().writeStream(self, streamId, connection)
 	for i=1,(self.nextSyncId-1) do
 		self.upkObjects[i]:writeStream(streamId, connection)
@@ -96,7 +96,7 @@ function OnCreateUPK:writeStream(streamId, connection)
 end
 
 function OnCreateUPK:readStream(streamId, connection)
-	print('OnCreateUPK:readStream('..tostring(streamId)..', '..tostring(connection)..')')
+	printFn('OnCreateUPK:readStream(',streamId,', ',connection,')')
 	OnCreateUPK:superClass().readStream(self, streamId, connection)
 	for i=1,(self.nextSyncId-1) do
 		self.upkObjects[i]:readStream(streamId, connection)
@@ -104,7 +104,7 @@ function OnCreateUPK:readStream(streamId, connection)
 end
 
 function OnCreateUPK:writeUpdateStream(streamId, connection, dirtyMask)
-	print('OnCreateUPK.writeUpdateStream('..tostring(self)..', '..tostring(streamId)..', '..tostring(connection)..')')
+	printFn('OnCreateUPK.writeUpdateStream(',self,', ',streamId,', ',connection,')')
 	OnCreateUPK:superClass().writeUpdateStream(self, streamId, connection, dirtyMask)
 	if not connection:getIsServer() then
 		local objectsToSync = {}
@@ -113,14 +113,14 @@ function OnCreateUPK:writeUpdateStream(streamId, connection, dirtyMask)
 				table.insert(objectsToSync,i)
 			end
 		end
-		print('want to sync '..tostring(#objectsToSync)..' objects')
-		streamWriteIntN(streamId, #objectsToSync, 12)
+		printAll('want to sync ',#objectsToSync,' objects')
+		streamWriteAuto(streamId, #objectsToSync)
 		for i=1,#objectsToSync do
 			local object = self.upkObjects[objectsToSync[i]]
 			--print('want to sync object with syncId '..tostring(object.syncId))
-			streamWriteIntN(streamId, object.syncId, 12)
+			streamWriteAuto(streamId, object.syncId)
 			--print('want to sync object with dirtyFlag '..tostring(object.dirtyMask))
-			streamWriteIntN(streamId, object.dirtyMask, 12) -- max 12 dirtyFlags
+			streamWriteAuto(streamId, object.dirtyMask)
 			local syncall=bitAND(object.dirtyMask, object.syncAllDirtyFlag)~=0
 			object:writeUpdateStream(streamId, connection, object.dirtyMask, syncall)
 			--print('mark client '..tostring(streamId)..' as synced')
@@ -148,17 +148,17 @@ function OnCreateUPK:writeUpdateStream(streamId, connection, dirtyMask)
 end
 
 function OnCreateUPK:readUpdateStream(streamId, timestamp, connection)
-	print('OnCreateUPK.readUpdateStream('..tostring(self)..', '..tostring(streamId)..', '..tostring(connection)..')')
+	printFn('OnCreateUPK.readUpdateStream(',self,', ',streamId,', ',connection,')')
 	OnCreateUPK:superClass().readUpdateStream(self, streamId, timestamp, connection)
 	if connection:getIsServer() then
-		local nrObjectsToSync = streamReadIntN(streamId, 12)
-		print('reading '..tostring(nrObjectsToSync)..' objects')
+		local nrObjectsToSync = streamReadAuto(streamId)
+		printAll('reading ',nrObjectsToSync,' objects')
 		if nrObjectsToSync>0 then
 			for i=1,nrObjectsToSync do
-				local objectSyncId = streamReadIntN(streamId, 12)
-				print('reading sync object with syncId '..tostring(objectSyncId))
-				local objectDirtyFlag = streamReadIntN(streamId, 12)
-				print('reading sync object with dirtyFalg '..tostring(objectDirtyFlag))
+				local objectSyncId = streamReadAuto(streamId)
+				printAll('reading sync object with syncId ',objectSyncId)
+				local objectDirtyFlag = streamReadAuto(streamId)
+				printAll('reading sync object with dirtyFalg ',objectDirtyFlag)
 				local object = self.upkObjects[objectSyncId]
 				local syncall=bitAND(object.dirtyMask, object.syncAllDirtyFlag)~=0
 				object:readUpdateStream(streamId, connection, objectDirtyFlag, syncall)

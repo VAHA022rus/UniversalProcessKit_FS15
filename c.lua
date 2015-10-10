@@ -96,7 +96,7 @@ function min(...)
 	return nil
 end;
 
-local times10 = {}
+_m.times10 = {}
 local times10_mt = {
 	__index = function(t,k)
 		local result=10^k
@@ -187,7 +187,7 @@ end;
 
 function getBoolFromUserAttribute(nodeId, attribute, default)
 	if nodeId==nil then
-		print('Warning from getBoolFromUserAttribute: nodeId is nil')
+		printInfo('Warning from getBoolFromUserAttribute: nodeId is nil')
 		return default
 	end
 	local bool=tobool(Utils.getNoNil(getUserAttribute(nodeId, attribute), default))
@@ -206,7 +206,7 @@ end
 
 function getStringFromUserAttribute(nodeId, attribute, default)
 	if nodeId==nil then
-		print('Warning from getStringFromUserAttribute: nodeId is nil')
+		printInfo('Warning from getStringFromUserAttribute: nodeId is nil')
 		return default
 	end
 	local str=getUserAttribute(nodeId, attribute) or default
@@ -218,11 +218,11 @@ end;
 
 function getArrayFromUserAttribute(nodeId, attribute, default)
 	if nodeId==nil then
-		print('Warning from getArrayFromUserAttribute: nodeId is nil')
+		printInfo('Warning from getArrayFromUserAttribute: nodeId is nil')
 		return default or {}
 	end
 	local str=getStringFromUserAttribute(nodeId, attribute)
-	if str==nil then
+	if str==nil or str=="" then
 		return default or {}
 	end
 	local arr=gmatch(str, "%S+")
@@ -396,7 +396,7 @@ function getLongFilename(filename,modname)
 	local filenamelen=string.len(filename)
 	local filenamesub=string.sub(filename,1,5)
 	if filenamesub=='$mods' then
-		return g_modsDirectory..string.sub(filename,7,filenamelen)
+		return g_modsDirectory..'/'..string.sub(filename,7,filenamelen) -- ..mods//modname/..
 	elseif filenamesub=='$data' then
 		return getAppBasePath()..'data/'..string.sub(filename,7,filenamelen)
 	end
@@ -406,10 +406,21 @@ function getLongFilename(filename,modname)
 	return g_modsDirectory..modname..'/'..filename;
 end
 
+function _m.reviveTimer(timerId, offset, callback, obj)
+	--printFn('reviveTimer(',timerId,', ',offset,', ',callback,', ',obj,')')
+	if timerId~=nil then
+		removeTimer(timerId)
+		timerId=nil
+	end
+	timerId = addTimer(offset,callback,obj)
+	return timerId
+end
+
 ----------------------------------
 -- classes and variables ---------
 ----------------------------------
 
+_g.UniversalProcessKitListener={}
 _g.UPK_ActivatorTrigger={}
 _g.UPK_Animator={}
 _g.UPK_BaleSpawner={}
@@ -447,7 +458,8 @@ _g.PlaceableUPK={}
 _g.OnCreateUPK={}
 
 _g.EvalFormula={}
-_m.AudioSourceSample={}
+_g.AudioSample={}
+_g.AnimationTrack={}
 
 UPK_Storage.SEPARATE=1
 UPK_Storage.SINGLE=2

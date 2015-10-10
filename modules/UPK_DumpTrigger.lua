@@ -22,26 +22,6 @@ function UPK_DumpTrigger:new(nodeId, parent)
 		--self.fillTypesConversionMatrix = self.fillTypesConversionMatrix + FillTypesConversionMatrix:new(fillType)
 	end
 	
-	-- add/ remove if dumping
-	
-	self.addIfDumping = {}
-	self.useAddIfDumping = false
-	local addIfDumpingArr = getArrayFromUserAttribute(nodeId, "addIfDumping")
-	for _,fillType in pairs(UniversalProcessKit.fillTypeNameToInt(addIfDumpingArr)) do
-		self:printAll('add if dumping '..tostring(UniversalProcessKit.fillTypeIntToName[fillType])..' ('..tostring(fillType)..')')
-		self.addIfDumping[fillType] = true
-		self.useAddIfDumping = true
-	end
-	
-	self.removeIfDumping = {}
-	self.useRemoveIfDumping = false
-	local removeIfDumpingArr = getArrayFromUserAttribute(nodeId, "removeIfDumping")
-	for _,fillType in pairs(UniversalProcessKit.fillTypeNameToInt(removeIfDumpingArr)) do
-		self:printAll('remove if dumping '..tostring(UniversalProcessKit.fillTypeIntToName[fillType])..' ('..tostring(fillType)..')')
-		self.removeIfDumping[fillType] = true
-		self.useRemoveIfDumping = true
-	end
-	
 	-- revenues
 	
 	self.revenuePerLiter = getNumberFromUserAttribute(nodeId, "revenuePerLiter", 0)
@@ -95,6 +75,14 @@ function UPK_DumpTrigger:new(nodeId, parent)
 		setCollisionMask(nodeId,collisionMask_new)
 	end
 	
+	-- actions
+	self:getActionUserAttributes('IfDumping')
+	self:getActionUserAttributes('IfDumpingStarted')
+	self:getActionUserAttributes('IfDumpingStopped')
+	
+	-- timer
+	self.isBeingFilledTimerId=nil
+	
 	self:printFn('UPK_DumpTrigger:new done')
 
 	return self
@@ -141,23 +129,20 @@ function UPK_DumpTrigger:setFillLevel(newFillLevel, fillType)
 			local revenue = deltaFillLevel * revenuePerLiter
 			g_currentMission:addSharedMoney(revenue, self.statName)
 		end
-		if self.useAddIfDumping then
-			for fillTypeToAdd,v in pairs(self.addIfDumping) do
-				if v then
-					self:addFillLevel(deltaFillLevel,fillTypeToAdd)
-				end
-			end
+		if self.isBeingFilledTimerId==nil then
+			self:operateAction('IfDumpingStarted')
 		end
-		if self.useRemoveIfDumping then
-			for fillTypeToRemove,v in pairs(self.removeIfDumping) do
-				if v then
-					self:addFillLevel(-deltaFillLevel,fillTypeToRemove)
-				end
-			end
-		end
+		self.isBeingFilledTimerId=reviveTimer(self.isBeingFilledTimerId,500,"timerCallback",self) -- half second delay to recognize if still being filled
+		self:operateAction('IfDumping',deltaFillLevel)
 	end
 
 	return deltaFillLevel
+end
+
+function UPK_DumpTrigger:timerCallback()
+	self:operateAction('IfDumpingStopped')
+	self.isBeingFilledTimerId=nil
+	return false
 end
 
 

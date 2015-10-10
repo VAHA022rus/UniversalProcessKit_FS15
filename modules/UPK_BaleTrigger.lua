@@ -96,6 +96,14 @@ function UPK_BaleTrigger:new(nodeId, parent)
 
 	self:addTrigger()
 	
+	--actions
+	self:getActionUserAttributes('OnEnter')
+	self:getActionUserAttributes('OnLeave')
+	self:getActionUserAttributes('OnDelete')
+	
+	self:getActionUserAttributes('IfDissolved')
+	self:getActionUserAttributes('IfSold')
+	
 	self:printFn('UPK_BaleTrigger:new done')
 	
 	return self
@@ -120,7 +128,7 @@ function UPK_BaleTrigger:triggerUpdate(vehicle,isInTrigger)
 		if type(vehicle)=="table" and vehicle:isa(Bale) then
 			self:printAll('isInTrigger is: '..tostring(isInTrigger))
 			if isInTrigger then
-				if not self.balesInTrigger[vehicle] then
+				if self.balesInTrigger[vehicle]==nil then
 					local fillType = vehicle:getFillType()
 					local isRoundBale = vehicle.isRoundbale
 					if isRoundBale==nil then
@@ -147,10 +155,14 @@ function UPK_BaleTrigger:triggerUpdate(vehicle,isInTrigger)
 					else
 						self:printAll('This kind of bale is not accepted')
 					end
+					self:operateAction('OnEnter')
 				end
 			else
-				self.balesInTrigger[vehicle]=nil
-				self.nrBalesInTrigger = self.nrBalesInTrigger -1
+				if self.balesInTrigger[vehicle]~=nil then
+					self.balesInTrigger[vehicle]=nil
+					self.nrBalesInTrigger = self.nrBalesInTrigger -1
+					self:operateAction('OnLeave')
+				end
 			end
 		end
 	end
@@ -171,39 +183,30 @@ function UPK_BaleTrigger:update(dt)
 
 			local bale = self.balesInLine[baleIndex]
 			if type(bale)=="table" and self.balesInTrigger[bale] then
+				local fillLevel = bale:getFillLevel()
+				local fillType = bale:getFillType()
 				if self.mode=="dissolve" then
-				    local fillLevel = bale:getFillLevel()
-				    local fillType = bale:getFillType()
 					local added = self:addFillLevel(fillLevel, fillType)
-					if added > 0 then
-						self.balesInTrigger[bale]=nil
-						table.remove(self.balesInLine,baleIndex)
-						bale:delete()
-					end
+					self:operateAction('IfDissolved',added)
+					self:deleteBale(bale,baleIndex)
 				elseif self.mode=="delete" then
-					self.balesInTrigger[bale]=nil
-					table.remove(self.balesInLine,baleIndex)
-					bale:delete()
+					self:deleteBale(bale,baleIndex)
 				elseif self.mode=="save" then
 					-- nothing yet
 				else
 					self:printAll('want to sell bale for '..tostring(bale:getValue()))
-					self.balesInTrigger[bale]=nil
-					self.nrBalesInTrigger = self.nrBalesInTrigger -1
-					local fillType = bale:getFillType()
 					local difficulty = g_currentMission.missionStats.difficulty
 					local revenue = 0
 					if self.revenuesPerLiter[fillType]~=nil then
-						revenue = self.revenuesPerLiter[fillType] * bale.fillLevel * self.revenueMultiplier[difficulty]
+						revenue = self.revenuesPerLiter[fillType] * fillLevel * self.revenueMultiplier[difficulty]
 					else 
 						revenue = bale:getValue() * self.revenueMultiplier[difficulty]
 					end
 					if revenue~=0 then
 						g_currentMission:addSharedMoney(revenue, self.statName)
 					end
-					self.balesInTrigger[bale]=nil
-					table.remove(self.balesInLine,baleIndex)
-					bale:delete()
+					self:operateAction('IfSold',fillLevel)
+					self:deleteBale(bale,baleIndex)
 				end
 			else
 				self.balesInTrigger[bale]=nil
@@ -221,4 +224,14 @@ function UPK_BaleTrigger:update(dt)
 			self:update(0)
 		end
 	end
+end
+
+function UPK_BaleTrigger:deleteBale(bale,baleIndex)
+	self:printFn('UPK_BaleTrigger:deleteBale(',baleId,',',baleIndex,')')
+	self.balesInTrigger[bale]=nil
+	table.remove(self.balesInLine,baleIndex)
+	self.nrBalesInTrigger = self.nrBalesInTrigger -1
+	self:triggerOnLeave(bale)
+	bale:delete()
+	self:operateAction('OnDelete')
 end

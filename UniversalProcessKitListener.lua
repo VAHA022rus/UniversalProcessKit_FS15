@@ -1,6 +1,5 @@
 -- by mor2000
 
-UniversalProcessKitListener = {}
 UniversalProcessKitListener.updateables = {}
 UniversalProcessKitListener.updateablesDay = {}
 UniversalProcessKitListener.updateablesHour = {}
@@ -11,8 +10,12 @@ UniversalProcessKitListener.updateablesDayOrder = {}
 UniversalProcessKitListener.updateablesHourOrder = {}
 UniversalProcessKitListener.updateablesMinuteOrder = {}
 UniversalProcessKitListener.updateablesSecondOrder = {}
-UniversalProcessKitListener.dtsum = 0
 UniversalProcessKitListener.postLoadObjects = {}
+
+UniversalProcessKitListener.registeredKeyFunctions={}
+
+UniversalProcessKitListener.dtsum = 0
+UniversalProcessKitListener.runTime=0 -- adds up milliseconds
 
 function UniversalProcessKitListener.loadMap(name)
 	printFn('UniversalProcessKitListener.loadMap('..tostring(name)..')')
@@ -96,16 +99,12 @@ function UniversalProcessKitListener.loadMap(name)
 	StoreItemsUtil.storeCategories["upk_sellingPoints"] = storageCategorySellingPoints
 	StoreItemsUtil.storeCategories["upk_factories"] = storageCategoryFactories
 	StoreItemsUtil.storeCategories["upk_examples"] = storageCategoryExamples
-	
-	
-	
-	
-	
+
 	if g_server ~= nil then
-		UniversalProcessKitListener.fillTypesSyncingObject = UPK_FillTypesSyncingObject:new(g_server ~= nil, g_client ~= nil)
-		g_server:addObject(UniversalProcessKitListener.fillTypesSyncingObject, UniversalProcessKitListener.fillTypesSyncingObject.id)
+		UniversalProcessKitListener.syncingObject = UniversalProcessKitSyncingObject:new(g_server ~= nil, g_client ~= nil)
+		g_server:addObject(UniversalProcessKitListener.syncingObject, UniversalProcessKitListener.syncingObject.id)
 		--self.syncTipTriggerObject:load(self)
-		UniversalProcessKitListener.fillTypesSyncingObject:register(false)
+		UniversalProcessKitListener.syncingObject:register(false)
 	end
 	
 	UniversalProcessKitEnvironment.setSun()
@@ -119,8 +118,29 @@ function UniversalProcessKitListener.loadMap(name)
 	g_currentMission.environment:addHourChangeListener(UniversalProcessKitListener)
 	g_currentMission.environment:addMinuteChangeListener(UniversalProcessKitListener)
 
+	--[[
+	-- gui callback function
+	local currentGuiName=g_gui.currentGuiName
+	local function returnToMenu(yes)
+		if not yes then
+			OnInGameMenuMenu()
+		else
+			g_gui:showGui(currentGuiName)
+		end
+	end
 	
-
+	-- check for missing mods
+	local modMissingDialog = g_gui:showGui("YesNoDialog")
+	modMissingDialog.target:setText('Soll das Spiel trotzdem gestartet werden?'..currentGuiName)
+	modMissingDialog.target:setButtonTexts(g_i18n:getText("Button_Continue"), g_i18n:getText("Button_Cancel"))
+	modMissingDialog.target:setCallbacks(returnToMenu)
+	
+	]]--
+	--print('=========')
+	--print(tableShow(g_i18n))
+	--print('=========')
+	
+	
 end
 
 function UniversalProcessKitListener.deleteMap(name)
@@ -134,10 +154,12 @@ function UniversalProcessKitListener.deleteMap(name)
 		g_currentMission.environment:removeHourChangeListener(UniversalProcessKitListener)
 		g_currentMission.environment:removeMinuteChangeListener(UniversalProcessKitListener)	
 	end
+	
+	UniversalProcessKitListener.registeredKeyFunctions={}
 end
 
 function UniversalProcessKitListener.addUpdateable(obj)
-	printFn('UniversalProcessKitListener.addUpdateable('..tostring(obj)..')')
+	printFn('UniversalProcessKitListener.addUpdateable(',obj,')')
 	if not UniversalProcessKitListener.updateables[obj] then
 		table.insert(UniversalProcessKitListener.updateablesOrder,obj)
 		UniversalProcessKitListener.updateables[obj]=true
@@ -145,7 +167,7 @@ function UniversalProcessKitListener.addUpdateable(obj)
 end
 
 function UniversalProcessKitListener.removeUpdateable(obj)
-	printFn('UniversalProcessKitListener.removeUpdateable('..tostring(obj)..')')
+	printFn('UniversalProcessKitListener.removeUpdateable(',obj,')')
 	if UniversalProcessKitListener.updateables[obj] then
 		removeValueFromTable(UniversalProcessKitListener.updateablesOrder,obj)
 		UniversalProcessKitListener.updateables[obj]=nil
@@ -153,7 +175,10 @@ function UniversalProcessKitListener.removeUpdateable(obj)
 end
 
 function UniversalProcessKitListener:update(dt)
-	printAll('UniversalProcessKitListener:update('..tostring(dt)..')')
+	printAll('UniversalProcessKitListener:update(',dt,')')
+	-- runTime
+	UniversalProcessKitListener.runTime = UniversalProcessKitListener.runTime + dt
+	-- seconds
 	UniversalProcessKitListener.dtsum = UniversalProcessKitListener.dtsum+dt
 	if UniversalProcessKitListener.dtsum >= 1000 then
 		UniversalProcessKitListener.dtsum = UniversalProcessKitListener.dtsum-1000
@@ -177,13 +202,25 @@ function UniversalProcessKitListener:update(dt)
 			obj:update(dt)
 		end
 	end
+	
+	-- show inputs
 
+	for k,v in ipairs(UniversalProcessKitListener.registeredKeyFunctions) do
+		if v.obj:getShowInfo() then
+			--printAll('inputIndex ',inputIndex,' displayText ',displayText)
+			g_currentMission:addHelpButtonText(v.displayText, v.inputIndex)
+			v.isShown=true
+		else
+			v.isShown=false
+		end
+	end
+	
 end
 
 -- day
 
 function UniversalProcessKitListener.addDayChangeListener(obj)
-	printFn('UniversalProcessKitListener.addDayChangeListener('..tostring(obj)..')')
+	printFn('UniversalProcessKitListener.addDayChangeListener(',obj,')')
 	if not UniversalProcessKitListener.updateablesDay[obj] then
 		table.insert(UniversalProcessKitListener.updateablesDayOrder,obj)
 		UniversalProcessKitListener.updateablesDay[obj]=true
@@ -191,7 +228,7 @@ function UniversalProcessKitListener.addDayChangeListener(obj)
 end
 
 function UniversalProcessKitListener.removeDayChangeListener(obj)
-	printFn('UniversalProcessKitListener.removeDayChangeListener('..tostring(obj)..')')
+	printFn('UniversalProcessKitListener.removeDayChangeListener(',obj,')')
 	if UniversalProcessKitListener.updateablesDay[obj] then
 		removeValueFromTable(UniversalProcessKitListener.updateablesDayOrder,obj)
 		UniversalProcessKitListener.updateablesDay[obj]=nil
@@ -200,6 +237,11 @@ end
 
 function UniversalProcessKitListener:dayChanged()
 	printFn('UniversalProcessKitListener:dayChanged()')
+	-- keep runTime in sync
+	if g_server~=nil then
+		UniversalProcessKitListener.syncingObject:raiseDirtyFlags(UniversalProcessKitListener.syncingObject.runTimeDirtyFlag)
+	end
+	-- call dayChanged()
 	for i=1,#UniversalProcessKitListener.updateablesDayOrder do
 		local obj=UniversalProcessKitListener.updateablesDayOrder[i]
 		if UniversalProcessKitListener.updateablesDay[obj] then
@@ -211,7 +253,7 @@ end
 -- hour
 
 function UniversalProcessKitListener.addHourChangeListener(obj)
-	printFn('UniversalProcessKitListener.addHourChangeListener('..tostring(obj)..')')
+	printFn('UniversalProcessKitListener.addHourChangeListener(',obj,')')
 	if not UniversalProcessKitListener.updateablesHour[obj] then
 		table.insert(UniversalProcessKitListener.updateablesHourOrder,obj)
 		UniversalProcessKitListener.updateablesHour[obj]=true
@@ -219,7 +261,7 @@ function UniversalProcessKitListener.addHourChangeListener(obj)
 end
 
 function UniversalProcessKitListener.removeHourChangeListener(obj)
-	printFn('UniversalProcessKitListener.removeHourChangeListener('..tostring(obj)..')')
+	printFn('UniversalProcessKitListener.removeHourChangeListener(',obj,')')
 	if UniversalProcessKitListener.updateablesHour[obj] then
 		removeValueFromTable(UniversalProcessKitListener.updateablesHourOrder,obj)
 		UniversalProcessKitListener.updateablesHour[obj]=nil
@@ -239,7 +281,7 @@ end
 -- minute
 
 function UniversalProcessKitListener.addMinuteChangeListener(obj)
-	printFn('UniversalProcessKitListener.addMinuteChangeListener('..tostring(obj)..')')
+	printFn('UniversalProcessKitListener.addMinuteChangeListener(',obj,')')
 	if not UniversalProcessKitListener.updateablesMinute[obj] then
 		table.insert(UniversalProcessKitListener.updateablesMinuteOrder,obj)
 		UniversalProcessKitListener.updateablesMinute[obj]=true
@@ -247,7 +289,7 @@ function UniversalProcessKitListener.addMinuteChangeListener(obj)
 end
 
 function UniversalProcessKitListener.removeMinuteChangeListener(obj)
-	printFn('UniversalProcessKitListener.removeMinuteChangeListener('..tostring(obj)..')')
+	printFn('UniversalProcessKitListener.removeMinuteChangeListener(',obj,')')
 	if UniversalProcessKitListener.updateablesMinute[obj] then
 		removeValueFromTable(UniversalProcessKitListener.updateablesMinuteOrder,obj)
 		UniversalProcessKitListener.updateablesMinute[obj]=nil
@@ -267,7 +309,7 @@ end
 -- second
 
 function UniversalProcessKitListener.addSecondChangeListener(obj)
-	printFn('UniversalProcessKitListener.addSecondChangeListener('..tostring(obj)..')')
+	printFn('UniversalProcessKitListener.addSecondChangeListener(',obj,')')
 	if not UniversalProcessKitListener.updateablesSecond[obj] then
 		table.insert(UniversalProcessKitListener.updateablesSecondOrder,obj)
 		UniversalProcessKitListener.updateablesSecond[obj]=true
@@ -275,7 +317,7 @@ function UniversalProcessKitListener.addSecondChangeListener(obj)
 end
 
 function UniversalProcessKitListener.removeSecondChangeListener(obj)
-	printFn('UniversalProcessKitListener.removeSecondChangeListener('..tostring(obj)..')')
+	printFn('UniversalProcessKitListener.removeSecondChangeListener(',obj,')')
 	if UniversalProcessKitListener.updateablesSecond[obj] then
 		removeValueFromTable(UniversalProcessKitListener.updateablesSecondOrder,obj)
 		UniversalProcessKitListener.updateablesSecond[obj]=nil
@@ -284,6 +326,11 @@ end
 
 function UniversalProcessKitListener.secondChanged()
 	printFn('UniversalProcessKitListener:secondChanged()')
+	-- keep runTime in sync
+	if g_server~=nil then
+		UniversalProcessKitListener.syncingObject:raiseDirtyFlags(UniversalProcessKitListener.syncingObject.runTimeDirtyFlag)
+	end
+	-- other
 	for i=1,#UniversalProcessKitListener.updateablesSecondOrder do
 		local obj=UniversalProcessKitListener.updateablesSecondOrder[i]
 		if UniversalProcessKitListener.updateablesSecond[obj] then
@@ -295,20 +342,72 @@ end
 -- post load
 
 function UniversalProcessKitListener.registerPostLoadObject(obj)
-	printFn('UniversalProcessKitListener.registerPostLoadObject('..tostring(obj)..')')
+	printFn('UniversalProcessKitListener.registerPostLoadObject(',obj,')')
 	table.insert(UniversalProcessKitListener.postLoadObjects,obj)
 end
 
-function UniversalProcessKitListener.keyEvent(self,unicode,sym,modifier,isDown)
-	printAll('UniversalProcessKitListener.keyEvent('..tostring(unicode)..','..tostring(sym)..','..tostring(modifier)..','..tostring(isDown)..')')
-	-- player spawner
+-- inputs
 
+function UniversalProcessKitListener.registerKeyFunction(inputName,obj,callbackFunc,displayText)
+	printFn('UniversalProcessKitListener.registerKeyFunction(',inputName,',',obj,',',callbackFunc,',',displayText,')')
+	
+	if type(inputName)~="string" or inputName=="" then
+		return
+	end
+	
+	local inputIndex = InputBinding[inputName]
+	
+	for _,v in pairs(UniversalProcessKitListener.registeredKeyFunctions) do
+		if v.obj==obj and v.inputName==inputName then
+			return
+		end
+	end
+
+	local registeredKeyFunction = {
+		inputIndex=inputIndex,
+		inputName=inputName,
+		displayText=displayText,
+		obj=obj,
+		callbackFunc=callbackFunc,
+		isShown=false
+	}
+	
+	table.insert(UniversalProcessKitListener.registeredKeyFunctions,registeredKeyFunction)
+end
+
+function UniversalProcessKitListener.unregisterKeyFunction(inputName,obj)
+	printFn('UniversalProcessKitListener.unregisterKeyFunction(',inputName,',',obj,')')
+	if type(inputName)~="string" or inputName=="" then
+		return
+	end
+	
+	local key=-1
+	for k,v in pairs(UniversalProcessKitListener.registeredKeyFunctions) do
+		if v.obj==obj and v.inputName==inputName then
+			key=k
+			break
+		end
+	end
+	
+	if key~=-1 then
+		table.remove(UniversalProcessKitListener.registeredKeyFunctions,key)
+	end
+end
+
+function UniversalProcessKitListener.keyEvent(self,unicode,sym,modifier,isDown)
+	printAll('UniversalProcessKitListener.keyEvent(',unicode,',',sym,',',modifier,',',isDown,')')
+	
+	-- player spawner
 	if InputBinding.isPressed(InputBinding.UPK_PLAYERTELEPORT) then
-		printAll("Teleport pressed")
 		UPK_PlayerSpawner.togglePlayerSpawner(1)
 	elseif InputBinding.isPressed(InputBinding.UPK_PLAYERTELEPORT_BACK) then
-		printAll("Teleport back pressed")
 		UPK_PlayerSpawner.togglePlayerSpawner(-1)
+	end
+	
+	for _,v in ipairs(self.registeredKeyFunctions) do
+		if v.isShown and InputBinding.isPressed(v.inputIndex) then
+			v.obj[v.callbackFunc](v.obj,v.inputName)
+		end
 	end
 end
 

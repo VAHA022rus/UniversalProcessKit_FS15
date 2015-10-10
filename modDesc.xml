@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="no" ?>
 <modDesc descVersion="21">
     <author>mor2000</author>
-    <version>0.10.3</version>
+    <version>0.10.4</version>
     <title>
         <en>AAA UniversalProcessKit</en>
         <de>AAA UniversalProcessKit</de>
@@ -20,49 +20,59 @@
 		<sourceFile filename="DEBUG.lua"/>
 		<sourceFile filename="c.lua"/>
 		<sourceFile filename="eval.lua"/>
-		<sourceFile filename="AudioSourceSample.lua"/>
+		<sourceFile filename="AudioSample.lua"/>
+		<sourceFile filename="AnimationTrack.lua"/>
+		<sourceFile filename="networking/streamReadWriteAuto.lua"/>
 		<sourceFile filename="UniversalProcessKitConsole.lua"/>
 		<sourceFile filename="FillLevelBubble.lua"/>
 		<sourceFile filename="UniversalProcessKitEnvironment.lua"/>
+		<sourceFile filename="networking/UniversalProcessKitSyncingObject.lua"/>
 		<sourceFile filename="UniversalProcessKitListener.lua"/>
 		<sourceFile filename="UniversalProcessKit.lua"/>
-		<sourceFile filename="UniversalProcessKitNetwork.lua"/>
+		<sourceFile filename="networking/UniversalProcessKitNetwork.lua"/>
 		<sourceFile filename="UniversalProcessKitTrigger.lua"/>
 		<sourceFile filename="UniversalProcessKitModules.lua"/>
+		<sourceFile filename="UniversalProcessKitActions.lua"/>
 		<sourceFile filename="UniversalProcessKitFillTypes.lua"/>
 		<sourceFile filename="UniversalProcessKitVehicleTypes.lua"/>
-		<sourceFile filename="UPK_Base.lua"/>
-		<sourceFile filename="UPK_FillTrigger.lua"/>
-		<sourceFile filename="UPK_TipTrigger.lua"/>
-		<sourceFile filename="UPK_ActivatorTrigger.lua"/>
-		<sourceFile filename="UPK_Animator.lua"/>
-		<sourceFile filename="UPK_BalerTrigger.lua"/>
-		<sourceFile filename="UPK_BaleTrigger.lua"/>
-		<sourceFile filename="UPK_Comparator.lua"/>
-		<sourceFile filename="UPK_DisplayTrigger.lua"/>
-		<sourceFile filename="UPK_DumpTrigger.lua"/>
-		<sourceFile filename="UPK_EntityTrigger.lua"/>
-		<sourceFile filename="UPK_EmptyTrigger.lua"/>
-		<sourceFile filename="UPK_GasStationTrigger.lua"/>
-		<sourceFile filename="UPK_LiquidManureFillTrigger.lua"/>
-		<sourceFile filename="UPK_Mover.lua"/>
-		<sourceFile filename="UPK_PalletTrigger.lua"/>
-		<sourceFile filename="UPK_ParkTrigger.lua"/>
-		<sourceFile filename="UPK_PlayerSpawner.lua"/>
-		<sourceFile filename="UPK_Processor.lua"/>
-		<sourceFile filename="UPK_SellTarget.lua"/>
-		<sourceFile filename="UPK_SowingMachineFillTrigger.lua"/>
-		<sourceFile filename="UPK_SprayerFillTrigger.lua"/>
-		<sourceFile filename="UPK_Switcher.lua"/>
-		<sourceFile filename="UPK_WashTrigger.lua"/>
-		<sourceFile filename="UPK_WaterFillTrigger.lua"/>
-		<sourceFile filename="UPK_WoodTrigger.lua"/>
+		<sourceFile filename="networking/UniversalProcessKitEvent.lua"/>
+		<sourceFile filename="networking/UniversalProcessKitTriggerPlayerEvent.lua"/>
+		<sourceFile filename="modules/UPK_Base.lua"/>
+		<sourceFile filename="modules/UPK_FillTrigger.lua"/>
+		<sourceFile filename="modules/UPK_TipTrigger.lua"/>
+		<sourceFile filename="modules/UPK_ActivatorTrigger.lua"/>
+		<sourceFile filename="modules/UPK_Animator.lua"/>
+		<sourceFile filename="modules/UPK_BalerTrigger.lua"/>
+		<sourceFile filename="modules/UPK_BaleTrigger.lua"/>
+		<sourceFile filename="modules/UPK_Comparator.lua"/>
+		<sourceFile filename="modules/UPK_DisplayTrigger.lua"/>
+		<sourceFile filename="modules/UPK_DumpTrigger.lua"/>
+		<sourceFile filename="modules/UPK_EntityTrigger.lua"/>
+		<sourceFile filename="modules/UPK_EmptyTrigger.lua"/>
+		<sourceFile filename="modules/UPK_GasStationTrigger.lua"/>
+		<sourceFile filename="modules/UPK_LiquidManureFillTrigger.lua"/>
+		<sourceFile filename="modules/UPK_Mover.lua"/>
+		<sourceFile filename="modules/UPK_PalletTrigger.lua"/>
+		<sourceFile filename="modules/UPK_ParkTrigger.lua"/>
+		<sourceFile filename="modules/UPK_PlayerSpawner.lua"/>
+		<sourceFile filename="modules/UPK_Processor.lua"/>
+		<sourceFile filename="modules/UPK_SellTarget.lua"/>
+		<sourceFile filename="modules/UPK_SowingMachineFillTrigger.lua"/>
+		<sourceFile filename="modules/UPK_SprayerFillTrigger.lua"/>
+		<sourceFile filename="modules/UPK_Switcher.lua"/>
+		<sourceFile filename="modules/UPK_WashTrigger.lua"/>
+		<sourceFile filename="modules/UPK_WaterFillTrigger.lua"/>
+		<sourceFile filename="modules/UPK_WoodTrigger.lua"/>
 		<sourceFile filename="PlaceableUPK.lua" />
 		<sourceFile filename="OnCreateUPK.lua" />
+		<sourceFile filename="UpkMultiSiloDialog.lua" />
     </extraSourceFiles>
 	<storeItems/>
 		
     <l10n>
+		<text name="versionWarning"><en><![CDATA[You need at least version %s of the UniversalProcessKit (version %s is installed).]]></en><de><![CDATA[Es wird mindestens die Version %s des UniversalProcessKit benötigt (Version %s ist installiert).]]></de></text>
+		<text name="requiredModWarning"><en><![CDATA[The mod "%s" needs additionally the mod "%s".]]></en><de><![CDATA[Der Mod "%s" benötigt zusätzlich den Mod "%s".]]></de></text>
+		
 		<text name="storeCategory_fruit"><en><![CDATA[fruit & vegetables]]></en><de><![CDATA[Obst & Gemüse]]></de><fr><![CDATA[Fruit et légumes]]></fr><ru><![CDATA[Фрукты и овощи]]></ru></text>
 		<text name="storeCategory_animals"><en><![CDATA[animal husbandry]]></en><de><![CDATA[Tierzucht]]></de><fr><![CDATA[Élevage d'animaux]]></fr><ru><![CDATA[животноводство]]></ru></text>
 		<text name="storeCategory_storage"><en><![CDATA[storage]]></en><de><![CDATA[Lager]]></de><fr><![CDATA[Stockage]]></fr><ru><![CDATA[склады]]></ru></text>

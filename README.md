@@ -46,6 +46,62 @@ Bisher enthaltene Module:
 
 ##Changelog
 
+__V0.10.4__
+
+FillTrigger:
+- fillTypes
+- stationName
+- activateInput
+- autoDeactivate
+- startFillingText
+- stopFillingText
+- spawnPalletType
+- spawnPalletFilename
+- palletSpawnDelay
+- palletSpawnPosition
+- palletSpawnRotation
+- ..OnPalletSpawned
+
+BaleTrigger:
+- ..OnEnter
+- ..OnLeave
+- ..OnDelete
+- ..IfDissolved
+- ..IfSold
+
+DumpTrigger:
+- ..IfDumpingStarted
+- ..IfDumpingStopped
+
+EmptyTrigger:
+- ..IfEmptying
+- ..IfEmptyingStarted
+- ..IfEmptyingStopped
+- ..OnPalletDeleted
+
+Animationen:
+zu verwenden bei Shapes mit Animationen
+- animationClip
+- animationBlendWeight
+- animationSpeed
+- animationRewindOnStop
+- animationRewindOnEnd
+- animationOffsetPlay
+- animationOffsetStop
+- animationEnabled
+
+Sounds:
+zu verwenden bei AudioSource
+- audioLoop
+- audioOffsetPlay
+- audioOffsetStop
+- audioEnabled
+
+Beispielmod:
+- UPK_DumpTriggerTest2
+- UPK_EmptyTriggerTest2
+- UPK_FillTriggerTest4
+
 __V0.10.3__
 
 Action-UserAttributes:

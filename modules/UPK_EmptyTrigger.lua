@@ -27,26 +27,6 @@ function UPK_EmptyTrigger:new(nodeId, parent)
 	self.emptyOnlyWholeNumbers = getBoolFromUserAttribute(nodeId, "emptyOnlyWholeNumbers", false)
 	self.amountToEmptyOfVehicle = {}
 	
-	-- add/ remove if emptying
-	
-	self.addIfEmptying = {}
-	self.useAddIfEmptying = false
-	local addIfEmptyingArr = getArrayFromUserAttribute(nodeId, "addIfEmptying")
-	for _,fillType in pairs(UniversalProcessKit.fillTypeNameToInt(addIfEmptyingArr)) do
-		self:printInfo('add if filling '..tostring(UniversalProcessKit.fillTypeIntToName[fillType])..' ('..tostring(fillType)..')')
-		self.addIfEmptying[fillType] = true
-		self.useAddIfEmptying = true
-	end
-	
-	self.removeIfEmptying = {}
-	self.useRemoveIfEmptying = false
-	local removeIfEmptyingArr = getArrayFromUserAttribute(nodeId, "removeIfEmptying")
-	for _,fillType in pairs(UniversalProcessKit.fillTypeNameToInt(removeIfEmptyingArr)) do
-		self:printInfo('remove if filling '..tostring(UniversalProcessKit.fillTypeIntToName[fillType])..' ('..tostring(fillType)..')')
-		self.removeIfEmptying[fillType] = true
-		self.useRemoveIfEmptying = true
-	end
-	
 	-- revenues
 	
 	self.revenuePerLiter = getNumberFromUserAttribute(nodeId, "revenuePerLiter", 0)
@@ -94,9 +74,14 @@ function UPK_EmptyTrigger:new(nodeId, parent)
 	
 	self:addTrigger()
 	
-	--self:print('UniversalProcessKit.FILLTYPE_FUEL: '..tostring(UniversalProcessKit.FILLTYPE_FUEL))
-	--self:print('self.emptyFillTypes[UniversalProcessKit.FILLTYPE_FUEL]: '..tostring(self.emptyFillTypes[UniversalProcessKit.FILLTYPE_FUEL]))
-	--self:print('self.allowedVehicles[UniversalProcessKit.VEHICLE_FUELTRAILER]: '..tostring(self.allowedVehicles[UniversalProcessKit.VEHICLE_FUELTRAILER]))
+	-- actions
+	self:getActionUserAttributes('IfEmptying')
+	self.isEmptying=nil
+	
+	self:getActionUserAttributes('IfEmptyingStarted')
+	self:getActionUserAttributes('IfEmptyingStopped')
+	
+	self:getActionUserAttributes('OnPalletDeleted')
 	
 	self:printFn('UPK_EmptyTrigger:new done')
 	
@@ -114,10 +99,6 @@ function UPK_EmptyTrigger:triggerUpdate(vehicle,isInTrigger)
 					UniversalProcessKitListener.addUpdateable(self)
 				else
 					self.amountToEmptyOfVehicle[vehicle]=nil
-					if self.entitiesInTrigger==0 then
-						self:printAll('UniversalProcessKitListener.removeUpdateable(',self,')')
-						UniversalProcessKitListener.removeUpdateable(self)
-					end
 				end
 			end
 		end
@@ -128,9 +109,15 @@ function UPK_EmptyTrigger:triggerUpdate(vehicle,isInTrigger)
 				UniversalProcessKitListener.addUpdateable(self)
 			else
 				self.amountToEmptyOfVehicle[vehicle]=nil
-				if self.entitiesInTrigger==0 then
-					UniversalProcessKitListener.removeUpdateable(self)
-				end
+			end
+		end
+		
+		if self.entitiesInTrigger==0 then
+			self:printAll('UniversalProcessKitListener.removeUpdateable(',self,')')
+			UniversalProcessKitListener.removeUpdateable(self)
+			if self.isEmptying then
+				self:operateAction('IfEmptyingStopped')
+				self.isEmptying=false
 			end
 		end
 	end
@@ -139,11 +126,13 @@ end
 function UPK_EmptyTrigger:update(dt)
 	self:printAll('UPK_EmptyTrigger:update(',dt,')')
 	if self.isServer and self.isEnabled then
+		local isEmptying=false
+		local removedTotally=0
 		for _,vehicle in pairs(self.entities) do
 			local deltaFillLevel = - (self.emptyLitersPerSecond * 0.001 * dt)
-			local added = 0
 			for vehicleType, isAllowed in pairs(self.allowedVehicles) do
 				if isAllowed and UniversalProcessKit.isVehicleType(vehicle, vehicleType) then
+					local removed = 0
 					if (vehicleType==UniversalProcessKit.VEHICLE_TIPPER or
 						 vehicleType==UniversalProcessKit.VEHICLE_SHOVEL or
 						 vehicleType==UniversalProcessKit.VEHICLE_SOWINGMACHINE or
@@ -153,31 +142,33 @@ function UPK_EmptyTrigger:update(dt)
 						 vehicleType==UniversalProcessKit.VEHICLE_LIQUIDMANURETRAILER or
 						 vehicleType==UniversalProcessKit.VEHICLE_SPRAYER or
 						 vehicleType==UniversalProcessKit.VEHICLE_FUELTRAILER) then
-						added = self:emptyFillable(vehicle, deltaFillLevel)
+						removed = self:emptyFillable(vehicle, deltaFillLevel)
 					elseif vehicleType==UniversalProcessKit.VEHICLE_MOTORIZED then
-						added = self:emptyMotorized(vehicle, deltaFillLevel)
+						removed = self:emptyMotorized(vehicle, deltaFillLevel)
 					end
+					removedTotally=removedTotally+removed
 				end
 			end
 			if self.allowPallets and vehicle.isPallet and vehicle.setFillLevel~=nil then
-				self:printAll('trying to empty pallet')
-				added = self:emptyPallet(vehicle, deltaFillLevel)
+				removed = self:emptyPallet(vehicle, deltaFillLevel)
+				removedTotally=removedTotally+removed
 			end
-			if added ~= 0 then
-				if self.useAddIfEmptying then
-					for fillTypeToAdd,v in pairs(self.addIfEmptying) do
-						if v then
-							self:addFillLevel(added,fillTypeToAdd)
-						end
-					end
-				end
-				if self.useRemoveIfEmptying then
-					for fillTypeToRemove,v in pairs(self.removeIfEmptying) do
-						if v then
-							self:addFillLevel(-added,fillTypeToRemove)
-						end
-					end
-				end
+		end
+		self:printAll('removedTotally ',removedTotally)
+		if (not self.isEmptying or not isEmptying) and round(removedTotally,8)>0 then
+			isEmptying=true
+		end
+		self:printAll('isEmptying ',isEmptying)
+		if isEmptying then
+			if not self.isEmptying then
+				self:operateAction('IfEmptyingStarted')
+				self.isEmptying=true
+			end
+			self:operateAction('IfEmptying',removedTotally)
+		else
+			if self.isEmptying then
+				self:operateAction('IfEmptyingStopped')
+				self.isEmptying=false
 			end
 		end
 	end
@@ -294,8 +285,9 @@ function UPK_EmptyTrigger:emptyPallet(fillable, deltaFillLevel) -- pallet
 				end
 				return added
 			elseif fillableFillLevel==0 and self.deleteEmptyPallets then
-				self:triggerUpdate(fillable,false)
+				self:triggerOnLeave(fillable)
 				fillable:delete()
+				self:operateAction('OnPalletDeleted')
 			end
 		end
 	end

@@ -12,10 +12,77 @@ function UPK_FillTrigger:new(nodeId, parent)
 	local self = UniversalProcessKit:new(nodeId, parent, UPK_FillTrigger_mt)
 	registerObjectClassName(self, "UPK_FillTrigger")
 	
+	self.fillFillType=nil
 	local fillFillTypeStr = getStringFromUserAttribute(nodeId, "fillType")
 	if fillFillTypeStr~=nil then
 		self.fillFillType = UniversalProcessKit.fillTypeNameToInt[fillFillTypeStr]
+		if self.fillFillType==nil then
+			printInfo('unknown fillType "',fillFillTypeStr,'"')
+		end
 	end
+	
+	self.fillFillTypes={}
+	self.useFillFillTypes=false
+	local fillTypesArr = getArrayFromUserAttribute(nodeId, "fillTypes", false)
+	if fillTypesArr~=false then
+		local fillTypesArrLen = length(fillTypesArr)
+		for i=1,fillTypesArrLen do
+			local fillType = UniversalProcessKit.fillTypeNameToInt[fillTypesArr[i]]
+			if fillType~=nil then
+				table.insert(self.fillFillTypes,fillType)
+				self.useFillFillTypes=true
+			else
+				printInfo('unknown fillType "',fillTypesArr[i],'"')
+			end
+		end
+	end
+	
+	if self.useFillFillTypes and length(self.fillFillTypes)==1 then
+		printInfo('just 1 filltype found in "fillTypes"')
+		self.fillFillType=self.fillFillTypes[1]
+		self.useFillFillTypes=false
+		self.fillFillTypes={}
+	end
+	
+	self:printInfo('self.useFillFillTypes: ',self.useFillFillTypes)
+	
+	if self.fillFillType~=nil and self.useFillFillTypes then
+		printInfo('use either "fillType" or "fillTypes" - merging both for now')
+		table.insert(self.fillFillTypes,self.fillFillType,1)
+		self.fillFillType=nil
+	end
+
+	self.useActivateInputBinding = false
+	local activateInput = getStringFromUserAttribute(nodeId, "activateInput", "false")
+	if activateInput~="false" or self.useFillFillTypes then
+		self.activateInputBinding = 'ACTIVATE_OBJECT'
+		self.useActivateInputBinding = true
+		self.startFillingText = returnNilIfEmptyString(self.i18n[getStringFromUserAttribute(nodeId, "startFillingText")]) or self.i18n['siloStartFilling']
+		self.stopFillingText = returnNilIfEmptyString(self.i18n[getStringFromUserAttribute(nodeId, "stopFillingText")]) or self.i18n['siloStopFilling']
+		if activateInput~="true" then
+			local isInputSet=false
+			for k,v in pairs(InputBinding.actions) do
+				if v.name==activateInput then
+					isInputSet=true
+					break
+				end
+			end
+			if isInputSet==false then
+				printErr('unknown input "',isInputSet,'" - using "ACTIVATE_OBJECT" for now')
+			else
+				self.activateInputBinding=activateInput
+			end
+		end
+		self.autoDeactivate = getBoolFromUserAttribute(nodeId, "autoDeactivate", true)
+		-- stationName
+		local stationName = self.name
+		if self.i18nNameSpace~=nil then
+			stationName = ModsUtil['modNameToMod'][self.i18nNameSpace].title
+		end
+		self.stationName = returnNilIfEmptyString(self.i18n[getStringFromUserAttribute(nodeId, "stationName")]) or stationName
+	end
+	
+	self.isActivated = not self.useActivateInputBinding
 	
     self.fillLitersPerSecond = getNumberFromUserAttribute(nodeId, "fillLitersPerSecond", 1500, 0)
 	self.createFillType = getBoolFromUserAttribute(nodeId, "createFillType", false)
@@ -44,17 +111,18 @@ function UPK_FillTrigger:new(nodeId, parent)
 	
 	if palletType~=nil then
 		filename=palletTypes[palletType]
-	elseif palletFilename then
+	elseif palletFilename~=nil then
 		filename=palletFilename
 	end
 	
-	self:printAll('filename '..tostring(filename))
-	self:printAll('modname '..tostring(self.i18nNameSpace))
-	
-	if filename~="" and self.i18nNameSpace~=nil then
-		local baseDir = g_modNameToDirectory[self.i18nNameSpace]
-		self.palletFilename = Utils.getFilename(filename, self.baseDirectory)
-		self:printAll('ready to spawn '..tostring(self.palletFilename))
+	if filename~="" then
+		local a,_=string.find(filename,"^[$%w_%/\\%.0-9]+%.i3d$")
+		if a==nil then
+			self:printErr('invalid pallet filename "'..tostring(filename)..'"')
+		else
+			self.palletFilename = getLongFilename(filename,self.base.i18nNameSpace)
+			self:printInfo('ready to spawn "',self.palletFilename,'"')
+		end
 	end
 	
 	self.palletSpawnDelay = getNumberFromUserAttribute(nodeId, "palletSpawnDelay", 1, 0.1)*1000
@@ -63,20 +131,25 @@ function UPK_FillTrigger:new(nodeId, parent)
 
 	-- auto allow...
 
-	local fillFillType = self:getFillType()
-
+	local fillTypes = {}
+	if self.useFillFillTypes==false then
+		table.insert(fillTypes,self.fillFillType or self:getFillType())
+	else
+		fillTypes=self.fillFillTypes
+	end
+	
 	self.allowedVehicles={}
 	self.allowedVehicles[UniversalProcessKit.VEHICLE_TIPPER] = getBoolFromUserAttribute(nodeId, "allowTipper", true)
 	self.allowedVehicles[UniversalProcessKit.VEHICLE_SHOVEL] = getBoolFromUserAttribute(nodeId, "allowShovel", true)
 	
-	self.allowedVehicles[UniversalProcessKit.VEHICLE_SOWINGMACHINE] = getBoolFromUserAttribute(nodeId, "allowSowingMachine", (self.fillFillType or fillFillType)==Fillable.FILLTYPE_SEEDS)
-	self.allowedVehicles[UniversalProcessKit.VEHICLE_WATERTRAILER] = getBoolFromUserAttribute(nodeId, "allowWaterTrailer", (self.fillFillType or fillFillType)==Fillable.FILLTYPE_WATER)
-	self.allowedVehicles[UniversalProcessKit.VEHICLE_MILKTRAILER] = getBoolFromUserAttribute(nodeId, "allowMilkTrailer", (self.fillFillType or fillFillType)==Fillable.FILLTYPE_MILK)
-	self.allowedVehicles[UniversalProcessKit.VEHICLE_LIQUIDMANURETRAILER] = getBoolFromUserAttribute(nodeId, "allowLiquidManureTrailer", (self.fillFillType or fillFillType)==Fillable.FILLTYPE_LIQUIDMANURE)
-	self.allowedVehicles[UniversalProcessKit.VEHICLE_SPRAYER] = getBoolFromUserAttribute(nodeId, "allowSprayer", (self.fillFillType or fillFillType)==Fillable.FILLTYPE_FERTILIZER)
-	self.allowedVehicles[UniversalProcessKit.VEHICLE_MANURESPREADER] = getBoolFromUserAttribute(nodeId, "allowManureSpreader", (self.fillFillType or fillFillType)==Fillable.FILLTYPE_MANURE)
+	self.allowedVehicles[UniversalProcessKit.VEHICLE_SOWINGMACHINE] = getBoolFromUserAttribute(nodeId, "allowSowingMachine", isInTable(fillTypes,Fillable.FILLTYPE_SEEDS))
+	self.allowedVehicles[UniversalProcessKit.VEHICLE_WATERTRAILER] = getBoolFromUserAttribute(nodeId, "allowWaterTrailer", isInTable(fillTypes,UniversalProcessKit.FILLTYPE_WATER))
+	self.allowedVehicles[UniversalProcessKit.VEHICLE_MILKTRAILER] = getBoolFromUserAttribute(nodeId, "allowMilkTrailer", isInTable(fillTypes,UniversalProcessKit.FILLTYPE_MILK))
+	self.allowedVehicles[UniversalProcessKit.VEHICLE_LIQUIDMANURETRAILER] = getBoolFromUserAttribute(nodeId, "allowLiquidManureTrailer", isInTable(fillTypes,UniversalProcessKit.FILLTYPE_LIQUIDMANURE))
+	self.allowedVehicles[UniversalProcessKit.VEHICLE_SPRAYER] = getBoolFromUserAttribute(nodeId, "allowSprayer", isInTable(fillTypes,UniversalProcessKit.FILLTYPE_FERTILIZER))
+	self.allowedVehicles[UniversalProcessKit.VEHICLE_MANURESPREADER] = getBoolFromUserAttribute(nodeId, "allowManureSpreader", isInTable(fillTypes,UniversalProcessKit.FILLTYPE_MANURE))
 	
-	self.allowedVehicles[UniversalProcessKit.VEHICLE_FUELTRAILER] = getBoolFromUserAttribute(nodeId, "allowFuelTrailer", (self.fillFillType or fillFillType)==Fillable.FILLTYPE_FUEL)
+	self.allowedVehicles[UniversalProcessKit.VEHICLE_FUELTRAILER] = getBoolFromUserAttribute(nodeId, "allowFuelTrailer", isInTable(fillTypes,UniversalProcessKit.FILLTYPE_FUEL))
 	self.allowedVehicles[UniversalProcessKit.VEHICLE_MOTORIZED] = getBoolFromUserAttribute(nodeId, "allowMotorized", false)
 	
 	self.allowPallets = getBoolFromUserAttribute(nodeId, "allowPallets", self.palletFilename~=nil)
@@ -94,6 +167,8 @@ function UPK_FillTrigger:new(nodeId, parent)
 	self:getActionUserAttributes('IfFillingStarted')
 	self:getActionUserAttributes('IfFillingStopped')
 	
+	self:getActionUserAttributes('OnPalletSpawned')
+	
 	self:printFn('UPK_FillTrigger:new done')
 	
     return self
@@ -102,6 +177,9 @@ end
 function UPK_FillTrigger:delete()
 	self:printFn('UPK_FillTrigger:delete()')
 	UniversalProcessKitListener.removeUpdateable(self)
+	if self.useActivateInputBinding then
+		UniversalProcessKitListener.unregisterKeyFunction(self.activateInputBinding,self)
+	end
 	UPK_FillTrigger:superClass().delete(self)
 end
 
@@ -110,17 +188,84 @@ function UPK_FillTrigger:postLoad()
 	UPK_FillTrigger:superClass().postLoad(self)
 	self:triggerUpdate(false,false)
 	UniversalProcessKitListener.addUpdateable(self)
+	
+	if self.isServer then
+		self:sendEvent(UniversalProcessKitEvent.TYPE_INPUT,1,123.123,-65000.02,"test",nil,1234567890.12345678,1900,-1900.12345678)
+	end
+end
+
+function UPK_FillTrigger:eventCallback(eventType,...)
+	self:printFn('UPK_FillTrigger:eventCallBack(',eventType,'...)')
+	if eventType==UniversalProcessKitEvent.TYPE_INPUT then
+		self:printAll('UniversalProcessKitEvent.TYPE_INPUT')
+		self:printAll(...)
+	elseif eventType==UniversalProcessKitEvent.TYPE_FILLTYPESELECTED then
+		self:printAll('UniversalProcessKitEvent.TYPE_FILLTYPESELECTED')
+		self:printAll(...)
+	end
+end
+
+function UPK_FillTrigger:writeStream(streamId, connection)
+	self:printFn('UPK_FillTrigger:writeStream(',streamId,', ',connection,')')
+	UPK_FillTrigger:superClass().writeStream(self, streamId, connection)
+	if not connection:getIsServer() then
+		self:printInfo('write to stream self.isActivated = ',self.isActivated)
+		streamWriteBool(streamId,self.isActivated)
+		self:printInfo('write to stream self.isActive = ',self.fillFillType)
+		streamWriteIntN(streamId,self.fillFillType,17)
+	end
+end;
+
+function UPK_FillTrigger:readStream(streamId, connection)
+	self:printFn('UPK_FillTrigger:readStream(',streamId,', ',connection,')')
+	UPK_FillTrigger:superClass().readStream(self, streamId, connection)
+	if connection:getIsServer() then
+		self.isActivated = streamReadBool(streamId)
+		self:printInfo('read from stream self.isActivated = ',self.isActivated)
+		self.fillFillType = streamReadIntN(streamId, 17)
+		self:printInfo('read from stream self.fillFillType = ',self.fillFillType)
+	end
+end;
+
+function UPK_FillTrigger:loadExtraNodes(xmlFile, key)
+	self:printFn('UPK_FillTrigger:loadExtraNodes(',xmlFile,', ',key,')')
+	self.isActivated = Utils.getNoNil(getXMLBool(xmlFile, key .. "#isActivated"),not self.useActivateInputBinding)
+	if self.useFillFillTypes then
+		local selectedFillType = getXMLString(xmlFile, key .. "#selectedFillType")
+		if selectedFillType~=nil then
+			local fillType=UniversalProcessKit.fillTypeNameToInt[selectedFillType]
+			if fillType~=nil then
+				self.fillFillType=fillType
+			end
+		end
+	end
+	return true
+end
+
+function UPK_FillTrigger:getSaveExtraNodes(nodeIdent)
+	self:printFn('UPK_FillTrigger:getSaveExtraNodes(',nodeIdent,')')
+	local nodes=""
+	if isActivated==false then
+		nodes=nodes .. ' isActivated="false"'
+	end
+	if self.useFillFillTypes and self.fillFillType~=nil then
+		nodes=nodes .. ' selectedFillType="'..UniversalProcessKit.fillTypeIntToName[self.fillFillType]..'"'
+	end
+	return nodes
 end
 
 function UPK_FillTrigger:triggerUpdate(vehicle,isInTrigger)
 	self:printFn('UPK_FillTrigger:triggerUpdate(',vehicle,', ',isInTrigger,')')
-	if true and self.isServer then
+	if true then
 		for k,v in pairs(self.allowedVehicles) do
 			if v and UniversalProcessKit.isVehicleType(vehicle, k) then
 				if isInTrigger then
 					self.amountToFillOfVehicle[vehicle]=0
 					--self:print('UniversalProcessKitListener.addUpdateable('..tostring(self)..')')
 					UniversalProcessKitListener.addUpdateable(self)
+					if self.useActivateInputBinding then
+						UniversalProcessKitListener.registerKeyFunction(self.activateInputBinding,self,'inputCallback',self.startFillingText)
+					end
 				else
 					self.amountToFillOfVehicle[vehicle]=nil
 				end
@@ -136,6 +281,12 @@ function UPK_FillTrigger:triggerUpdate(vehicle,isInTrigger)
 				self.amountToFillOfVehicle[vehicle]=nil
 			end
 		end
+		
+		if self.entitiesInTrigger==0 then
+			if self.useActivateInputBinding then
+				UniversalProcessKitListener.unregisterKeyFunction(self.activateInputBinding,self)
+			end
+		end
 	end
 end
 
@@ -146,13 +297,25 @@ function UPK_FillTrigger:update(dt)
 		return
 	end
 	
-	if self.isEnabled then
+	if not self.isActivated and (self.isFilling==nil or self.isFilling) then
+		self:operateAction('IfFillingStopped')
+		self.isFilling=false
+	end
+
+	if self.useActivateInputBinding and not self.isActivated then
+		UniversalProcessKitListener.removeUpdateable(self)
+	end
+	
+	--self:printInfo('self.isEnabled ',self.isEnabled,' self.isActivated ',self.isActivated)
+	if self.isEnabled and self.isActivated then
 		local isFilling=false
 		local addedTotally=0
 		if self.entitiesInTrigger==0 then
 			if self.palletFilename==nil then
-				self:printAll('UniversalProcessKitListener.removeUpdateable(',self,')')
 				UniversalProcessKitListener.removeUpdateable(self)
+				if self.useActivateInputBinding then
+					UniversalProcessKitListener.unregisterKeyFunction(self.activateInputBinding,self)
+				end
 				if self.isFilling==nil or self.isFilling then
 					self:operateAction('IfFillingStopped')
 					self.isFilling=false
@@ -172,31 +335,29 @@ function UPK_FillTrigger:update(dt)
 						self:printAll('spawning pallet in ',x,', ',y,', ',z)
 						pallet:register()
 						pallet.fillType = self.fillFillType or self:getFillType() or UniversalProcessKit.FILLTYPE_UNKNOWN
-						UniversalProcessKitListener.removeUpdateable(self)
+						self:operateAction('OnPalletSpawned')
 						if self.isFilling==nil or self.isFilling then
 							self:operateAction('IfFillingStopped')
 							self.isFilling=false
 						end
-						return
 					else
-						self:triggerCallback(self.nodeId, pallet.nodeId, false, false, false, pallet.nodeId) -- needed?
-						pallet:delete()
+						self:printErr('couldnt load ',self.palletFilename)
 					end
 				end
 			end
 		else
 			for _,trailer in pairs(self.entities) do
-				local added = 0
 				--self:print('vehicle is '..tostring(trailer.upk_vehicleType))
 				local deltaFillLevel = floor(self.fillLitersPerSecond * 0.001 * dt,8)
 				for k,v in pairs(self.allowedVehicles) do
 					--self:print('checking for '..tostring(k)..': '..tostring(v))
 					if v and UniversalProcessKit.isVehicleType(trailer, k) then
 						--self:print('vehicle allowed')
+						local added = 0
 						if k==UniversalProcessKit.VEHICLE_MIXERWAGONPICKUP then
-							self:fillMixerWagonPickup(trailer, deltaFillLevel)
+							added = self:fillMixerWagonPickup(trailer, deltaFillLevel)
 						elseif k==UniversalProcessKit.VEHICLE_MIXERWAGONTRAILER then
-							self:fillMixerWagonTrailer(trailer, deltaFillLevel)
+							added = self:fillMixerWagonTrailer(trailer, deltaFillLevel)
 						elseif ((k==UniversalProcessKit.VEHICLE_TIPPER and not UniversalProcessKit.isVehicleType(trailer, UniversalProcessKit.VEHICLE_MIXERWAGONTRAILER)) or
 							 (k==UniversalProcessKit.VEHICLE_SHOVEL and not UniversalProcessKit.isVehicleType(trailer, UniversalProcessKit.VEHICLE_MIXERWAGONPICKUP)) or
 							 k==UniversalProcessKit.VEHICLE_SOWINGMACHINE or
@@ -212,17 +373,14 @@ function UPK_FillTrigger:update(dt)
 						end
 						addedTotally=addedTotally+added
 					end
-					if (not self.isFilling or not isFilling) and round(added,8)>0 then
-						isFilling=true
-					end
 				end
 				if self.allowPallets and trailer.isPallet and trailer.setFillLevel~=nil then
 					added = self:fillPallet(trailer, deltaFillLevel)
-					if (not self.isFilling or not isFilling) and round(added,8)>0 then
-						isFilling=true
-					end
 					addedTotally=addedTotally+added
 				end
+			end
+			if (not self.isFilling or not isFilling) and round(addedTotally,8)>0 then
+				isFilling=true
 			end
 		end
 		if isFilling then
@@ -235,6 +393,12 @@ function UPK_FillTrigger:update(dt)
 			if self.isFilling then
 				self:operateAction('IfFillingStopped',addedTotally)
 				self.isFilling=false
+			end
+			self:printInfo('self.useActivateInputBinding: ',self.useActivateInputBinding,' - self.autoDeactivate: ',self.autoDeactivate)
+			if self.isActivated and self.useActivateInputBinding and self.autoDeactivate then
+				self.isActivated=false
+				UniversalProcessKitListener.unregisterKeyFunction(self.activateInputBinding,self)
+				UniversalProcessKitListener.registerKeyFunction(self.activateInputBinding,self,'inputCallback',self.startFillingText)
 			end
 		end
 	end
@@ -262,6 +426,49 @@ function UPK_FillTrigger:getPricePerLiter(fillType)
 	end
 	self.pricesPerLiter[fillType] = pricePerLiter
 	return pricePerLiter
+end
+
+function UPK_FillTrigger:inputCallback(inputName)
+	self:printFn('UPK_FillTrigger:inputCallback(',inputName,')')
+	if self.activateInputBinding==inputName then
+		UniversalProcessKitListener.unregisterKeyFunction(self.activateInputBinding,self)
+		if self.useFillFillTypes and not self.isActivated then
+			-- show dialog
+			upkMultiSiloDialog:setModule(self)
+			upkMultiSiloDialog:setTitle(self.stationName)
+			upkMultiSiloDialog:setFillTypes(self.fillFillTypes)
+			upkMultiSiloDialog:setSelectedFillType(self.fillFillType)
+			upkMultiSiloDialog:setSelectionCallback(self.onFillTypeSelection, self)
+			upkMultiSiloDialog:setCancelCallback(self.onFillTypeSelectionCancel, self)
+			g_gui:showGui("UpkMultiSiloDialog")
+		else
+			self.isActivated=not self.isActivated
+			local text=nil
+			if self.isActivated then
+				text=self.stopFillingText
+			else
+				text=self.startFillingText
+			end
+			UniversalProcessKitListener.registerKeyFunction(self.activateInputBinding,self,'inputCallback',text)
+		end
+	end
+end
+
+function UPK_FillTrigger:onFillTypeSelection(selectedFillType)
+	self:printFn('UPK_FillTrigger:onSelectCallback(',selectedFillType,')')
+	self.fillFillType=selectedFillType
+	self.isActivated=true
+	UniversalProcessKitListener.registerKeyFunction(self.activateInputBinding,self,'inputCallback',self.stopFillingText)
+	-- event
+	self:sendEvent(UniversalProcessKitEvent.TYPE_FILLTYPESELECTED,self.fillFillType)
+	UniversalProcessKitListener.addUpdateable(self)
+end
+
+function UPK_FillTrigger:onFillTypeSelectionCancel()
+	self:printFn('UPK_FillTrigger:onSelectCallbackCancel()')
+	self.fillFillType=nil
+	self.isActivated=false
+	UniversalProcessKitListener.registerKeyFunction(self.activateInputBinding,self,'inputCallback',self.startFillingText)
 end
 
 function UPK_FillTrigger:fillTrailer(trailer, deltaFillLevel) -- tippers, shovels etc

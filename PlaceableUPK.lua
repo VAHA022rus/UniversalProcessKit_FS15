@@ -129,14 +129,14 @@ function PlaceableUPK:writeUpdateStream(streamId, connection, dirtyMask)
 				table.insert(objectsToSync,i)
 			end
 		end
-		printAll('want to sync '..tostring(#objectsToSync)..' objects')
-		streamWriteIntN(streamId, #objectsToSync, 12)
+		printAll('want to sync ',#objectsToSync,' objects')
+		streamWriteAuto(streamId, #objectsToSync)
 		for i=1,#objectsToSync do
 			local object = self.upkObjects[objectsToSync[i]]
 			--print('want to sync object with syncId '..tostring(object.syncId))
-			streamWriteIntN(streamId, object.syncId, 12)
+			streamWriteAuto(streamId, object.syncId, 12)
 			--print('want to sync object with dirtyFlag '..tostring(object.dirtyMask))
-			streamWriteIntN(streamId, object.dirtyMask, 12) -- max 12 dirtyFlags
+			streamWriteAuto(streamId, object.dirtyMask, 12) -- max 12 dirtyFlags
 			local syncall=bitAND(object.dirtyMask, object.syncAllDirtyFlag)~=0
 			object:writeUpdateStream(streamId, connection, object.dirtyMask, syncall)
 			--print('mark client '..tostring(streamId)..' as synced')
@@ -167,14 +167,14 @@ function PlaceableUPK:readUpdateStream(streamId, timestamp, connection)
 	printFn('PlaceableUPK:readUpdateStream(',streamId,', ',timestamp,', ',connection,')')
 	PlaceableUPK:superClass().readUpdateStream(self, streamId, timestamp, connection)
 	if connection:getIsServer() then
-		local nrObjectsToSync = streamReadIntN(streamId, 12)
-		printAll('reading '..tostring(nrObjectsToSync)..' objects')
+		local nrObjectsToSync = streamReadAuto(streamId)
+		printAll('reading ',nrObjectsToSync,' objects')
 		if nrObjectsToSync>0 then
 			for i=1,nrObjectsToSync do
-				local objectSyncId = streamReadIntN(streamId, 12)
-				printAll('reading sync object with syncId '..tostring(objectSyncId))
-				local objectDirtyFlag = streamReadIntN(streamId, 12)
-				printAll('reading sync object with dirtyFlag '..tostring(objectDirtyFlag))
+				local objectSyncId = streamReadAuto(streamId)
+				printAll('reading sync object with syncId ',objectSyncId)
+				local objectDirtyFlag = streamReadAuto(streamId)
+				printAll('reading sync object with dirtyFlag ',objectDirtyFlag)
 				local object = self.upkObjects[objectSyncId]
 				local syncall=bitAND(objectDirtyFlag, object.syncAllDirtyFlag)~=0
 				object:readUpdateStream(streamId, connection, objectDirtyFlag, syncall)

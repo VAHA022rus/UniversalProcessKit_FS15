@@ -111,8 +111,17 @@ function UPK_ActivatorTrigger:setIsActive(isActive,alreadySent)
 		end
 		
 		if not alreadySent then
-			UPK_ActivatorTriggerEvent.sendEvent(self,self.isActive, alreadySent)
+			self:sendEvent(UniversalProcessKitEvent.TYPE_ACTIVATOR, self.isActive)
 		end
+	end
+end
+
+function UPK_ActivatorTrigger:eventCallBack(eventType,...)
+	self:printFn('UPK_ActivatorTrigger:eventCallBack(',eventType,'...)')
+	if eventType==UniversalProcessKitEvent.TYPE_ACTIVATOR then
+		self:printAll('UniversalProcessKitEvent.TYPE_ACTIVATOR')
+		isActive = ...
+		self:setIsActive(isActive, true)
 	end
 end
 
@@ -237,73 +246,3 @@ function UPK_ActivatorTriggerActivatable:updateActivateText()
 		self.activateText = self.upkmodule.deactivateText
 	end
 end;
-
-UPK_ActivatorTriggerEvent = {}
-UPK_ActivatorTriggerEvent_mt = Class(UPK_ActivatorTriggerEvent, Event);
-InitEventClass(UPK_ActivatorTriggerEvent, "UPK_ActivatorTriggerEvent");
-
-function UPK_ActivatorTriggerEvent:emptyNew()
-	printFn('UPK_ActivatorTriggerEvent:emptyNew()')
-    local self = Event:new(UPK_ActivatorTriggerEvent_mt)
-    return self
-end
-
-function UPK_ActivatorTriggerEvent:new(upkmodule, isActive)
-	printFn('UPK_ActivatorTriggerEvent:new(',upkmodule,', ',isActive,')')
-	local self = UPK_ActivatorTriggerEvent:emptyNew()
-	self.upkmodule = upkmodule
-	self.isActive = isActive
-	return self
-end
-
-function UPK_ActivatorTriggerEvent:writeStream(streamId, connection)
-	printFn('UPK_ActivatorTriggerEvent:writeStream(',streamId,', ',connection,')')
-	local syncObj = self.upkmodule.syncObj
-	local syncObjId = networkGetObjectId(syncObj)
-	printAll('syncObjId: ',syncObjId)
-	streamWriteInt32(streamId, syncObjId)
-	local syncId = self.upkmodule.syncId
-	printAll('syncId: ',syncId)
-	streamWriteInt32(streamId, syncId)
-	printAll('isActive: ',self.isActive)
-	streamWriteBool(streamId, self.isActive)
-end
-
-function UPK_ActivatorTriggerEvent:readStream(streamId, connection)
-	printFn('UPK_ActivatorTriggerEvent:readStream(',streamId,', ',connection,')')
-	local syncObjId = streamReadInt32(streamId)
-	printAll('syncObjId: ',syncObjId)
-	local syncObj = networkGetObject(syncObjId)
-	local syncId = streamReadInt32(streamId)
-	printAll('syncId: ',syncId)
-	self.upkmodule=syncObj:getObjectToSync(syncId)
-	printAll('upkmodule: ',self.upkmodule)
-	self.isActive = streamReadBool(streamId)
-	printAll('isActive: ',self.isActive)
-	self:run(connection)
-end;
-
-function UPK_ActivatorTriggerEvent:run(connection)
-	printFn('UPK_ActivatorTriggerEvent:run(',connection,')')
-	if not connection:getIsServer() then -- if server: send after receiving
-		g_server:broadcastEvent(self, false, connection)
-	end
-	printAll('running step a')
-	if self.upkmodule ~= nil then
-		printAll('running step b')
-		self.upkmodule:setIsActive(self.isActive, true)
-	end
-end
-
-function UPK_ActivatorTriggerEvent.sendEvent(upkmodule, isActive, alreadySent)
-	printFn('UPK_ActivatorTriggerEvent.sendEvent('..tostring(upkmodule)..', '..tostring(isActive)..', '..tostring(alreadySent)..')')
-	if not alreadySent then
-		if g_server ~= nil then
-			printAll('broadcasting isActive = '..tostring(isActive))
-			g_server:broadcastEvent(UPK_ActivatorTriggerEvent:new(upkmodule, isActive))
-		else
-			printAll('sending to server isActive = '..tostring(isActive))
-			g_client:getServerConnection():sendEvent(UPK_ActivatorTriggerEvent:new(upkmodule, isActive))
-		end
-	end
-end
