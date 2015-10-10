@@ -12,4 +12,4 @@
 -- 4 everything - log every manually set print
 -- 5 everything+ - log more than everything (cannot be changed in-game)
 
-debugMode=4
+debugMode=1
