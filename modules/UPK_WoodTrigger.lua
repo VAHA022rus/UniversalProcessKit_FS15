@@ -32,7 +32,14 @@ function UPK_WoodTrigger:new(nodeId, parent)
 	if self.acceptedMinLength>0 or self.acceptedMaxLength<999 then
 		self.useLength = true
 	end
-		
+	
+	-- diameter
+	self.useDiameter = false
+	self.acceptedMinDiameter = getNumberFromUserAttribute(nodeId, "acceptedMinDiameter", 0, 0, 999)
+	self.acceptedMaxDiameter = getNumberFromUserAttribute(nodeId, "acceptedMaxDiameter", 999, self.acceptedMinDiameter, 999)
+	if self.acceptedMinDiameter>0 or self.acceptedMaxDiameter<999 then
+		self.useDiameter = true
+	end
 	
 	self.delay = getNumberFromUserAttribute(nodeId, "delay", 0.1, 0)*1000
 	
@@ -82,17 +89,33 @@ end
 function UPK_WoodTrigger:triggerUpdate(woodId,isInTrigger)
 	self:printFn('UPK_WoodTrigger:triggerUpdate(',woodId,', ',isInTrigger,')')
 	if self.isEnabled and woodId~=nil then
-		self:printAll('wood is: '..tostring(woodId))
-		self:printAll('isInTrigger is: '..tostring(isInTrigger))
+		self:printAll('wood is: ',woodId)
+		self:printAll('isInTrigger is: ',isInTrigger)
 		if isInTrigger then
 			if self.woodInTrigger[woodId]==nil then
-				-- length
-				if self.useLength then
+				-- length and diameter
+				if self.useLength or self.useDiameter then
 					local lenX, lenY, lenZ, _ = getSplitShapeStats(woodId)
 					local length = mathmax(lenX,mathmax(lenY, lenZ))
-					self:printInfo('length of wood is ',length)
-					if length<self.acceptedMinLength or length>self.acceptedMaxLength then
-						return
+					if self.useLength then
+						self:printInfo('length of wood is ',length)
+						if length<self.acceptedMinLength or length>self.acceptedMaxLength then
+							return
+						end
+					end
+					local diameter=0
+					if length==lenX then
+						diameter = mathmax(lenY,lenZ)
+					elseif length==lenY then
+						diameter = mathmax(lenX,lenZ)
+					elseif length==lenZ then
+						diameter = mathmax(lenX,lenY)
+					end
+					if self.useDiameter then
+						self:printInfo('diameter of wood is ',diameter)
+						if diameter<self.acceptedMinDiameter or diameter>self.acceptedMaxDiameter then
+							return
+						end
 					end
 				end
 
@@ -102,6 +125,7 @@ function UPK_WoodTrigger:triggerUpdate(woodId,isInTrigger)
 				if not self.runningUpdate and self.nrWoodInTrigger>self.ignoreWood then
 					self.dtsum = 0
 					if self.isServer then
+						self.runningUpdate=true
 						UniversalProcessKitListener.addUpdateable(self)
 					end
 				end
@@ -111,6 +135,7 @@ function UPK_WoodTrigger:triggerUpdate(woodId,isInTrigger)
 			if self.woodInTrigger[woodId]~=nil then
 				self.woodInTrigger[woodId]=nil
 				self.nrWoodInTrigger = self.nrWoodInTrigger -1
+				removeValueFromTable(self.woodInLine,woodId)
 				self:operateAction('OnLeave')
 			end
 		end
@@ -126,19 +151,21 @@ function UPK_WoodTrigger:update(dt)
 		
 		if self.isServer then
 			
-			if #self.woodInLine>self.ignoreWood then
+			local woodInLineLength=length(self.woodInLine)
+			if woodInLineLength>self.ignoreWood then
 				local woodIndex = 1
 				if not self.useFirstWood then
-					woodIndex = #self.woodInLine
+					woodIndex = woodInLineLength
 				end
 
 				local woodId = self.woodInLine[woodIndex]
-				if type(woodId)=="number" and woodId>0 and self.woodInTrigger[woodId] then
+				if type(woodId)=="number" and woodId>0 and self.woodInTrigger[woodId] and entityExists(woodId) then
+					self:printInfo('wood exists')
 					local splitType = SplitUtil.splitTypes[getSplitType(woodId)]
 					if splitType~=nil then
 						local fillLevel = getVolume(woodId)*1000
 						local fillType = UniversalProcessKit.FILLTYPE_WOODCHIPS
-					
+				
 						self:printAll('fillLevel of wood is ',fillLevel)
 						if self.mode=="dissolve" then
 							local added = self:addFillLevel(fillLevel*splitType.woodChipsPerLiter, fillType)
@@ -171,12 +198,13 @@ function UPK_WoodTrigger:update(dt)
 			end
 		end
 		
-		if #self.woodInLine<=self.ignoreWood then
+		
+		if length(self.woodInLine)<=self.ignoreWood then
 			self.runningUpdate = false
 			UniversalProcessKitListener.removeUpdateable(self)
 		else
 			if self.dtsum>self.delay then
-				self:update(0)
+				self:update(0) -- kind of loop
 			end
 		end
 	end

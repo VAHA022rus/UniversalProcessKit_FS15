@@ -384,7 +384,10 @@ function UniversalProcessKit:delete()
 
 	self.isEnabled = false
 
-	self:removeTrigger()
+	if self.triggerId~=nil then
+		self:removeTrigger()
+		-- clear player in trigger
+	end
 	
 	for i=1,#self.kids do
 		self.kids[i]:removeTrigger()
