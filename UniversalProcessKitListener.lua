@@ -105,6 +105,9 @@ function UniversalProcessKitListener.loadMap(name)
 		g_server:addObject(UniversalProcessKitListener.syncingObject, UniversalProcessKitListener.syncingObject.id)
 		--self.syncTipTriggerObject:load(self)
 		UniversalProcessKitListener.syncingObject:register(false)
+		for _,actionName in pairs(UniversalProcessKit.actionIdToName) do
+			UniversalProcessKitListener.syncingObject:addActionNameToSync(actionName)
+		end
 	end
 	
 	UniversalProcessKitEnvironment.setSun()

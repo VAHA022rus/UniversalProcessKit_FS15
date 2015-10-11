@@ -8,7 +8,7 @@ function UniversalProcessKit.registerActionName(actionName,actionId)
 		local id=actionId or length(UniversalProcessKit.actionNameToId)+1
 		UniversalProcessKit.actionIdToName[id]=actionName
 		UniversalProcessKit.actionNameToId[actionName]=id
-		if g_server~=nil then
+		if g_server~=nil and UniversalProcessKitListener.syncingObject~=nil then -- loadmap done
 			UniversalProcessKitListener.syncingObject:addActionNameToSync(actionName)
 		end
 	end
