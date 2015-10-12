@@ -17,10 +17,6 @@ end
 function UniversalProcessKit:getActionUserAttributes(actionName, defaultEnableChildren, defaultDisableChildren)
 	self:printFn('UniversalProcessKit:getActionUserAttributes(',actionName,', ',defaultEnableChildren,', ',defaultDisableChildren,')')
 	
-	if self.actions==nil then
-		self.actions={}
-	end
-	
 	if type(actionName)~="string" or strlen(actionName)==0 or self.actions[actionName]~=nil then
 		self:printErr('faulty actionName')
 		return
@@ -131,7 +127,7 @@ function UniversalProcessKit:getActionUserAttributes(actionName, defaultEnableCh
 end
 
 function UniversalProcessKit:operateAction(actionName, multiplier, alreadySent)
-	self:printFn('UniversalProcessKit:operateAction('..tostring(actionName)..','..tostring(multiplier)..','..tostring(alreadySent)..')')
+	self:printFn('UniversalProcessKit:operateAction(',actionName,',',multiplier,',',alreadySent,')')
 	
 	if type(actionName)~="string" or strlen(actionName)==0 or self.actions[actionName]==nil then
 		self:printErr('faulty actionName')
@@ -144,12 +140,12 @@ function UniversalProcessKit:operateAction(actionName, multiplier, alreadySent)
 	
 	if self.isServer then
 		local actionId = UniversalProcessKit.actionNameToId[actionName]
-		self:sendEvent(UniversalProcessKitEvent.TYPE_ACTION, actionId, multiplier, false)
+		self:sendEvent(UniversalProcessKitEvent.TYPE_ACTION, actionId, multiplier)
 	end
 
 	local action = self.actions[actionName]
 	
-	if self.isServer then
+	if self.isServer and self.isLoaded then
 		if action['hasEmptyFillTypes'] then
 			for i=1,#action['emptyFillTypes'] do
 				self:setFillLevel(0,action['emptyFillTypes'][i])
@@ -207,52 +203,3 @@ function UniversalProcessKit:operateAction(actionName, multiplier, alreadySent)
 	end
 end
 
-function UniversalProcessKit:operateActionSilent(actionName, multiplier, alreadySent)
-	self:printFn('UniversalProcessKit:operateActionSilent('..tostring(actionName)..','..tostring(multiplier)..','..tostring(alreadySent)..')')
-	
-	if type(actionName)~="string" or strlen(actionName)==0 or self.actions[actionName]==nil then
-		self:printErr('faulty actionName')
-		return
-	end
-	
-	if multiplier==nil then
-		multiplier=1
-	end
-	
-	if self.isServer then
-		local actionId = UniversalProcessKit.actionNameToId[actionName]
-		self:sendEvent(UniversalProcessKitEvent.TYPE_ACTION, actionId, multiplier, true)
-	end
-
-	local action = self.actions[actionName]
-	
-	if action['enableChildren'] then
-		self:printAll('enable children')
-		self:setEnableChildren(true, alreadySent)
-	end
-	if action['disableChildren'] then
-		self:printAll('disable children')
-		self:setEnableChildren(false, alreadySent)
-	end	
-	
-	if action['hasShow'] then
-		self.base:setVisibility(action['show'],true)
-	end
-	
-	if action['hasHide'] then
-		self.base:setVisibility(action['hide'],false)
-	end
-	
-	-- audio samples and animations
-	if action['hasPlay'] then
-		for _,v in pairs(action['play']) do
-			v:play()
-		end
-	end
-
-	if action['hasStop'] then
-		for _,v in pairs(action['stop']) do
-			v:stop()
-		end
-	end
-end

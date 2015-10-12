@@ -5,16 +5,14 @@
 
 local UniversalProcessKit_i18n_mt = {
 	__index = function(t,key)
-		if key=="" then
-			return ""
-		end
 		local text=""
 		if type(key)=="string" then
-			if t.i18nNameSpace~=nil and
-				(_g or {})[t.i18nNameSpace]~=nil and
-				_g[t.i18nNameSpace].g_i18n~=nil and
-				_g[t.i18nNameSpace].g_i18n:hasText(key) then
-				text=_g[t.i18nNameSpace].g_i18n:getText(key)
+			local i18nNameSpace=rawget(t,"i18nNameSpace") -- modname
+			if i18nNameSpace~=nil and
+				(_g or {})[i18nNameSpace]~=nil and
+				_g[i18nNameSpace].g_i18n~=nil and
+				_g[i18nNameSpace].g_i18n:hasText(key) then
+				text=_g[i18nNameSpace].g_i18n:getText(key)
 			elseif g_i18n:hasText(key) then
 				text=g_i18n:getText(key)
 			end

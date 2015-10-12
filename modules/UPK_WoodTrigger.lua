@@ -151,11 +151,10 @@ function UPK_WoodTrigger:update(dt)
 		
 		if self.isServer then
 			
-			local woodInLineLength=length(self.woodInLine)
-			if woodInLineLength>self.ignoreWood then
-				local woodIndex = 1
+			if length(self.woodInLine)>self.ignoreWood then
+				local woodIndex, woodIndexMax = getMinMaxKeys(self.woodInLine)
 				if not self.useFirstWood then
-					woodIndex = woodInLineLength
+					woodIndex = woodIndexMax
 				end
 
 				local woodId = self.woodInLine[woodIndex]
@@ -190,7 +189,7 @@ function UPK_WoodTrigger:update(dt)
 							self:deleteWood(woodId,woodIndex)
 						end
 					end
-				else
+				elseif woodId~=nil then
 					self.woodInTrigger[woodId]=nil
 					table.remove(self.woodInLine,woodIndex)
 					self.nrWoodInTrigger = self.nrWoodInTrigger -1
@@ -218,3 +217,16 @@ function UPK_WoodTrigger:deleteWood(woodId,woodIndex)
 	delete(woodId)
 	self:operateAction('OnDelete')
 end
+
+function UPK_WoodTrigger:loadExtraNodes(xmlFile, key)
+	self:printFn('UPK_WoodTrigger:loadExtraNodes(',xmlFile,', ',key,')')
+	self.dtsum=getXMLBool(xmlFile, key .. "#delay") or 0
+	return true
+end;
+
+function UPK_WoodTrigger:getSaveExtraNodes(nodeIdent)
+	self:printFn('UPK_WoodTrigger:getSaveExtraNodes(',nodeIdent,')')
+	local nodes=""
+	nodes=nodes..' delay="'..round(self.dtsum,0)..'"'
+	return nodes
+end;

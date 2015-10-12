@@ -127,15 +127,11 @@ end
 function UniversalProcessKit:eventCallback(eventType, ...) -- to be overwritten
 	self:printFn('UniversalProcessKit:eventCallback(',eventType,'...)')
 	if eventType==UniversalProcessKitEvent.TYPE_ACTION then
-		local actionId, multiplier, silent = ...
+		local actionId, multiplier = ...
 		local actionName=UniversalProcessKit.actionIdToName[actionId]
 		if actionName~=nil then
 			self:printAll('operate action ',actionName)
-			if silent then
-				self:operateActionSilent(actionName, multiplier)
-			else
-				self:operateAction(actionName, multiplier)
-			end
+			self:operateAction(actionName, multiplier)
 		end
 	end
 end

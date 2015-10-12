@@ -106,6 +106,7 @@ function UPK_Processor:new(nodeId, parent)
 	for i=1,#byproductsArr,2 do
 		local amount=tonumber(byproductsArr[i])
 		local fillType=unpack(UniversalProcessKit.fillTypeNameToInt(byproductsArr[i+1]))
+		self:printInfo('found byproduct to produce ',amount,' ',fillType)
 		if type(amount)=="number" and type(fillType)=="number" then
 			self.byproducts[fillType]=amount
 			self.hasByproducts=true
@@ -116,7 +117,8 @@ function UPK_Processor:new(nodeId, parent)
 	
 	local byproducts=getStringFromUserAttribute(nodeId, "byproducts", "")
 	local addIfProduced=getStringFromUserAttribute(nodeId, "addIfProduced", "")
-	setUserAttribute(nodeId,"addIfProduced",addIfProduced.." "..byproducts)
+	setUserAttribute(nodeId,"addIfProduced","String",addIfProduced.." "..byproducts)
+	self:printInfo('set addIfProduced to "',addIfProduced.." "..byproducts,'"')
 	
 	-- actions
 	
@@ -192,13 +194,14 @@ end
 
 function UPK_Processor:postLoad()
 	self:printFn('UPK_Processor:postLoad()')
-	UPK_Processor:superClass().postLoad(self)
 	
 	if self.isProcessing then
-		self:operateActionSilent('IfProcessing')
+		self:operateAction('IfProcessing')
 	else
-		self:operateActionSilent('IfNotProcessing')
+		self:operateAction('IfNotProcessing')
 	end
+	
+	UPK_Processor:superClass().postLoad(self)
 end;
 
 function UPK_Processor:loadExtraNodes(xmlFile, key)

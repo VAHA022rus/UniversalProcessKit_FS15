@@ -38,7 +38,7 @@ function AudioSample.new(shapeId,syncObj)
 	self.offsetPlay = getNumberFromUserAttribute(shapeId, "audioOffsetPlay", 0, 0)*1000
 	self.offsetStop = getNumberFromUserAttribute(shapeId, "audioOffsetStop", 0, 0)*1000
 	
-	local audioEnabled = getBoolFromUserAttribute(shapeId, "audioEnabled", false)
+	local audioEnabled = getBoolFromUserAttribute(shapeId, "audioEnabled") or getVisibility(self.shapeId)
 	
 	setmetatable(self,AudioSample_mt)
 	
@@ -190,7 +190,11 @@ function AudioSample:loadFromAttributes(xmlFile, key)
 	printFn('AudioSample:loadFromAttributes(',xmlFile,', ',key,')')
 	
 	local audioEnabled = getXMLBool(xmlFile, key .. "#audioEnabled") or self.audioEnabled
-	self:enableAudioSource(audioEnabled)
+	if audioEnabled then
+		self:play(0)
+	else
+		self:stop(0)
+	end
 	
 	self.loopCount = getXMLInt(xmlFile, key .. "#loopCount") or 0
 	

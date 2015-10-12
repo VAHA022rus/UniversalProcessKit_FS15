@@ -41,12 +41,14 @@ end
 
 function UPK_EntityTrigger:postLoad()
 	self:printFn('UPK_EntityTrigger:postLoad()')
-	UPK_EntityTrigger:superClass().postLoad(self)
+	
 	if self.isTriggered then
-		self:operateActionSilent('OnEmpty')
+		self:operateAction('OnEmpty')
 	else
-		self:operateActionSilent('OnPopulated')
+		self:operateAction('OnPopulated')
 	end
+	
+	UPK_EntityTrigger:superClass().postLoad(self)
 end
 
 function UPK_EntityTrigger:triggerUpdate(vehicle,isInTrigger)

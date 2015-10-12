@@ -52,13 +52,15 @@ end
 
 function UPK_ActivatorTrigger:postLoad()
 	self:printFn('UPK_ActivatorTrigger:postLoad()')
-	UPK_ActivatorTrigger:superClass().postLoad(self)
-	self:triggerUpdate(false,false)
+	
+	--self:triggerUpdate(false,false)
 	if self.isActive then
-		self:operateActionSilent('OnActivate')
+		self:operateAction('OnActivate')
 	else
-		self:operateActionSilent('OnDeactivate')
+		self:operateAction('OnDeactivate')
 	end
+	
+	UPK_ActivatorTrigger:superClass().postLoad(self)
 end
 
 function UPK_ActivatorTrigger:readStream(streamId, connection)

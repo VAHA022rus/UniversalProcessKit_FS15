@@ -4,7 +4,7 @@ local UniversalProcessKit_mt = ClassUPK(UniversalProcessKit);
 InitObjectClass(UniversalProcessKit, "UniversalProcessKit");
 
 function UniversalProcessKit:onCreate(id)
-	printFn('UniversalProcessKit:onCreate('..tostring(id)..')')
+	printFn('UniversalProcessKit:onCreate(',id,')')
 	
 	local upkbase = OnCreateUPK:new(g_server ~= nil, g_client ~= nil)
 	if upkbase==false or upkbase~=nil then
@@ -17,7 +17,7 @@ function UniversalProcessKit:onCreate(id)
 end;
 
 function UniversalProcessKit:new(nodeId, parent, customMt)
-	printFn('UniversalProcessKit:new('..tostring(nodeId)..', '..tostring(parent)..', '..tostring(customMt)..')')
+	printFn('UniversalProcessKit:new(',nodeId,', ',parent,', ',customMt,')')
 	
 	if nodeId==nil then
 		printErr('Error: UniversalProcessKit:new() called with id=nil')
@@ -102,7 +102,7 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 			local capacity=tonumber(capacitiesArr[i])
 			local fillType=unpack(UniversalProcessKit.fillTypeNameToInt(capacitiesArr[i+1]))
 			if capacity~=nil and fillType~=nil then
-				printInfo('adding capacity of '..tostring(capacity)..' to '..tostring(fillType))
+				printInfo('adding capacity of ',capacity,' to ',fillType)
 				capacities[fillType]=capacity
 			end
 		end
@@ -111,7 +111,7 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 	self.capacities = FillLevelBubbleCapacities:new(self.p_capacity, capacities)
 
 	for k,v in pairs(self.capacities) do
-		printAll('capacity of '..tostring(k)..': '..tostring(v))
+		printAll('capacity of ',k,': ',v)
 	end
 
 	-- set metatable
@@ -157,11 +157,11 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 	-- fill types conversion matrix
 
 	local fillTypesConversionMatrixStrStr = getStringFromUserAttribute(nodeId, "convertFillTypes", "")
-	self:printInfo('fillTypesConversionMatrixStrStr: '..tostring(fillTypesConversionMatrixStrStr))
+	self:printInfo('fillTypesConversionMatrixStrStr: ',fillTypesConversionMatrixStrStr)
 	local fillTypesConversionMatrixStrArr = gmatch(fillTypesConversionMatrixStrStr..',','(.-),')
 	for _,fillTypesConversionMatrixStr in pairs(fillTypesConversionMatrixStrArr) do
 		if fillTypesConversionMatrixStr~=nil and fillTypesConversionMatrixStr~="" then
-			self:printAll('dealing with '..tostring(fillTypesConversionMatrixStr))
+			self:printAll('dealing with ',fillTypesConversionMatrixStr)
 			self.fillTypesConversionMatrix = self.fillTypesConversionMatrix + FillTypesConversionMatrix:new(UniversalProcessKit.fillTypeNameToInt(gmatch(fillTypesConversionMatrixStr,'%S+')))
 		end
 	end
@@ -170,7 +170,7 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 	
 	for k,v in pairs(self.fillTypesConversionMatrix) do
 		for l,w in pairs(v) do
-			printInfo('adding '..tostring(l)..' (incoming) to '..tostring(k)..' (stored) ends up as '..tostring(w))
+			printInfo('adding ',l,' (incoming) to ',k,' (stored) ends up as ',w)
 		end
 	end
 	
@@ -189,7 +189,7 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 	for _,flb in pairs(self.p_flbs) do
 		flb.capacities = self.capacities
 		for k,v in pairs(flb.capacities) do
-			printInfo('capacity of '..tostring(k)..': '..tostring(v))
+			printInfo('capacity of ',k,': ',v)
 		end
 		flb.fillTypesConversionMatrix = self.fillTypesConversionMatrix
 		flb:registerOnFillLevelChangeFunc(self,"p_onFillLevelChange")
@@ -241,6 +241,10 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 	
 	self:showMapHotspot(getBoolFromUserAttribute(nodeId, "showMapHotspot", false), true)
 	
+	-- actions
+	
+	self.actions={}
+	
 	-- placeable object
 	
 	if self.type~="base" and self.parent~=nil then
@@ -252,10 +256,10 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 	end
 	
 	
-	printAll('loaded module '..tostring(self.name)..' with id '..tostring(nodeId))
+	printAll('loaded module ',self.name,' with id ',nodeId)
 	
-	printAll('self.placeable '..tostring(self.placeable))
-	printAll('getBoolFromUserAttribute(nodeId, "adjustToTerrainHeight", false) '..tostring(getBoolFromUserAttribute(nodeId, "adjustToTerrainHeight", false)))
+	printAll('self.placeable ',self.placeable)
+	printAll('getBoolFromUserAttribute(nodeId, "adjustToTerrainHeight", false) ',getBoolFromUserAttribute(nodeId, "adjustToTerrainHeight", false))
 	
 	if getBoolFromUserAttribute(nodeId, "adjustToTerrainHeight", false) and self.placeable then
 		UniversalProcessKit.adjustToTerrainHeight(nodeId)
@@ -269,7 +273,7 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 end;
 
 function UniversalProcessKit:findChildrenLoopFunc(childId,prefixShapeNames)
-	self:printFn('UniversalProcessKit:findChildrenLoopFunc('..tostring(childId)..')')	
+	self:printFn('UniversalProcessKit:findChildrenLoopFunc(',childId,')')	
 	
 	-- rename shapes
 	if prefixShapeNames==nil then
@@ -291,7 +295,7 @@ function UniversalProcessKit:findChildrenLoopFunc(childId,prefixShapeNames)
 		
 		local a,_=string.find(loadI3D,"^[$%w_%/\\%.0-9]+%.i3d$")
 		if a==nil then
-			printErr('invalid filename "'..tostring(loadI3D)..'"')
+			printErr('invalid filename "',loadI3D,'"')
 		else
 			local filename = getLongFilename(loadI3D,self.base.i18nNameSpace)
 			printInfo('filename is "'..tostring(filename)..'"')
@@ -301,7 +305,7 @@ function UniversalProcessKit:findChildrenLoopFunc(childId,prefixShapeNames)
 			else
 				local nrOfChildren=getNumOfChildren(newNode)
 				if nrOfChildren==0 then
-					printInfo('no shapes loadable out of file "'..tostring(filename)..'"')
+					printInfo('no shapes loadable out of file "',filename,'"')
 				end
 				for i=0,getNumOfChildren(newNode)-1 do
 					local linkShapeId = getChildAt(newNode, i)
@@ -340,7 +344,7 @@ function UniversalProcessKit:findChildrenLoopFunc(childId,prefixShapeNames)
 end
 
 function UniversalProcessKit:findChildren(id,prefixShapeNames)
-	self:printFn('UniversalProcessKit:findChildren('..tostring(id)..')')
+	self:printFn('UniversalProcessKit:findChildren(',id,')')
 	local name=getName(id)
 	local a,b=string.find(name,"[%w_%.%/]+")
 	if name=="" or a==nil or string.sub(name,a,b)~=name then
@@ -368,19 +372,19 @@ function UniversalProcessKit:findChildren(id,prefixShapeNames)
 end;
 
 function UniversalProcessKit:findChildrenShapesLoopFunc(childId)
-	self:printFn('UniversalProcessKit:findChildrenShapesLoopFunc('..tostring(childId)..')')
+	self:printFn('UniversalProcessKit:findChildrenShapesLoopFunc(',childId,')')
 	table.insert(self.childrenShapes,childId)
 	self:findChildrenShapes(childId)
 	return true
 end;
 
 function UniversalProcessKit:findChildrenShapes(id)
-	self:printFn('UniversalProcessKit:findChildrenShapes('..tostring(id)..')')
+	self:printFn('UniversalProcessKit:findChildrenShapes(',id,')')
 	loopThruChildren(id,"findChildrenShapesLoopFunc",self)
 end;
 
 function UniversalProcessKit:delete()
-	printFn('delete module '..tostring(self.name)..' with nid '..tostring(self.nodeId))
+	printFn('delete module ',self.name,' with nodeid ',self.nodeId)
 
 	self.isEnabled = false
 
@@ -416,14 +420,14 @@ function UniversalProcessKit:delete()
 end;
 
 function UniversalProcessKit:update(dt)
-	self:printFn('UniversalProcessKit:update('..tostring(dt)..')')
+	self:printFn('UniversalProcessKit:update(',dt,')')
 	-- do sth with time (ms)
 	-- requieres UniversalProcessKitListener.addUpdateable(self)
 	-- and UniversalProcessKitListener.removeUpdateable(self)
 end;
 
 function UniversalProcessKit:registerOnFillLevelChangeFunc(obj,func)
-	self:printFn('UniversalProcessKit:registerOnFillLevelChangeFunc('..tostring(obj)..', '..tostring(func)..')')
+	self:printFn('UniversalProcessKit:registerOnFillLevelChangeFunc(',obj,', ',func,')')
 	if obj.registeredOnFillLevelChangeFuncs==nil then
 		obj.registeredOnFillLevelChangeFuncs={}
 	end
@@ -435,14 +439,14 @@ function UniversalProcessKit:registerOnFillLevelChangeFunc(obj,func)
 end
 
 function UniversalProcessKit:unregisterOnFillLevelChangeFunc(obj)
-	self:printFn('UniversalProcessKit:unregisterOnFillLevelChangeFunc('..tostring(obj)..')')
+	self:printFn('UniversalProcessKit:unregisterOnFillLevelChangeFunc(',obj,')')
 	if type(obj)=="table" then
 		self.onFillLevelChangeFuncs[obj]=nil
 	end
 end
 
 function UniversalProcessKit:p_onFillLevelChange(deltaFillLevel, newFillLevel, fillType) -- do sth with syncing
-	self:printFn('UniversalProcessKit:p_onFillLevelChange('..tostring(deltaFillLevel)..', '..tostring(newFillLevel)..', '..tostring(fillType)..')')
+	self:printFn('UniversalProcessKit:p_onFillLevelChange(',deltaFillLevel,', ',newFillLevel,', ',fillType,')')
 	
 	if self.isServer then
 		table.insert(self.fillLevelsToSync,{fillLevel=newFillLevel,fillType=fillType})
@@ -456,11 +460,11 @@ function UniversalProcessKit:p_onFillLevelChange(deltaFillLevel, newFillLevel, f
 end
 
 function UniversalProcessKit:onFillLevelChange(deltaFillLevel, newFillLevel, fillType) -- to be overwritten
-	self:printFn('UniversalProcessKit:onFillLevelChange('..tostring(deltaFillLevel)..', '..tostring(newFillLevel)..', '..tostring(fillType)..')')
+	self:printFn('UniversalProcessKit:onFillLevelChange(',deltaFillLevel,', ',newFillLevel,', ',fillType,')')
 end
 
 function UniversalProcessKit:getFillLevelBubbleShellFromFillType(fillType)
-	self:printFn('UniversalProcessKit:getFillLevelBubbleShellFromFillType('..tostring(fillType)..')')
+	self:printFn('UniversalProcessKit:getFillLevelBubbleShellFromFillType(',fillType,')')
 	if self.storageType==UPK_Storage.SEPARATE and fillType~=nil then
 		local newFillType=self.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN][fillType] or fillType
 		local flb=self.p_flbs[newFillType]
@@ -478,7 +482,7 @@ function UniversalProcessKit:getFillLevelBubbleShellFromFillType(fillType)
 end
 
 function UniversalProcessKit:getFillLevel(fillType)
-	self:printFn('UniversalProcessKit:getFillLevel('..tostring(fillType)..')')
+	self:printFn('UniversalProcessKit:getFillLevel(',fillType,')')
 	if fillType~=nil then
 		if UniversalProcessKit.isSpecialFillType(fillType) then
 			return UniversalProcessKitEnvironment.flbs[fillType].fillLevel
@@ -508,7 +512,7 @@ function UniversalProcessKit:getFillLevel(fillType)
 end
 
 function UniversalProcessKit:getCapacity(fillType)
-	self:printFn('UniversalProcessKit:getCapacity('..tostring(fillType)..')')
+	self:printFn('UniversalProcessKit:getCapacity(',fillType,')')
 	if self.storageType==UPK_Storage.SEPARATE and fillType~=nil then
 		local newFillType=self.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN][fillType] or fillType
 		local flb=self.p_flbs[newFillType]
@@ -539,7 +543,7 @@ function UniversalProcessKit:resetFillLevelIfNeeded()
 end
 
 function UniversalProcessKit:allowFillType(fillType, allowEmptying) -- also check for capacity
-	self:printFn('UniversalProcessKit:allowFillType('..tostring(fillType)..', '..tostring(allowEmptying)..')')
+	self:printFn('UniversalProcessKit:allowFillType(',fillType,', ',allowEmptying,')')
 	if fillType~=nil then
 		local newFillType=self.fillTypesConversionMatrix[UniversalProcessKit.FILLTYPE_UNKNOWN][fillType] or fillType
 		if UniversalProcessKit.isSpecialFillType(newFillType) then
@@ -569,7 +573,7 @@ function UniversalProcessKit:allowFillType(fillType, allowEmptying) -- also chec
 end
 
 function UniversalProcessKit:setFillLevel(newFillLevel, fillType, force)
-	self:printFn('UniversalProcessKit:setFillLevel('..tostring(newFillLevel)..', '..tostring(fillType)..', '..tostring(force)..')')
+	self:printFn('UniversalProcessKit:setFillLevel(',newFillLevel,', ',fillType,', ',force,')')
 	if fillType~=nil then
 		newFillType=self.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN][fillType] or fillType
 		if UniversalProcessKit.isSpecialFillType(newFillType) then -- should not happen
@@ -582,7 +586,7 @@ function UniversalProcessKit:setFillLevel(newFillLevel, fillType, force)
 end
 
 function UniversalProcessKit:addFillLevel(deltaFillLevel, fillType)
-	self:printFn('UniversalProcessKit:addFillLevel('..tostring(deltaFillLevel)..', '..tostring(fillType)..')')
+	self:printFn('UniversalProcessKit:addFillLevel(',deltaFillLevel,', ',fillType,')')
 	if fillType~=nil then
 		fillType=self.fillTypesConversionMatrix[Fillable.FILLTYPE_UNKNOWN][fillType] or fillType
 	end
@@ -590,7 +594,7 @@ function UniversalProcessKit:addFillLevel(deltaFillLevel, fillType)
 end;
 
 function UniversalProcessKit:addFillLevels(fillLevelsArr)
-	self:printFn('UniversalProcessKit:addFillLevels('..tostring(fillLevelsArr)..')')
+	self:printFn('UniversalProcessKit:addFillLevels(',fillLevelsArr,')')
 	for fillType, deltaFillLevel in pairs(fillLevelsArr) do
 		if type(deltaFillLevel)=="number" and type(fillType)=="number" then
 			self:addFillLevel(deltaFillLevel,fillType)
@@ -623,7 +627,7 @@ end;
 
 -- show or hide an icon on the mini map
 function UniversalProcessKit:showMapHotspot(on,alreadySent)
-	self:printFn('UniversalProcessKit:showMapHotspot('..tostring(on)..', '..tostring(alreadySent)..')')
+	self:printFn('UniversalProcessKit:showMapHotspot(',on,', ',alreadySent,')')
 	self.appearsOnMap=on
 	if on==true and self.mapHotspot == nil then
 		
@@ -637,8 +641,8 @@ function UniversalProcessKit:showMapHotspot(on,alreadySent)
 		]]--
 		
 		local widthHeightRatio = g_currentMission.syncBackgroundOverlay.height
-		self:printInfo('widthHeightRatio = '..tostring(widthHeightRatio))
-		self:printInfo('g_currentMission.ingameMap.mapWidth = '..tostring(g_currentMission.ingameMap.mapWidth))
+		self:printInfo('widthHeightRatio = ',widthHeightRatio)
+		self:printInfo('g_currentMission.ingameMap.mapWidth = ',g_currentMission.ingameMap.mapWidth)
 		local iconSize = 0.015625 --g_currentMission.ingameMap.mapWidth / 10
 		local x,_,z = unpack(self.wpos)
 		self.mapHotspot = g_currentMission.ingameMap:createMapHotspot(nil, self.MapHotspotIcon, x, z, iconSize, iconSize * widthHeightRatio, false, false, false, 0, true)
@@ -653,7 +657,7 @@ function UniversalProcessKit:showMapHotspot(on,alreadySent)
 end;
 
 function UniversalProcessKit:setEnable(isEnabled,alreadySent)
-	self:printFn('UniversalProcessKit:setEnable('..tostring(isEnabled)..', '..tostring(alreadySent)..')')
+	self:printFn('UniversalProcessKit:setEnable(',isEnabled,', ',alreadySent,')')
 	if isEnabled~=nil then
 		self.isEnabled=isEnabled
 		if not alreadySent then
@@ -673,7 +677,7 @@ function UniversalProcessKit:setEnable(isEnabled,alreadySent)
 end;
 
 function UniversalProcessKit:setEnableChildren(isEnabled,alreadySent)
-	self:printFn('UniversalProcessKit:setEnableChildren('..tostring(isEnabled)..', '..tostring(alreadySent)..')')
+	self:printFn('UniversalProcessKit:setEnableChildren(',isEnabled,', ',alreadySent,')')
 	for i=1,#self.kids do
 		self.kids[i]:setEnable(isEnabled,alreadySent)
 	end
@@ -687,16 +691,18 @@ function UniversalProcessKit:postLoad()
 		for i=1,#initialFillLevelsArr,2 do
 			local fillLevel=tonumber(initialFillLevelsArr[i])
 			local fillType=unpack(UniversalProcessKit.fillTypeNameToInt(initialFillLevelsArr[i+1]))
-			self:printAll('want to initially add '..tostring(fillLevel)..' to '..tostring(fillType))
+			self:printAll('want to initially add ',fillLevel,' to ',fillType)
 			if fillLevel~=nil and fillType~=nil then
 				self:addFillLevel(fillLevel, fillType)
 			end
 		end
 	end
+	-- loading done (for actions)
+	self.isLoaded=true
 end;
 
 function UniversalProcessKit:loadFromAttributesAndNodes(xmlFile, key)
-	self:printFn('UniversalProcessKit:loadFromAttributesAndNodes('..tostring(xmlFile)..', '..tostring(key)..')')
+	self:printFn('UniversalProcessKit:loadFromAttributesAndNodes(',xmlFile,', ',key,')')
 	key=key.."."..self.name
 
 	local fillLevelsStr = getXMLString(xmlFile, key .. "#fillLevels")
@@ -705,18 +711,18 @@ function UniversalProcessKit:loadFromAttributesAndNodes(xmlFile, key)
 	for i=1,#fillLevelsArr,2 do
 		local fillLevel=tonumber(fillLevelsArr[i])
 		local fillType=unpack(UniversalProcessKit.fillTypeNameToInt(fillLevelsArr[i+1]))
-		self:printInfo('want to add saved '..tostring(fillLevel)..' to '..tostring(fillType))
+		self:printInfo('want to add saved ',fillLevel,' to ',fillType)
 		if fillLevel~=nil and fillType~=nil then
 			self:addFillLevel(fillLevel, fillType) -- should be good for fifo and filo
 		end
 	end
 	
 	local isEnabled = getXMLBool(xmlFile, key .. "#isEnabled")
-	self:printInfo('read from save file: isEnabled = '..tostring(isEnabled)..' ('..type(isEnabled)..')')
+	self:printInfo('read from save file: isEnabled = ',isEnabled,' (',type(isEnabled),')')
 	self:setEnable(Utils.getNoNil(getXMLBool(xmlFile, key .. "#isEnabled"), true), true)
 	
 	local appearsOnMap = getXMLBool(xmlFile, key .. "#showMapHotspot")
-	self:printInfo('read from save file: showMapHotspot = '..tostring(appearsOnMap)..' ('..type(appearsOnMap)..')')
+	self:printInfo('read from save file: showMapHotspot = ',appearsOnMap,' (',type(appearsOnMap),')')
 	self:showMapHotspot(Utils.getNoNil(getXMLBool(xmlFile, key .. "#showMapHotspot"), getBoolFromUserAttribute(self.nodeId, "showMapHotspot", false)), true)
 	self.entitiesInTriggerLoaded = getXMLInt(xmlFile, key .. "#entitiesInTrigger") or 0
 	self:loadExtraNodes(xmlFile, key)
@@ -729,7 +735,7 @@ function UniversalProcessKit:loadFromAttributesAndNodes(xmlFile, key)
 end;
 
 function UniversalProcessKit:getSaveAttributesAndNodes(nodeIdent)
-	self:printFn('UniversalProcessKit:getSaveAttributesAndNodes('..tostring(nodeIdent)..')')
+	self:printFn('UniversalProcessKit:getSaveAttributesAndNodes(',nodeIdent,')')
 	local attributes=""
 		
 	local nodes = "<"..tostring(self.name)
@@ -769,7 +775,7 @@ function UniversalProcessKit:getSaveAttributesAndNodes(nodeIdent)
 		end
 	end
 	
-	self:printInfo('fillLevels: '..tostring(fillLevels))
+	self:printInfo('fillLevels: ',fillLevels)
 	
 	if fillLevels~="" then
 		extraNodes = extraNodes.." fillLevels=\"" .. tostring(fillLevels) .. "\""
@@ -812,13 +818,13 @@ end;
 
 -- use this function to load your extra Nodes (YourClass:loadExtraNodes)
 function UniversalProcessKit:loadExtraNodes(xmlFile, key)
-	self:printFn('UniversalProcessKit:loadExtraNodes('..tostring(xmlFile)..', '..tostring(key)..')')
+	self:printFn('UniversalProcessKit:loadExtraNodes(',xmlFile,', ',key,')')
 	return true
 end;
 
 -- use this function to save your own values (YourClass:getSaveExtraNodes)
 function UniversalProcessKit:getSaveExtraNodes(nodeIdent)
-	self:printFn('UniversalProcessKit:getSaveExtraNodes('..tostring(nodeIdent)..')')
+	self:printFn('UniversalProcessKit:getSaveExtraNodes(',nodeIdent,')')
 	return ""
 end;
 

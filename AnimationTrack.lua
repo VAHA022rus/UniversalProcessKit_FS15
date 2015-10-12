@@ -227,7 +227,11 @@ function AnimationTrack:loadFromAttributes(xmlFile, key)
 	
 	self:setAnimTrackTime(animTrackTime)
 	self:setAnimTrackSpeedScale(animationSpeed)
-	self:enableAnimTrack(animationEnabled)
+	if animationEnabled then
+		self:play(0)
+	else
+		self:stop(0)
+	end
 	
 	self.loopCount = getXMLInt(xmlFile, key .. "#loopCount") or 0
 	

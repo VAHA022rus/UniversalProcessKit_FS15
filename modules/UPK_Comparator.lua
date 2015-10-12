@@ -12,7 +12,6 @@ function UPK_Comparator:new(nodeId,parent)
 	local self = UniversalProcessKit:new(nodeId,parent, UPK_Comparator_mt)
 	registerObjectClassName(self, "UPK_Comparator")
 	
-	self.isLoaded = false
 	self.fillLevelsCopy = {}
 	
 	-- formula, eval
@@ -46,7 +45,6 @@ end
 
 function UPK_Comparator:postLoad()
 	self:printFn('UPK_Comparator:postLoad()')
-	UPK_Comparator:superClass().postLoad(self)
 	
 	for fillType,_ in pairs(self.usedFillTypes) do
 		local fillLevel = self:getFillLevel(fillType) or 0
@@ -57,23 +55,25 @@ function UPK_Comparator:postLoad()
 	
 	if state~=self.state then
 		if state and not self.state then
-			self:operateActionSilent('OnTrue')
+			self:operateAction('OnTrue')
 		elseif not state and self.state then
-			self:operateActionSilent('OnFalse')
+			self:operateAction('OnFalse')
 		end
 	end
 	self.state=state
 	
-	self.isLoaded=true
+	UPK_Comparator:superClass().postLoad(self)
 end;
 
 function UPK_Comparator:onFillLevelChange(deltaFillLevel, newFillLevel, fillType)
 	self:printFn('UPK_Comparator:onFillLevelChange(',deltaFillLevel,', ',newFillLevel,', ',fillType,')')
 	
+	self:printInfo('self.isEnabled ',self.isEnabled,' self.isLoaded ',self.isLoaded)
 	if self.isEnabled and self.isLoaded then
 		if self.usedFillTypes[fillType]==true then		
 			self.fillLevelsCopy[fillType] = newFillLevel
 			local state=self.eval()
+			self:printInfo('self.state ',self.state)
 			if state~=self.state then
 				if state and not (self.state or false) then
 					self:printAll('OnTrue')
