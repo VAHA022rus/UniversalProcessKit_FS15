@@ -110,6 +110,8 @@ function UniversalProcessKitListener.loadMap(name)
 		end
 	end
 	
+	UniversalProcessKitEnvironment.setWeekday()
+	
 	UniversalProcessKitEnvironment.setSun()
 	UniversalProcessKitEnvironment.setRain()
 	UniversalProcessKitEnvironment.setTemperature()
@@ -178,7 +180,7 @@ function UniversalProcessKitListener.removeUpdateable(obj)
 end
 
 function UniversalProcessKitListener:update(dt)
-	printAll('UniversalProcessKitListener:update(',dt,')')
+	--printAll('UniversalProcessKitListener:update(',dt,')')
 	-- runTime
 	UniversalProcessKitListener.runTime = UniversalProcessKitListener.runTime + dt
 	-- seconds
@@ -240,6 +242,8 @@ end
 
 function UniversalProcessKitListener:dayChanged()
 	printFn('UniversalProcessKitListener:dayChanged()')
+	-- wekday
+	UniversalProcessKitEnvironment.setWeekday()
 	-- keep runTime in sync
 	if g_server~=nil then
 		UniversalProcessKitListener.syncingObject:raiseDirtyFlags(UniversalProcessKitListener.syncingObject.runTimeDirtyFlag)
@@ -407,6 +411,7 @@ function UniversalProcessKitListener.keyEvent(self,unicode,sym,modifier,isDown)
 		UPK_PlayerSpawner.togglePlayerSpawner(-1)
 	end
 	
+	--InputBinding.isGamepadButtonPressed(0, Input.BUTTON_10)
 	for _,v in ipairs(self.registeredKeyFunctions) do
 		if v.isShown and InputBinding.isPressed(v.inputIndex) then
 			v.obj[v.callbackFunc](v.obj,v.inputName)

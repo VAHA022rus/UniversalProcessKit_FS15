@@ -22,6 +22,12 @@ function UniversalProcessKitEnvironment:hourChanged()
 	UniversalProcessKitEnvironment.setTemperature()
 end
 
+function UniversalProcessKitEnvironment:setWeekday()
+	printFn('UniversalProcessKitEnvironment:setWeekday()')
+	UniversalProcessKitEnvironment.weekday=(g_currentMission.environment.currentDay-1)%7 -- 0-6
+	--printInfo('currentDay= ',g_currentMission.environment.currentDay,' day=',day,' weekday=',UniversalProcessKitEnvironment.weekday)
+end
+
 function UniversalProcessKitEnvironment:setSun()
 	printFn('UniversalProcessKitEnvironment:setSun()')
 	local lightScale=1

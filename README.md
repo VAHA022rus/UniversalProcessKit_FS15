@@ -9,7 +9,7 @@ Die Konfiguration des UPK-Mods wird allein über UserAttributes in der i3d gereg
 
 __aktuelle Version (0.9.8) -> AAA\_UniversalProcessKit__
 
-__aktuelle Entwickler-Version (0.10.7) -> AAA\_UniversalProcessKit-dev__
+__aktuelle Entwickler-Version (0.10.8) -> AAA\_UniversalProcessKit-dev__
 
 __Dokumentation -> 00\_documentation__
 
@@ -45,6 +45,13 @@ Bisher enthaltene Module:
 - woodtrigger
 
 ##Changelog
+
+__V0.10.8__
+
+Processor
+- neu: productionDays
+- neu: productionThreshold
+- Fix für productionPrerequisite
 
 __V0.10.7__
 

@@ -56,6 +56,9 @@ function UPK_FillTrigger:new(nodeId, parent)
 	local activateInput = getStringFromUserAttribute(nodeId, "activateInput", "false")
 	if activateInput~="false" or self.useFillFillTypes then
 		self.activateInputBinding = 'ACTIVATE_OBJECT'
+		if activateInput=="false" then
+			activateInput = 'ACTIVATE_OBJECT'
+		end
 		self.useActivateInputBinding = true
 		self.startFillingText = returnNilIfEmptyString(self.i18n[getStringFromUserAttribute(nodeId, "startFillingText")]) or self.i18n['siloStartFilling']
 		self.stopFillingText = returnNilIfEmptyString(self.i18n[getStringFromUserAttribute(nodeId, "stopFillingText")]) or self.i18n['siloStopFilling']
@@ -68,7 +71,7 @@ function UPK_FillTrigger:new(nodeId, parent)
 				end
 			end
 			if isInputSet==false then
-				printErr('unknown input "',isInputSet,'" - using "ACTIVATE_OBJECT" for now')
+				self:printErr('unknown input "',isInputSet,'" - using "ACTIVATE_OBJECT" for now')
 			else
 				self.activateInputBinding=activateInput
 			end

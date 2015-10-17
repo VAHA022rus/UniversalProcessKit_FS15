@@ -19,6 +19,7 @@ function UPK_Processor:new(nodeId, parent)
 	self.productsPerSecond = getNumberFromUserAttribute(nodeId, "productsPerSecond", 0)
 	self.productsPerMinute = getNumberFromUserAttribute(nodeId, "productsPerMinute", 0)
 	self.productsPerHour = getNumberFromUserAttribute(nodeId, "productsPerHour", 0)
+	
 	self.productionHours={}
 	if self.productsPerSecond>0 or self.productsPerMinute>0 or self.productsPerHour>0 then
 		local productionHoursStrings = getStringFromUserAttribute(nodeId, "productionHours", "0-23")
@@ -36,23 +37,44 @@ function UPK_Processor:new(nodeId, parent)
 			end
 		end
 	end
+	
 	self.productsPerDay = getNumberFromUserAttribute(nodeId, "productsPerDay" ,0)
+	
+	-- productionDays
+	self.productionDays={}
+	local productionDaysStrings = getStringFromUserAttribute(nodeId, "productionDays", "0-6") -- mon - sun
+	local productionDaysStringArr = Utils.splitString(",",productionDaysStrings)
+	for _,v in pairs(productionDaysStringArr) do
+		self:printAll(v)
+		local productionDaysArr = Utils.splitString("-",v)
+		local lowerDay = mathmin(mathmax(tonumber(productionDaysArr[1]),0),6)
+		local upperDay = mathmin(mathmax(tonumber(productionDaysArr[2]),lowerDay),6)
+		if lowerDay~=nil and upperDay~=nil then
+			for i=lowerDay,upperDay do
+				self:printInfo('produce sth at day ',i)
+				self.productionDays[i]=true
+			end
+		end
+	end
 	
 	self.productionInterval = getNumberFromUserAttribute(nodeId, "productionInterval", 1, 1)
 	self.currentInterval = self.productionInterval
 
-	self.productionPrerequisite={}
-	self.hasProductionPrerequisite=false
-	local prerequisiteArr=getArrayFromUserAttribute(nodeId, "productionPrerequisite")
-	for i=1,#prerequisiteArr,2 do
-		local amount=tonumber(prerequisiteArr[i])
-		local type=unpack(UniversalProcessKit.fillTypeNameToInt(prerequisiteArr[i+1]))
-		self:printInfo('productionPrerequisite: '..tostring(amount)..' of '..tostring(prerequisiteArr[i+1])..' ('..tostring(type)..')')
+	-- productionThreshold
+	self.productionThreshold={}
+	self.hasProductionThreshold=false
+	local thresholdArr=getArrayFromUserAttribute(nodeId, "productionThreshold")
+	for i=1,#thresholdArr,2 do
+		local amount=tonumber(thresholdArr[i])
+		local type=unpack(UniversalProcessKit.fillTypeNameToInt(thresholdArr[i+1]))
+		self:printInfo('productionThreshold: ',amount,' of ',thresholdArr[i+1],' (',type,')')
 		if amount~=nil and type~=nil then
-			self.productionPrerequisite[type]=amount
-			self.hasProductionPrerequisite=true
+			self.productionThreshold[type]=amount
+			self.hasProductionThreshold=true
 		end
 	end
+	
+	-- productionThreshold
 	
 	self.productionProbability = getNumberFromUserAttribute(nodeId, "productionProbability", 1, 0, 1)
 	
@@ -265,9 +287,23 @@ function UPK_Processor:timeframeChanged(processed)
 	end
 end
 
-function UPK_Processor:canProduce(ignoreProductionHours)
-	self:printFn('UPK_Processor:canProduce(',ignoreProductionHours,')')
-	if self.productionHours[g_currentMission.environment.currentHour] or ignoreProductionHours then
+function UPK_Processor:canProduce(ignoreProductionTimes)
+	self:printFn('UPK_Processor:canProduce(',ignoreProductionTimes,')')
+	
+	local passThreshold=true
+	if self.hasProductionThreshold then
+		for k,v in pairs(self.productionThreshold) do
+			self:printInfo('productionThreshold ',k,': ',v)
+			if type(v)=="number" and v>0 then
+				if self:getFillLevel(k)<v then
+					passThreshold=false
+					break
+				end
+			end
+		end
+	end
+	
+	if (self.productionHours[g_currentMission.environment.currentHour] and self.productionDays[UniversalProcessKitEnvironment.weekday] and passThreshold) or ignoreProductionTimes then
 		local produce=self.productionProbability==1
 		if not produce then
 			local rnr = mathrandom()
@@ -299,10 +335,13 @@ function UPK_Processor:produce(processed)
 		end
 		if self.hasProductionPrerequisite then
 			for k,v in pairs(self.productionPrerequisite) do
-				if type(v)=="number" and v<0 then
+				self:printInfo('productionPrerequisite ',k,': ',v)
+				if type(v)=="number" and v>0 then
 					if self.onlyWholeProducts then
+						self:printInfo('processed=',processed,' min=',mathfloor(self:getFillLevel(k)/v))
 						processed=mathmin(processed,mathfloor(self:getFillLevel(k)/v))
 					else
+						self:printInfo('processed=',processed,' min=',self:getFillLevel(k)/v)
 						processed=mathmin(processed,-self:getFillLevel(k)/v)
 					end
 					if processed==0 then
