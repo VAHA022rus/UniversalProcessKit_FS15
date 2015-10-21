@@ -60,6 +60,20 @@ function UPK_Processor:new(nodeId, parent)
 	self.productionInterval = getNumberFromUserAttribute(nodeId, "productionInterval", 1, 1)
 	self.currentInterval = self.productionInterval
 
+	-- productionPrerequisite
+	self.productionPrerequisite={}
+	self.hasProductionPrerequisite=false
+	local prerequisiteArr=getArrayFromUserAttribute(nodeId, "productionPrerequisite")
+	for i=1,#prerequisiteArr,2 do
+		local amount=tonumber(prerequisiteArr[i])
+		local type=unpack(UniversalProcessKit.fillTypeNameToInt(prerequisiteArr[i+1]))
+		self:printInfo('productionPrerequisite: ',amount,' of ',prerequisiteArr[i+1],' (',type,')')
+		if amount~=nil and type~=nil then
+			self.productionPrerequisite[type]=amount
+			self.hasProductionPrerequisite=true
+		end
+	end
+	
 	-- productionThreshold
 	self.productionThreshold={}
 	self.hasProductionThreshold=false
@@ -74,7 +88,7 @@ function UPK_Processor:new(nodeId, parent)
 		end
 	end
 	
-	-- productionThreshold
+	-- productionProbability
 	
 	self.productionProbability = getNumberFromUserAttribute(nodeId, "productionProbability", 1, 0, 1)
 	
@@ -342,7 +356,7 @@ function UPK_Processor:produce(processed)
 						processed=mathmin(processed,mathfloor(self:getFillLevel(k)/v))
 					else
 						self:printInfo('processed=',processed,' min=',self:getFillLevel(k)/v)
-						processed=mathmin(processed,-self:getFillLevel(k)/v)
+						processed=mathmin(processed,self:getFillLevel(k)/v)
 					end
 					if processed==0 then
 						break

@@ -17,6 +17,8 @@ UniversalProcessKitListener.registeredKeyFunctions={}
 UniversalProcessKitListener.dtsum = 0
 UniversalProcessKitListener.runTime=0 -- adds up milliseconds
 
+local gamepadButtonsPressed = {}
+
 function UniversalProcessKitListener.loadMap(name)
 	printFn('UniversalProcessKitListener.loadMap('..tostring(name)..')')
 	
@@ -220,6 +222,26 @@ function UniversalProcessKitListener:update(dt)
 		end
 	end
 	
+	-- gamepad input
+	if getGamepadEnabled() then
+		for i=1,getNumOfGamepads() do
+			for _,v in ipairs(self.registeredKeyFunctions) do
+				if v.isShown then
+					local isPressed = true
+					local gamepadDevice = InputBinding.actions[v.inputIndex].gamepadDevice
+					local gamepadButtons = InputBinding.actions[v.inputIndex].gamepadButtons
+					if InputBinding.areGamepadButtonsPressed(gamepadDevice, gamepadButtons) then
+						if not gamepadButtonsPressed[v.inputIndex] then
+							gamepadButtonsPressed[v.inputIndex]=true
+							v.obj[v.callbackFunc](v.obj,v.inputName)
+						end
+					else
+						gamepadButtonsPressed[v.inputIndex]=false
+					end
+				end
+			end
+		end
+	end
 end
 
 -- day
@@ -401,6 +423,25 @@ function UniversalProcessKitListener.unregisterKeyFunction(inputName,obj)
 	end
 end
 
+function UniversalProcessKitListener.updateKeyFunctionDisplayText(inputName,obj,displayText)
+	printFn('UniversalProcessKitListener.updateKeyFunctionDisplayText(',inputName,',',obj,',',displayText,')')
+	if type(inputName)~="string" or inputName=="" then
+		return
+	end
+	
+	local key=-1
+	for k,v in pairs(UniversalProcessKitListener.registeredKeyFunctions) do
+		if v.obj==obj and v.inputName==inputName then
+			key=k
+			break
+		end
+	end
+	
+	if key~=-1 then
+		UniversalProcessKitListener.registeredKeyFunctions[key].displayText=displayText
+	end
+end
+
 function UniversalProcessKitListener.keyEvent(self,unicode,sym,modifier,isDown)
 	printAll('UniversalProcessKitListener.keyEvent(',unicode,',',sym,',',modifier,',',isDown,')')
 	
@@ -411,7 +452,8 @@ function UniversalProcessKitListener.keyEvent(self,unicode,sym,modifier,isDown)
 		UPK_PlayerSpawner.togglePlayerSpawner(-1)
 	end
 	
-	--InputBinding.isGamepadButtonPressed(0, Input.BUTTON_10)
+	
+	
 	for _,v in ipairs(self.registeredKeyFunctions) do
 		if v.isShown and InputBinding.isPressed(v.inputIndex) then
 			v.obj[v.callbackFunc](v.obj,v.inputName)

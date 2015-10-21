@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="no" ?>
 <modDesc descVersion="21">
     <author>mor2000</author>
-    <version>0.10.8</version>
+    <version>0.10.9</version>
     <title>
         <en>AAA UniversalProcessKit</en>
         <de>AAA UniversalProcessKit</de>
@@ -29,13 +29,13 @@
 		<sourceFile filename="networking/UniversalProcessKitSyncingObject.lua"/>
 		<sourceFile filename="UniversalProcessKitListener.lua"/>
 		<sourceFile filename="UniversalProcessKit.lua"/>
+		<sourceFile filename="networking/UniversalProcessKitEvent.lua"/>
 		<sourceFile filename="networking/UniversalProcessKitNetwork.lua"/>
 		<sourceFile filename="UniversalProcessKitTrigger.lua"/>
 		<sourceFile filename="UniversalProcessKitModules.lua"/>
 		<sourceFile filename="UniversalProcessKitActions.lua"/>
 		<sourceFile filename="UniversalProcessKitFillTypes.lua"/>
 		<sourceFile filename="UniversalProcessKitVehicleTypes.lua"/>
-		<sourceFile filename="networking/UniversalProcessKitEvent.lua"/>
 		<sourceFile filename="networking/UniversalProcessKitTriggerPlayerEvent.lua"/>
 		<sourceFile filename="modules/UPK_Base.lua"/>
 		<sourceFile filename="modules/UPK_FillTrigger.lua"/>

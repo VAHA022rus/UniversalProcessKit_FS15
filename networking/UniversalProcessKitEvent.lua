@@ -2,16 +2,24 @@
 
 -- UniversalProcessKitEvent
 
-UniversalProcessKitEvent = {}
+_m.UniversalProcessKitEvent = {}
 UniversalProcessKitEvent_mt = Class(UniversalProcessKitEvent, Event);
 InitEventClass(UniversalProcessKitEvent, "UniversalProcessKitEvent");
 
-UniversalProcessKitEvent.TYPE_ACTION = 1
-UniversalProcessKitEvent.TYPE_INPUT = 2
-UniversalProcessKitEvent.TYPE_ACTIVATOR = 3
-UniversalProcessKitEvent.TYPE_FILLTYPESELECTED = 4
-UniversalProcessKitEvent.TYPE_PLAY = 5
-UniversalProcessKitEvent.TYPE_STOP = 6
+UniversalProcessKitEvent.currentEventId = 0
+
+function UniversalProcessKitEvent.getNextEventId()
+	printFn('UniversalProcessKitEvent.getNextEventId()')
+	UniversalProcessKitEvent.currentEventId = UniversalProcessKitEvent.currentEventId + 1
+	return UniversalProcessKitEvent.currentEventId
+end
+
+UniversalProcessKitEvent.TYPE_ACTION = UniversalProcessKitEvent.getNextEventId()
+UniversalProcessKitEvent.TYPE_INPUT = UniversalProcessKitEvent.getNextEventId()
+UniversalProcessKitEvent.TYPE_ACTIVATOR = UniversalProcessKitEvent.getNextEventId()
+UniversalProcessKitEvent.TYPE_FILLTYPESELECTED = UniversalProcessKitEvent.getNextEventId()
+UniversalProcessKitEvent.TYPE_PLAY = UniversalProcessKitEvent.getNextEventId()
+UniversalProcessKitEvent.TYPE_STOP = UniversalProcessKitEvent.getNextEventId()
 
 function UniversalProcessKitEvent:emptyNew()
 	printFn('UniversalProcessKitEvent:emptyNew()')
@@ -49,10 +57,14 @@ function UniversalProcessKitEvent:readStream(streamId, connection)
 	local syncObjId = streamReadAuto(streamId)
 	local syncId = streamReadAuto(streamId)
 	local syncObj = networkGetObject(syncObjId)
-	self.upkmodule=syncObj:getObjectToSync(syncId)
-	-- args
-	self.args={streamReadAuto(streamId)}
-	self:run(connection)
+	if syncObj~=nil then
+		self.upkmodule=syncObj:getObjectToSync(syncId)
+		-- args
+		self.args={streamReadAuto(streamId)}
+		self:run(connection)
+	else
+		printInfo('syncObj is nil somehow (syncId is ',syncId,')')
+	end
 end;
 
 function UniversalProcessKitEvent:run(connection)
@@ -60,7 +72,7 @@ function UniversalProcessKitEvent:run(connection)
 	if not connection:getIsServer() then -- if server: send after receiving
 		g_server:broadcastEvent(self, false, connection)
 	end
-	self.upkmodule['eventCallback'](self.upkmodule,unpack(self.args))
+	self.upkmodule['p_eventCallback'](self.upkmodule,unpack(self.args))
 end
 
 function UniversalProcessKitEvent.sendEvent(upkmodule, alreadySent, ...)

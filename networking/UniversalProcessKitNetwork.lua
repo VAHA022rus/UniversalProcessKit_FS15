@@ -1,5 +1,7 @@
 -- by mor2000
 
+UniversalProcessKit.EVENT_PLAYERINTRIGGER = UniversalProcessKitEvent.getNextEventId()
+
 function UniversalProcessKit:writeStream(streamId, connection)
 	self:printFn('UniversalProcessKit:writeStream(',streamId,', ',connection,')')
 	if not connection:getIsServer() then -- in connection with client
@@ -124,7 +126,7 @@ function UniversalProcessKit:sendEvent(eventType,...)
 	UniversalProcessKitEvent.sendEvent(self, false, eventType, ...)
 end
 
-function UniversalProcessKit:eventCallback(eventType, ...) -- to be overwritten
+function UniversalProcessKit:p_eventCallback(eventType, ...) 
 	self:printFn('UniversalProcessKit:eventCallback(',eventType,'...)')
 	if eventType==UniversalProcessKitEvent.TYPE_ACTION then
 		local actionId, multiplier = ...
@@ -133,5 +135,9 @@ function UniversalProcessKit:eventCallback(eventType, ...) -- to be overwritten
 			self:printAll('operate action ',actionName)
 			self:operateAction(actionName, multiplier)
 		end
+	elseif eventType==UniversalProcessKit.EVENT_PLAYERINTRIGGER then
+	end
+	if self['eventCallback']~=nil then
+		self:eventCallback(eventType, ...) -- use that
 	end
 end

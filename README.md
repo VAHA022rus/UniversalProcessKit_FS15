@@ -46,6 +46,12 @@ Bisher enthaltene Module:
 
 ##Changelog
 
+__V0.10.9__
+
+- Support für Controller
+- neuer ActivatorTrigger
+- div. Bugfixe
+
 __V0.10.8__
 
 Processor

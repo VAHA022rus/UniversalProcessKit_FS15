@@ -329,6 +329,7 @@ function UniversalProcessKit:findChildrenLoopFunc(childId,prefixShapeNames)
 			--	module=debugObject(module)
 			--end
 			table.insert(self.kids,module)
+			self:printInfo('shape ',module.name,' is child of ',self.name)
 			module:findChildren(childId,prefixShapeNames)
 		else
 			self:printErr('couldnt load module of type ',type,' and id ',childId)
@@ -678,8 +679,12 @@ end;
 
 function UniversalProcessKit:setEnableChildren(isEnabled,alreadySent)
 	self:printFn('UniversalProcessKit:setEnableChildren(',isEnabled,', ',alreadySent,')')
-	for i=1,#self.kids do
-		self.kids[i]:setEnable(isEnabled,alreadySent)
+	local mink,maxk=getMinMaxKeys(self.kids)
+	self:printInfo('mink=',mink,' maxk=',maxk)
+	if mink~=nil then
+		for i=mink,maxk do
+			self.kids[i]:setEnable(isEnabled,alreadySent)
+		end
 	end
 end;
 

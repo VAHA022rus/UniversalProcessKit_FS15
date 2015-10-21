@@ -344,7 +344,7 @@ function AudioSample:onEndTimerCallback()
 	end
 	self.loopCount = self.loopCount+1
 	if self.loop==0 or (self.loop~=0 and self.loopCount<self.loop) then
-		setTimerTime(self.onEndTimerId,self.animDuration-offset)
+		setTimerTime(self.onEndTimerId,self.sampleDuration-offset)
 		return true
 	end
 	self.onEndTimerId=nil

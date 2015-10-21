@@ -63,14 +63,7 @@ function UPK_FillTrigger:new(nodeId, parent)
 		self.startFillingText = returnNilIfEmptyString(self.i18n[getStringFromUserAttribute(nodeId, "startFillingText")]) or self.i18n['siloStartFilling']
 		self.stopFillingText = returnNilIfEmptyString(self.i18n[getStringFromUserAttribute(nodeId, "stopFillingText")]) or self.i18n['siloStopFilling']
 		if activateInput~="true" then
-			local isInputSet=false
-			for k,v in pairs(InputBinding.actions) do
-				if v.name==activateInput then
-					isInputSet=true
-					break
-				end
-			end
-			if isInputSet==false then
+			if not InputBinding[activateInput] then
 				self:printErr('unknown input "',isInputSet,'" - using "ACTIVATE_OBJECT" for now')
 			else
 				self.activateInputBinding=activateInput
@@ -400,8 +393,7 @@ function UPK_FillTrigger:update(dt)
 			self:printInfo('self.useActivateInputBinding: ',self.useActivateInputBinding,' - self.autoDeactivate: ',self.autoDeactivate)
 			if self.isActivated and self.useActivateInputBinding and self.autoDeactivate then
 				self.isActivated=false
-				UniversalProcessKitListener.unregisterKeyFunction(self.activateInputBinding,self)
-				UniversalProcessKitListener.registerKeyFunction(self.activateInputBinding,self,'inputCallback',self.startFillingText)
+				UniversalProcessKitListener.updateKeyFunctionDisplayText(self.activateInputBinding,self,self.startFillingText)
 			end
 		end
 	end
@@ -434,7 +426,6 @@ end
 function UPK_FillTrigger:inputCallback(inputName)
 	self:printFn('UPK_FillTrigger:inputCallback(',inputName,')')
 	if self.activateInputBinding==inputName then
-		UniversalProcessKitListener.unregisterKeyFunction(self.activateInputBinding,self)
 		if self.useFillFillTypes and not self.isActivated then
 			-- show dialog
 			upkMultiSiloDialog:setModule(self)
@@ -452,7 +443,7 @@ function UPK_FillTrigger:inputCallback(inputName)
 			else
 				text=self.startFillingText
 			end
-			UniversalProcessKitListener.registerKeyFunction(self.activateInputBinding,self,'inputCallback',text)
+			UniversalProcessKitListener.updateKeyFunctionDisplayText(self.activateInputBinding,self,text)
 		end
 	end
 end
@@ -461,7 +452,7 @@ function UPK_FillTrigger:onFillTypeSelection(selectedFillType)
 	self:printFn('UPK_FillTrigger:onSelectCallback(',selectedFillType,')')
 	self.fillFillType=selectedFillType
 	self.isActivated=true
-	UniversalProcessKitListener.registerKeyFunction(self.activateInputBinding,self,'inputCallback',self.stopFillingText)
+	UniversalProcessKitListener.updateKeyFunctionDisplayText(self.activateInputBinding,self,self.stopFillingText)
 	-- event
 	self:sendEvent(UniversalProcessKitEvent.TYPE_FILLTYPESELECTED,self.fillFillType)
 	UniversalProcessKitListener.addUpdateable(self)
@@ -471,7 +462,7 @@ function UPK_FillTrigger:onFillTypeSelectionCancel()
 	self:printFn('UPK_FillTrigger:onSelectCallbackCancel()')
 	self.fillFillType=nil
 	self.isActivated=false
-	UniversalProcessKitListener.registerKeyFunction(self.activateInputBinding,self,'inputCallback',self.startFillingText)
+	UniversalProcessKitListener.updateKeyFunctionDisplayText(self.activateInputBinding,self,self.startFillingText)
 end
 
 function UPK_FillTrigger:fillTrailer(trailer, deltaFillLevel) -- tippers, shovels etc
