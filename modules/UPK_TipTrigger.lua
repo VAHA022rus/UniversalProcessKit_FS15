@@ -140,23 +140,13 @@ function UPK_TipTrigger:new(nodeId, parent)
 	
 	-- add/ remove if tipping
 	
-	self.addIfTipping = {}
-	self.useAddIfTipping = false
-	local addIfTippingArr = getArrayFromUserAttribute(nodeId, "addIfTipping")
-	for _,fillType in pairs(UniversalProcessKit.fillTypeNameToInt(addIfTippingArr)) do
-		self:printInfo('add if tipping '..tostring(UniversalProcessKit.fillTypeIntToName[fillType])..' ('..tostring(fillType)..')')
-		self.addIfTipping[fillType] = true
-		self.useAddIfTipping = true
-	end
+	-- actions
 	
-	self.removeIfTipping = {}
-	self.useRemoveIfTipping = false
-	local removeIfTippingArr = getArrayFromUserAttribute(nodeId, "removeIfTipping")
-	for _,fillType in pairs(UniversalProcessKit.fillTypeNameToInt(removeIfTippingArr)) do
-		self:printInfo('remove if tipping '..tostring(UniversalProcessKit.fillTypeIntToName[fillType])..' ('..tostring(fillType)..')')
-		self.removeIfTipping[fillType] = true
-		self.useRemoveIfTipping = true
-	end
+	self:getActionUserAttributes('IfTipping')
+	self.isTipping = {}
+	
+	self:getActionUserAttributes('IfTippingStarted')
+	self:getActionUserAttributes('IfTippingStopped')
 	
 	-- texts
 
@@ -260,19 +250,10 @@ function UPK_TipTrigger:updateTrailerTipping(trailer, fillDelta, fillType)
 						local revenue = fill * revenuePerLiter
 						g_currentMission:addSharedMoney(revenue, self.statName)
 					end
-					if self.useAddIfTipping then
-						for fillTypeToAdd,v in pairs(self.addIfTipping) do
-							if v then
-								self:addFillLevel(fill,fillTypeToAdd)
-							end
-						end
-					end
-					if self.useRemoveIfTipping then
-						for fillTypeToRemove,v in pairs(self.removeIfTipping) do
-							if v then
-								self:addFillLevel(-fill,fillTypeToRemove)
-							end
-						end
+					self:operateAction('IfTipping',fill)
+					if self.isTipping[trailer]~=true then
+						self.isTipping[trailer]=true
+						self:operateAction('IfTippingStarted')
 					end
 				end
 				
@@ -282,6 +263,8 @@ function UPK_TipTrigger:updateTrailerTipping(trailer, fillDelta, fillType)
 			self:printAll('toomuch: ',toomuch)
 			if toomuch<=-0.00000001 then
 				self:printAll('end tipping')
+				self.isTipping[trailer]=nil
+				self:operateAction('IfTippingStopped')
 				trailer:onEndTip()
 				trailer:setFillLevel(trailer:getFillLevel(fillType)-toomuch, fillType) -- put sth back
 			end
@@ -291,20 +274,19 @@ end
 
 function UPK_TipTrigger:getTipInfoForTrailer(trailer, tipReferencePointIndex)
 	self:printFn('UPK_TipTrigger:getTipInfoForTrailer(',trailer,', ',tipReferencePointIndex,')')
-	--if trailer.currentTipTrigger==self then
+	if not self.acceptedFillTypes[trailerFillType] then
+		self:printAll('self.acceptedFillTypes[',trailerFillType,'] = false')
+		return false,math.huge,nil
+	else
 		local minDistance, bestPoint = self:getTipDistanceFromTrailer(trailer, tipReferencePointIndex)
 		local trailerFillType = trailer.currentFillType
-		local isAllowed = --minDistance<1 and
-			self.acceptedFillTypes[trailerFillType] and
-			self:allowFillType(trailerFillType)
 		
+		local isAllowed = self:allowFillType(trailerFillType)
+	
 		self:printAll('isAllowed: ',isAllowed)
-		--self:print('self.acceptedFillTypes[trailerFillType]: '..tostring(self.acceptedFillTypes[trailerFillType]))
-		--self:print('self:allowFillType(trailerFillType): '..tostring(self:allowFillType(trailerFillType)))
 		self:printAll('minDistance: ',minDistance)
 		return isAllowed, minDistance, bestPoint
-		--end
-	--return false,math.huge,nil
+	end
 end
 
 function UPK_TipTrigger:getTipDistanceFromTrailer(trailer, tipReferencePointIndex)
@@ -398,22 +380,11 @@ function UPK_TipTrigger:triggerUpdate(vehicle,isInTrigger)
 		if UniversalProcessKit.isVehicleType(vehicle, UniversalProcessKit.VEHICLE_TIPPER) then
 			self:printAll('vehicle is tipper')
 			if isInTrigger then
-				--if vehicle.upk_currentTipTrigger==nil then
-				--	vehicle.upk_currentTipTrigger={}
-				--end
-				--table.insert(vehicle.upk_currentTipTrigger,self)
 				if g_currentMission.trailerTipTriggers[vehicle] == nil then
 					g_currentMission.trailerTipTriggers[vehicle] = {}
 				end
 				table.insert(g_currentMission.trailerTipTriggers[vehicle], self)
 			else
-				--[[
-				if vehicle.upk_currentTipTrigger[1]==self then
-					table.remove(vehicle.upk_currentTipTrigger,1)
-				end
-				]]--
-				
-				
 				local triggers = g_currentMission.trailerTipTriggers[vehicle]
 				if type(triggers) == "table" then
 					removeValueFromTable(triggers,self)

@@ -89,7 +89,7 @@ end
 function UPK_BalerTrigger:update(dt)
 	self:printAll('UPK_BalerTrigger:update(',dt,')')
 	if self.isServer and self.isEnabled then
-		for _,trailer in pairs(self.entities) do
+		for _,trailer in pairs(self.vehicles) do
 			local deltaFillLevel = self.fillLitersPerSecond * 0.001 * dt
 			for k,v in pairs(self.allowedVehicles) do
 				--self:print('is trailer VEHICLE_FORAGEWAGON '..tostring(UniversalProcessKit.isVehicleType(trailer, UniversalProcessKit.VEHICLE_FORAGEWAGON)))
@@ -179,7 +179,7 @@ function UPK_BalerTrigger:fillBaler(trailer, deltaFillLevel)
 						if not self.createFillType then
 							deltaFillLevel=math.min(deltaFillLevel, fillLevel)
 						end
-						if trailer.baleUnloadAnimationName == nil then
+						if trailer.baleUnloadAnimationName == nil and trailer.getTimeFromLevel~=nil then
 							local deltaTime = trailer:getTimeFromLevel(deltaFillLevel)
 							trailer:moveBales(deltaTime)
 						end
@@ -265,7 +265,7 @@ function UPK_BalerTrigger:getPickupNode(vehicle)
 		end
 		delete(xmlFile)
 	end
-	self:printInfo('vehicle.upk_pickupNode = '..tostring(vehicle.upk_pickupNode))
+	self:printInfo('vehicle.upk_pickupNode = ',vehicle.upk_pickupNode,' (',getName(vehicle.upk_pickupNode),')')
 end
 
 UPK_BalerTrigger.getPricePerLiter = UPK_FillTrigger.getPricePerLiter

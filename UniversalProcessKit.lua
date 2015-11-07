@@ -521,7 +521,7 @@ function UniversalProcessKit:getCapacity(fillType)
 			return self.capacities[newFillType]
 		else
 			if self.parent~=nil then
-				return self.parent:getCapacity(fillType)
+				return self.parent:getCapacity(newFillType)
 			end
 		end
 	end
@@ -545,19 +545,16 @@ end
 
 function UniversalProcessKit:allowFillType(fillType, allowEmptying) -- also check for capacity
 	self:printFn('UniversalProcessKit:allowFillType(',fillType,', ',allowEmptying,')')
+	-- return isAllowed, allowFilltype, capacityNotReached
 	if fillType~=nil then
 		local newFillType=self.fillTypesConversionMatrix[UniversalProcessKit.FILLTYPE_UNKNOWN][fillType] or fillType
 		if UniversalProcessKit.isSpecialFillType(newFillType) then
 			return true
 		elseif self.storageType==UPK_Storage.SEPARATE then
-			local flb=self.p_flbs[newFillType]
-			if flb~=nil then
-				return flb.fillLevel < flb.capacity
-			else
-				if self.parent~=nil then
-					return self.parent:allowFillType(fillType, allowEmptying)
-				end
-			end
+			local flbs = self:getFillLevelBubbleShellFromFillType(newFillType)
+			local fillLevel = flbs:geFillLevel(newFillType)
+			local cpacity = flbs:getCapacity(newFillType)
+			return fillLevel < capacity
 		elseif self.storageType==UPK_Storage.SINGLE then
 			local myFillType=self.fillType
 			newFillType=self.fillTypesConversionMatrix[myFillType][fillType]
@@ -702,8 +699,27 @@ function UniversalProcessKit:postLoad()
 			end
 		end
 	end
+	
+	if self.triggerId~=nil and self.triggerId~=0 then
+		if self.isServer then -- server, single game
+			self:setIsPopulated(self.vehiclesInTrigger>0) -- from savegame, ignore players
+		else -- client joning
+			self:setIsPopulated(self.entitiesInTrigger>0)
+		end
+	end
+	
 	-- loading done (for actions)
 	self.isLoaded=true
+	
+	if self.triggerId~=nil and self.triggerId~=0 then
+		-- isLoaded true
+		if self.isServer and self.playersInTrigger>0 then -- catch up on player left at end of game
+			for i=1,self.playersInTrigger do
+				self:operateAction('OnLeave')
+			end
+			self.playersInTrigger=0
+		end
+	end
 end;
 
 function UniversalProcessKit:loadFromAttributesAndNodes(xmlFile, key)
@@ -711,7 +727,7 @@ function UniversalProcessKit:loadFromAttributesAndNodes(xmlFile, key)
 	key=key.."."..self.name
 
 	local fillLevelsStr = getXMLString(xmlFile, key .. "#fillLevels")
-	self:printInfo('read save fillLevels '..tostring(fillLevelsStr))
+	self:printInfo('read save fillLevels ',fillLevelsStr)
 	local fillLevelsArr = gmatch(fillLevelsStr, "%S+")
 	for i=1,#fillLevelsArr,2 do
 		local fillLevel=tonumber(fillLevelsArr[i])
@@ -729,7 +745,13 @@ function UniversalProcessKit:loadFromAttributesAndNodes(xmlFile, key)
 	local appearsOnMap = getXMLBool(xmlFile, key .. "#showMapHotspot")
 	self:printInfo('read from save file: showMapHotspot = ',appearsOnMap,' (',type(appearsOnMap),')')
 	self:showMapHotspot(Utils.getNoNil(getXMLBool(xmlFile, key .. "#showMapHotspot"), getBoolFromUserAttribute(self.nodeId, "showMapHotspot", false)), true)
-	self.entitiesInTriggerLoaded = getXMLInt(xmlFile, key .. "#entitiesInTrigger") or 0
+	
+	-- trigger
+	if self.triggerId~=nil and self.triggerId~=0 then
+		self.vehiclesInTrigger = getXMLInt(xmlFile, key .. "#vehiclesInTrigger") or 0
+		self.playersInTrigger = getXMLInt(xmlFile, key .. "#playersInTrigger") or 0
+	end
+
 	self:loadExtraNodes(xmlFile, key)
 	
 	for i=1,#self.kids do
@@ -751,7 +773,6 @@ function UniversalProcessKit:getSaveAttributesAndNodes(nodeIdent)
 		extraNodes=extraNodes.." isEnabled=\"false\""
 	end
 	
-	self:printInfo('save to file: showMapHotspot = '..tostring(self.appearsOnMap))
 	extraNodes=extraNodes.." showMapHotspot=\""..tostring(self.appearsOnMap).."\""
 	
 	local fillLevels = ""
@@ -780,14 +801,14 @@ function UniversalProcessKit:getSaveAttributesAndNodes(nodeIdent)
 		end
 	end
 	
-	self:printInfo('fillLevels: ',fillLevels)
-	
 	if fillLevels~="" then
 		extraNodes = extraNodes.." fillLevels=\"" .. tostring(fillLevels) .. "\""
 	end
 	
+	-- trigger
 	if self.triggerId~=nil and self.triggerId~=0 then
-		extraNodes = extraNodes.." entitiesInTrigger=\"" .. tostring(self.entitiesInTrigger) .. "\""
+		extraNodes = extraNodes.." vehiclesInTrigger=\"" .. tostring(self.vehiclesInTrigger) .. "\""
+		extraNodes = extraNodes.." playersInTrigger=\"" .. tostring(self.playersInTrigger) .. "\""
 	end
 	
 	local extraNodesF = self:getSaveExtraNodes(nodeIdent)
@@ -802,7 +823,11 @@ function UniversalProcessKit:getSaveAttributesAndNodes(nodeIdent)
 		local attributesKid, nodesKid = self.kids[i]:getSaveAttributesAndNodes(nodeIdent)
 		attributes = attributes .. attributesKid
 		if nodesKid~="" then
-			nodesKids = nodesKids .. nodesKid
+			if nodesKids=="" then
+				nodesKids = nodesKid
+			else
+				nodesKids = nodesKids .. "\n" .. nodesKid
+			end
 		end
 	end
 	
@@ -813,10 +838,9 @@ function UniversalProcessKit:getSaveAttributesAndNodes(nodeIdent)
 			nodes = nodes .. extraNodes .. " />"
 		end
 	else
-		nodes = nodes .. extraNodes ..">\n" .. "\t" .. nodesKids .. "\n" .. "</"..tostring(self.name)..">"
+		nodesKids = string.gsub(nodesKids,"\n","\n\t")
+		nodes = nodes .. extraNodes ..">\n\t" .. nodesKids .. "\n" .. "</"..tostring(self.name)..">"
 	end
-	
-	self:printInfo('nodes: '..tostring(nodes))
 	
 	return attributes, nodes
 end;

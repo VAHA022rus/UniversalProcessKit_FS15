@@ -62,12 +62,9 @@ end
 
 function UPK_DisplayTrigger:triggerUpdate(vehicle,isInTrigger)
 	self:printFn('UPK_DisplayTrigger:triggerUpdate(',vehicle,',',isInTrigger,')')
-	--self:print('entitiesInTrigger = '..tostring(self.entitiesInTrigger))
 	if self.entitiesInTrigger>0 then
-		--self:print('UniversalProcessKitListener.addUpdateable()')
 		UniversalProcessKitListener.addUpdateable(self)
 	else
-		--self:print('UniversalProcessKitListener.removeUpdateable()')
 		UniversalProcessKitListener.removeUpdateable(self)
 	end
 end

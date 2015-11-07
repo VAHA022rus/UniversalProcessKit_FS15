@@ -71,7 +71,7 @@ function UPK_Animator:new(nodeId, parent)
 		local rx,ry,rz = unpack(self.rotateTo)
 		local distance = Utils.vector3Length(rx,ry,rz)
 		local factor=mathpi/(mathpi+(2-mathpi)*self.rotationSpeedupPeriod+(2-mathpi)*self.rotationSlowdownPeriod)
-		self:print('factor='..tostring(factor))
+		self:printAll('factor='..tostring(factor))
 		if factor==0 then
 			self.doRotation = false
 		else

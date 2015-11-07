@@ -2,27 +2,34 @@
 
 --[[ TRIGGER FUNCTIONS BEGIN ]]--
 
--- use this function to handle trigger events (in your own class)
--- otherwise use self.entitiesInTrigger and self.entities in update()
-function UniversalProcessKit:triggerUpdate(vehicle,isInTrigger)
-end
-
 function UniversalProcessKit:addTrigger()
 	self:printFn('UniversalProcessKit:addTrigger()')
 	
 	self.triggerId=self.nodeId
 	self:getAllowedVehicles()
 	self:fitCollisionMaskToAllowedVehicles()
-	self.entities={}
+	
+	self.vehicles={}
+	self.vehiclesInTrigger=0
+	self.vehicleNodesInTrigger={}
+	self.players={}
+	self.playersInTrigger=0
 	self.entitiesInTrigger=0
+	
 	self.playerInRange=false
-	self.playersInRange={}
-	self.playerInRangeNetworkNode = false
+	
+	-- actions
+	
+	self:getActionUserAttributes('OnEmpty')
+	self:getActionUserAttributes('OnPopulated')
+	self:getActionUserAttributes('OnEnter')
+	self:getActionUserAttributes('OnLeave')
+	
 
 	addTrigger(self.triggerId, "triggerCallback", self)
 	table.insert(g_upkTrigger, self)
-	self:triggerUpdate(nil,true)
-	self:triggerUpdate(nil,false)
+	--self:triggerUpdate(nil,true)
+	--self:triggerUpdate(nil,false)
 end
 
 function UniversalProcessKit:removeTrigger()
@@ -33,10 +40,14 @@ function UniversalProcessKit:removeTrigger()
 		removeTrigger(self.triggerId)
 		self.triggerId = 0
 		self.allowedVehicles=nil
-		self.entities={}
+		
+		self.vehicles={}
+		self.vehiclesInTrigger=0
+		self.players={}
+		self.playersInTrigger=0
 		self.entitiesInTrigger=0
+		
 		self.playerInRange=false
-		self.playersInRange={}
 	end
 end
 
@@ -229,15 +240,17 @@ function UniversalProcessKit:triggerCallback(triggerId, otherActorId, onEnter, o
 		self:printAll('g_currentMission.nodeToVehicle[otherShapeId] ',g_currentMission.nodeToVehicle[otherShapeId])
 		self:printAll('g_currentMission.objectToTrailer[otherActorId] ',g_currentMission.objectToTrailer[otherActorId])
 		self:printAll('g_currentMission.nodeToVehicle[otherActorId] ',g_currentMission.nodeToVehicle[otherActorId])
-		self:printAll('vehicle is '..tostring(vehicle))
-				
-		local checkStr=""
-		for _,v in pairs(UniversalProcessKit.getVehicleTypes(vehicle)) do
-			checkStr=checkStr..tostring(v)..", "
-		end
-		self:printAll('vehicle Type is '..tostring(checkStr))
+		self:printAll('vehicle is ',vehicle)
 		
 		if vehicle~=nil then
+			
+			if self.vehicleNodesInTrigger[vehicle]==nil then
+				self.vehicleNodesInTrigger[vehicle]={}
+			end
+			if not isInTable(self.vehicleNodesInTrigger[vehicle],otherShapeId) then
+				table.insert(self.vehicleNodesInTrigger[vehicle],otherShapeId)
+			end
+			
 			if self.allowPallets then
 				if vehicle.isPallet==nil then
 					local shapeId = otherActorId or otherShapeId
@@ -251,19 +264,32 @@ function UniversalProcessKit:triggerCallback(triggerId, otherActorId, onEnter, o
 				if vehicle.isPallet then
 					self:printAll('thingy is a pallet 1')
 					if onEnter then
-						self:triggerOnEnter(vehicle)
+						if length(self.vehicleNodesInTrigger[vehicle])==1 then
+							self:vehicleEntered(vehicle)
+						end
 					elseif onLeave then
-						self:triggerOnLeave(vehicle)
+						removeValueFromTable(self.vehicleNodesInTrigger[vehicle],otherShapeId)
+						if length(self.vehicleNodesInTrigger[vehicle])==0 then
+							self.vehicleNodesInTrigger[vehicle]=nil
+							self:vehicleLeft(vehicle)
+						end
 					end
 				end
 			end
 			
 			if self.allowBales then
 				if vehicle:isa(Bale) then
+					vehicle.isBale = true
 					if onEnter then
-						self:triggerOnEnter(vehicle)
+						if length(self.vehicleNodesInTrigger[vehicle])==1 then
+							self:vehicleEntered(vehicle)
+						end
 					elseif onLeave then
-						self:triggerOnLeave(vehicle)
+						removeValueFromTable(self.vehicleNodesInTrigger[vehicle],otherShapeId)
+						if length(self.vehicleNodesInTrigger[vehicle])==0 then
+							self.vehicleNodesInTrigger[vehicle]=nil
+							self:vehicleLeft(vehicle)
+						end
 					end
 				end
 			end
@@ -275,10 +301,16 @@ function UniversalProcessKit:triggerCallback(triggerId, otherActorId, onEnter, o
 							vehicle.upkTrigger={}
 						end
 						table.insert(vehicle.upkTrigger,self)
-						self:triggerOnEnter(vehicle)
+						if length(self.vehicleNodesInTrigger[vehicle])==1 then
+							self:vehicleEntered(vehicle)
+						end
 					elseif onLeave then
 						removeValueFromTable(vehicle.upkTrigger,self)
-						self:triggerOnLeave(vehicle)
+						removeValueFromTable(self.vehicleNodesInTrigger[vehicle],otherShapeId)
+						if length(self.vehicleNodesInTrigger[vehicle])==0 then
+							self.vehicleNodesInTrigger[vehicle]=nil
+							self:vehicleLeft(vehicle)
+						end
 					end
 					break
 				end
@@ -289,81 +321,146 @@ function UniversalProcessKit:triggerCallback(triggerId, otherActorId, onEnter, o
 			self:printAll('splitType is ',splitType)
 			if splitType~=nil and splitType.woodChipsPerLiter>0 then
 				if onEnter then
-					self:triggerOnEnter(otherActorId,true)
+					self:vehicleEntered(otherActorId,true)
 				elseif onLeave then
-					self:triggerOnLeave(otherActorId,false)
+					self:vehicleLeft(otherActorId,false)
 				end
 			end
 		end
 		if self.allowWalker and g_currentMission.player ~= nil and otherActorId == g_currentMission.player.rootNode then
 			if onEnter then
-				self.playerInRangeNetworkNode = true
-				self:triggerOnEnter(nil, true)
+				self:playerEntered(UniversalProcessKitListener.clientId, true)
 			elseif onLeave then
-				self.playerInRangeNetworkNode = false
-				self:triggerOnLeave(nil, true)
+				self:playerLeft(UniversalProcessKitListener.clientId, true)
 			end
 		end
 	end
 end
 
-function UniversalProcessKit:triggerOnEnter(vehicle, player, alreadySent)
-	self:printFn('UniversalProcessKit:triggerCallback(',vehicle,', ',player,', ',alreadySent,')')
+function UniversalProcessKit:vehicleEntered(vehicle, player, alreadySent)
+	self:printFn('UniversalProcessKit:vehicleEntered(',vehicle,', ',player,', ',alreadySent,')')
 	if vehicle~=nil then
-		if isInTable(self.entities, vehicle) then
+		if isInTable(self.vehicles, vehicle) then
 			return
 		end
 		local typeV=type(vehicle)
 		if typeV=="table" then
 			local networkId=networkGetObjectId(vehicle)
 			if networkId~=nil and networkId~=0 then
-				self.entities[networkId]=vehicle
+				self.vehicles[networkId]=vehicle
 			end
 		elseif typeV=="number" then
-			self.entities[-vehicle]=true -- workaround for non-objects
+			self.vehicles[-vehicle]=true -- workaround for non-objects
 		end
 	end
-	self.entitiesInTrigger=length(self.entities)
-	if player==true and not self.playerInRange then
-		self.playerInRange = true
-		self.entitiesInTrigger=self.entitiesInTrigger+1
-		if not alreadySent then
-			UniversalProcessKitTriggerPlayerEvent.sendEvent(self, true, alreadySent)
-		end
-	end
-	self:triggerUpdate(vehicle,true)
+	
+	self.vehiclesInTrigger = length(self.vehicles)
+	self:p_triggerUpdate(vehicle,true)
 end;
 
-function UniversalProcessKit:triggerOnLeave(vehicle, player, alreadySent)
-	self:printFn('UniversalProcessKit:triggerOnLeave(',vehicle,', ',player,', ',alreadySent,')')
+function UniversalProcessKit:vehicleLeft(vehicle, player, alreadySent)
+	self:printFn('UniversalProcessKit:vehicleLeft(',vehicle,', ',player,', ',alreadySent,')')
 	if vehicle~=nil then
 		local typeV=type(vehicle)
 		if typeV=="table" then
 			local networkId=networkGetObjectId(vehicle)
 			if networkId~=nil and networkId~=0 then
-				self.entities[networkId]=nil
+				self.vehicles[networkId]=nil
 			end
-			removeValueFromTable(self.entities,vehicle)
+			removeValueFromTable(self.vehicles,vehicle)
 		elseif typeV=="number" then
-			self.entities[-vehicle]=nil -- workaround for non-objects
+			self.vehicles[-vehicle]=nil -- workaround for non-objects
 		end
 	end
-	self.entitiesInTrigger=length(self.entities)
-	if player==true and self.playerInRange then
-		self.playerInRange = false
-		if not alreadySent then
-			UniversalProcessKitTriggerPlayerEvent.sendEvent(self, false, alreadySent)
-		end
-	end
-	self:triggerUpdate(vehicle,false)
+	
+	self.vehiclesInTrigger = length(self.vehicles)
+	self:p_triggerUpdate(vehicle,false)
 end;
+
+function UniversalProcessKit:playerEntered(player,alreadySent)
+	self:printFn('UniversalProcessKit:playerEntered(',player,', ',alreadySent,')')
+	if player~=nil then
+		if isInTable(self.players, player) then
+			return
+		end
+		if player==UniversalProcessKitListener.clientId then
+			self.playerInRange = true
+		end
+		self.players[player] = true
+		if not alreadySent then
+			self:sendEvent(UniversalProcessKitEvent.TYPE_PLAYERINTRIGGER,player,true)
+		end
+	end
+	
+	self.playersInTrigger = length(self.players)
+	self:p_triggerUpdate(nil,true)
+end
+
+function UniversalProcessKit:playerLeft(player,alreadySent)
+	self:printFn('UniversalProcessKit:vehicleLeft(',player,', ',alreadySent,')')
+	if player~=nil then
+		if player==UniversalProcessKitListener.clientId then
+			self.playerInRange = false
+		end
+		self.players[player] = false
+		if not alreadySent then
+			self:sendEvent(UniversalProcessKitEvent.TYPE_PLAYERINTRIGGER,player,false)
+		end
+	end
+	
+	self.playersInTrigger = length(self.players)
+	self:p_triggerUpdate(nil,false)
+end
+
+function UniversalProcessKit:p_triggerUpdate(vehicle,isInTrigger)
+	self:printFn('UniversalProcessKit:p_triggerUpdate(',vehicle,', ',isInTrigger,')')
+	self.entitiesInTrigger = self.vehiclesInTrigger + self.playersInTrigger
+	
+	if self.isEnabled then
+		if isInTrigger then
+			self:operateAction('OnEnter')
+		else
+			self:operateAction('OnLeave')
+		end
+	end
+	
+	self:printInfo('self.vehiclesInTrigger ',self.vehiclesInTrigger)
+	self:printInfo('self.playersInTrigger ',self.playersInTrigger)
+	self:printInfo('self.entitiesInTrigger ',self.entitiesInTrigger)
+	self:printInfo('self.isPopulated ',self.isPopulated)
+	
+	if self.entitiesInTrigger>0 and not self.isPopulated then
+		self:setIsPopulated(true)
+	elseif self.entitiesInTrigger==0 and self.isPopulated then
+		self:setIsPopulated(false)
+	end
+
+	if self.triggerUpdate~=nil then
+		-- use this function to handle trigger events (in your own class)
+		-- otherwise use self.vehiclesInTrigger and self.vehicles in update()
+		self:triggerUpdate(vehicle,isInTrigger)
+	end
+end
+
+function UniversalProcessKit:setIsPopulated(isPopulated)
+	self:printFn('UniversalProcessKit:setIsPopulated(',isPopulated,')')
+	if isPopulated~=self.isPopulated then
+		if isPopulated==false then
+			self.isPopulated=false
+			self:operateAction('OnEmpty')
+		elseif isPopulated==true then
+			self.isPopulated=true
+			self:operateAction('OnPopulated')
+		end
+	end
+end
 
 function UniversalProcessKit:getShowInfo()
 	self:printFn('UniversalProcessKit:getShowInfo()')
-	if self.playerInRangeNetworkNode then
+	if self.playerInRange then
 		return g_currentMission.controlPlayer or false
 	else
-		for k,v in pairs(self.entities) do
+		for k,v in pairs(self.vehicles) do
 			if v.isEntered or v:getIsActiveForInput(true) then
 				return true
 			end

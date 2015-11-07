@@ -46,11 +46,30 @@ Bisher enthaltene Module:
 
 ##Changelog
 
+__V0.10.10__
+
+- Fruchttypen sun und rain überarbeitet
+- Fix für FillTrigger
+- Fix für EmptyTrigger
+- Fix für DumpTrigger für Häcksler hinzugefügt
+- Support für Mod Krone Ultima CF155XC hinzugefügt
+- Action-UserAttributes OnEnter, OnLeave, OnEmpty und OnPopulated für jedes Trigger-Modul
+
+TipTrigger
+- ..IfTipping
+- ..IfTippingStarted
+- ..IfTippingStopped
+
+DumpTrigger
+- ..IfDumping
+- ..IfDumpingStarted
+- ..IfDumpingStopped
+
 __V0.10.9__
 
 - Support für Controller
 - neuer ActivatorTrigger
-- div. Bugfixe
+- div. Bugfixes
 
 __V0.10.8__
 

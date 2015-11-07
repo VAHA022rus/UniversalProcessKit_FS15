@@ -20,6 +20,7 @@ UniversalProcessKitEvent.TYPE_ACTIVATOR = UniversalProcessKitEvent.getNextEventI
 UniversalProcessKitEvent.TYPE_FILLTYPESELECTED = UniversalProcessKitEvent.getNextEventId()
 UniversalProcessKitEvent.TYPE_PLAY = UniversalProcessKitEvent.getNextEventId()
 UniversalProcessKitEvent.TYPE_STOP = UniversalProcessKitEvent.getNextEventId()
+UniversalProcessKitEvent.TYPE_PLAYERINTRIGGER = UniversalProcessKitEvent.getNextEventId()
 
 function UniversalProcessKitEvent:emptyNew()
 	printFn('UniversalProcessKitEvent:emptyNew()')

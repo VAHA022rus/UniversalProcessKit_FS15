@@ -103,6 +103,7 @@ function UniversalProcessKitListener.loadMap(name)
 	StoreItemsUtil.storeCategories["upk_examples"] = storageCategoryExamples
 
 	if g_server ~= nil then
+		UniversalProcessKitListener.clientId = -1
 		UniversalProcessKitListener.syncingObject = UniversalProcessKitSyncingObject:new(g_server ~= nil, g_client ~= nil)
 		g_server:addObject(UniversalProcessKitListener.syncingObject, UniversalProcessKitListener.syncingObject.id)
 		--self.syncTipTriggerObject:load(self)
@@ -114,8 +115,7 @@ function UniversalProcessKitListener.loadMap(name)
 	
 	UniversalProcessKitEnvironment.setWeekday()
 	
-	UniversalProcessKitEnvironment.setSun()
-	UniversalProcessKitEnvironment.setRain()
+	UniversalProcessKitEnvironment.setSunAndRain()
 	UniversalProcessKitEnvironment.setTemperature()
 
 	UniversalProcessKitListener.addMinuteChangeListener(UniversalProcessKitEnvironment)
@@ -125,6 +125,12 @@ function UniversalProcessKitListener.loadMap(name)
 	g_currentMission.environment:addHourChangeListener(UniversalProcessKitListener)
 	g_currentMission.environment:addMinuteChangeListener(UniversalProcessKitListener)
 
+	-- blinking warning
+	
+	UniversalProcessKitListener.dtBlinkingWarning=0
+	UniversalProcessKitListener.hasBlinkingWarningToShow = false
+	UniversalProcessKitListener.blinkingWarningText = ""
+	
 	--[[
 	-- gui callback function
 	local currentGuiName=g_gui.currentGuiName
@@ -190,6 +196,15 @@ function UniversalProcessKitListener:update(dt)
 	if UniversalProcessKitListener.dtsum >= 1000 then
 		UniversalProcessKitListener.dtsum = UniversalProcessKitListener.dtsum-1000
 		UniversalProcessKitListener.secondChanged()
+	end
+	
+	-- blinking warning
+	
+	if self.dtBlinkingWarning>0 then
+		self.hasBlinkingWarningToShow = true
+		self.dtBlinkingWarning = self.dtBlinkingWarning - dt
+	elseif self.hasBlinkingWarningToShow then
+		self.hasBlinkingWarningToShow = false
 	end
 	
 	-- running post load
@@ -462,6 +477,19 @@ function UniversalProcessKitListener.keyEvent(self,unicode,sym,modifier,isDown)
 end
 
 UniversalProcessKitListener.mouseEvent=emptyFunc
-UniversalProcessKitListener.draw=emptyFunc
+
+function UniversalProcessKitListener.showBlinkingWarning(text)
+	printAll('UniversalProcessKitListener.showBlinkingWarning(',text,')')
+	if type(text)=="string" and text~="" then
+		UniversalProcessKitListener.blinkingWarningText = text
+		UniversalProcessKitListener.dtBlinkingWarning = 3000
+	end
+end
+
+function UniversalProcessKitListener:draw()
+	if self.hasBlinkingWarningToShow then
+		g_currentMission:showBlinkingWarning(self.blinkingWarningText);
+	end;
+end
 
 addModEventListener(UniversalProcessKitListener)

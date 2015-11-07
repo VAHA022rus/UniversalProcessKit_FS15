@@ -60,11 +60,11 @@ function UPK_FillTrigger:new(nodeId, parent)
 			activateInput = 'ACTIVATE_OBJECT'
 		end
 		self.useActivateInputBinding = true
-		self.startFillingText = returnNilIfEmptyString(self.i18n[getStringFromUserAttribute(nodeId, "startFillingText")]) or self.i18n['siloStartFilling']
-		self.stopFillingText = returnNilIfEmptyString(self.i18n[getStringFromUserAttribute(nodeId, "stopFillingText")]) or self.i18n['siloStopFilling']
+		self.startFillingText = returnNilIfEmptyString(self.i18n[getStringFromUserAttribute(nodeId, "startFillingText")]) or self.i18n['fillTriggerStartFilling']
+		self.stopFillingText = returnNilIfEmptyString(self.i18n[getStringFromUserAttribute(nodeId, "stopFillingText")]) or self.i18n['fillTriggerStopFilling']
 		if activateInput~="true" then
 			if not InputBinding[activateInput] then
-				self:printErr('unknown input "',isInputSet,'" - using "ACTIVATE_OBJECT" for now')
+				self:printErr('unknown input "',activateInput,'" - using "ACTIVATE_OBJECT" for now')
 			else
 				self.activateInputBinding=activateInput
 			end
@@ -72,7 +72,7 @@ function UPK_FillTrigger:new(nodeId, parent)
 		self.autoDeactivate = getBoolFromUserAttribute(nodeId, "autoDeactivate", true)
 		-- stationName
 		local stationName = self.name
-		if self.i18nNameSpace~=nil then
+		if self.i18nNameSpace~=nil and self.i18nNameSpace~="" and type(ModsUtil['modNameToMod'][self.i18nNameSpace])=="table" then
 			stationName = ModsUtil['modNameToMod'][self.i18nNameSpace].title
 		end
 		self.stationName = returnNilIfEmptyString(self.i18n[getStringFromUserAttribute(nodeId, "stationName")]) or stationName
@@ -167,7 +167,7 @@ function UPK_FillTrigger:new(nodeId, parent)
 	
 	self:printFn('UPK_FillTrigger:new done')
 	
-    return self
+	return self
 end
 
 function UPK_FillTrigger:delete()
@@ -182,12 +182,7 @@ end
 function UPK_FillTrigger:postLoad()
 	self:printFn('UPK_FillTrigger:postLoad()')
 	UPK_FillTrigger:superClass().postLoad(self)
-	self:triggerUpdate(false,false)
 	UniversalProcessKitListener.addUpdateable(self)
-	
-	if self.isServer then
-		self:sendEvent(UniversalProcessKitEvent.TYPE_INPUT,1,123.123,-65000.02,"test",nil,1234567890.12345678,1900,-1900.12345678)
-	end
 end
 
 function UPK_FillTrigger:eventCallback(eventType,...)
@@ -302,10 +297,11 @@ function UPK_FillTrigger:update(dt)
 		UniversalProcessKitListener.removeUpdateable(self)
 	end
 	
-	--self:printInfo('self.isEnabled ',self.isEnabled,' self.isActivated ',self.isActivated)
+	self:printInfo('self.isEnabled ',self.isEnabled,' self.isActivated ',self.isActivated)
 	if self.isEnabled and self.isActivated then
 		local isFilling=false
 		local addedTotally=0
+		self:printInfo('self.entitiesInTrigger ',self.entitiesInTrigger)
 		if self.entitiesInTrigger==0 then
 			if self.palletFilename==nil then
 				UniversalProcessKitListener.removeUpdateable(self)
@@ -324,7 +320,7 @@ function UPK_FillTrigger:update(dt)
 					local x, y, z = unpack(__c({getWorldTranslation(self.nodeId)}) + self.palletSpawnPosition)
 					local y_terrain = getTerrainHeightAtWorldPos(g_currentMission.terrainRootNode, x, 0, z) + 0.2
 					y = mathmax(y, y_terrain)
-					local rx, ry, rz = unpack((__c({getWorldRotation(self.nodeId)}) + self.palletSpawnRotation) * (2*math.pi))
+					local rx, ry, rz = unpack((__c({getWorldRotation(self.nodeId)}) + self.palletSpawnRotation*(2*math.pi)))
 			
 					local pallet = FillablePallet:new(self.isServer, self.isClient)
 					if pallet:load(self.palletFilename, x, y, z, rx, ry, rz) then
@@ -342,13 +338,13 @@ function UPK_FillTrigger:update(dt)
 				end
 			end
 		else
-			for _,trailer in pairs(self.entities) do
+			for _,trailer in pairs(self.vehicles) do
 				--self:print('vehicle is '..tostring(trailer.upk_vehicleType))
 				local deltaFillLevel = floor(self.fillLitersPerSecond * 0.001 * dt,8)
 				for k,v in pairs(self.allowedVehicles) do
 					--self:print('checking for '..tostring(k)..': '..tostring(v))
 					if v and UniversalProcessKit.isVehicleType(trailer, k) then
-						--self:print('vehicle allowed')
+						self:print('vehicle allowed')
 						local added = 0
 						if k==UniversalProcessKit.VEHICLE_MIXERWAGONPICKUP then
 							added = self:fillMixerWagonPickup(trailer, deltaFillLevel)
@@ -469,7 +465,7 @@ function UPK_FillTrigger:fillTrailer(trailer, deltaFillLevel) -- tippers, shovel
 	self:printFn('UPK_FillTrigger:fillTrailer(',trailer,', ',deltaFillLevel,')')
 	if self.isServer and self.isEnabled then
 		local fillFillType = self.fillFillType or self:getFillType() -- for single, fifo and filo
-		self:printAll('fillFillType '..tostring(fillFillType))
+		self:printAll('fillFillType ',fillFillType)
 		if fillFillType~=UniversalProcessKit.FILLTYPE_UNKNOWN then
 			
 			if self.fillOnlyWholeNumbers then
@@ -484,14 +480,20 @@ function UPK_FillTrigger:fillTrailer(trailer, deltaFillLevel) -- tippers, shovel
 			
 			local trailerFillLevel = trailer:getFillLevel(trailer.currentFillType)
 			local fillLevel = self:getFillLevel(fillFillType)
-			--self:print('fillLevel '..tostring(fillLevel))
-			--self:print('trailer:allowFillType(fillFillType, false) '..tostring(trailer:allowFillType(fillFillType, false)))
+			--self:printInfo('trailer.currentFillType ',trailer.currentFillType)
+			--self:printInfo('trailerFillLevel ',trailerFillLevel)
+			--self:printInfo('fillLevel ',fillLevel)
+			--self:printInfo('(fillLevel>0 or self.createFillType) ',(fillLevel>0 or self.createFillType))
+			--self:printInfo('fillFillType==trailer.currentFillType ',fillFillType==trailer.currentFillType)
+			--self:printInfo('trailer.currentFillType==UniversalProcessKit.FILLTYPE_UNKNOWN ',trailer.currentFillType==UniversalProcessKit.FILLTYPE_UNKNOWN)
+			--self:printInfo('trailer:allowFillType(fillFillType, false) ',trailer:allowFillType(fillFillType, false))
+			--self:printInfo('trailerFillLevel<trailer.capacity ',trailerFillLevel<trailer.capacity)
 			if (fillLevel>0 or self.createFillType) and
 				(fillFillType==trailer.currentFillType or trailer.currentFillType==UniversalProcessKit.FILLTYPE_UNKNOWN or
 					(fillFillType~=trailer.currentFillType and trailerFillLevel<0.0001)) and
 				trailer:allowFillType(fillFillType, false) and
-				trailerFillLevel<trailer.capacity then
-				
+				(trailer.capacity==0 or trailerFillLevel<trailer.capacity) then
+				self:printInfo('trailer is filling')
 				trailer:resetFillLevelIfNeeded(fillFillType)
 				trailerFillLevel = trailer:getFillLevel(fillFillType)
 				if not self.createFillType then

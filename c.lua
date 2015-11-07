@@ -107,9 +107,14 @@ local times10_mt = {
 setmetatable(times10, times10_mt)
 
 function round(nr, digits)
-	digits = digits or 0
-	local result=mathfloor(nr*times10[digits]+0.5)/times10[digits]
-	return result
+	if type(nr)=="number" then
+		digits = digits or 0
+		local result=mathfloor(nr*times10[digits]+0.5)/times10[digits]
+		return result
+	else
+		printErr('round() called with non-number, returning 0')
+		return 0
+	end
 end
 
 function floor(nr, digits)
@@ -157,6 +162,48 @@ function getMinMaxKeys(t)
 	end
 	return nil, nil
 end;
+
+function getUserAttributeWithSpaces(nodeId, attribute)
+	local val = _g.getUserAttribute(nodeId, attribute)
+	if val~=nil then
+		return val
+	end
+	local val = _g.getUserAttribute(nodeId, ' '..attribute)
+	if val~=nil then
+		return val
+	end
+	local val = _g.getUserAttribute(nodeId, attribute..' ')
+	if val~=nil then
+		return val
+	end
+	local val = _g.getUserAttribute(nodeId, ' '..attribute..' ')
+	if val~=nil then
+		return val
+	end
+	return nil
+end
+
+function _m.getUserAttribute(nodeId, attribute)
+	-- standard: prefixNameSuffix
+	-- tests prefixnamesuffix and PREFIXNAMESUFFIX
+	-- also with space in front and at the end
+	-- checks 12 attributes in total
+	local val = getUserAttributeWithSpaces(nodeId, attribute)
+	if val~=nil then
+		return val
+	end
+	local attributeLower = string.lower(attribute)
+	local val = getUserAttributeWithSpaces(nodeId, attributeLower)
+	if val~=nil then
+		return val
+	end
+	local attributeUpper = string.upper(attribute)
+	local val = getUserAttributeWithSpaces(nodeId, attributeUpper)
+	if val~=nil then
+		return val
+	end
+	return nil
+end
 
 function getVectorFromUserAttribute(nodeId, attribute, default)
 	if nodeId==nil then
@@ -441,9 +488,10 @@ _g.UPK_Mover={}
 _g.UPK_PalletTrigger={}
 _g.UPK_ParkTrigger={}
 _g.UPK_Processor={}
-_g.UPK_Scaler={}
+_g.UPK_ScaleTrigger={}
 _g.UPK_SellTarget={}
 _g.UPK_SowingMachineFillTrigger={}
+_g.UPK_SpeedTrigger={}
 _g.UPK_SprayerFillTrigger={}
 _g.UPK_Storage={}
 _g.UPK_Switcher={}

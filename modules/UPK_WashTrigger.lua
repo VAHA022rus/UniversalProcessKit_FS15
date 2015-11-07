@@ -101,7 +101,7 @@ function UPK_WashTrigger:update(dt)
 		local dirtToRemove = self.washPerSecond/1000 * dt
 		local dirtRemoved = 0
 		
-		for _,vehicle in pairs(self.entities) do
+		for _,vehicle in pairs(self.vehicles) do
 			if vehicle.dirtAmount~=nil and vehicle.setDirtAmount~=nil then
 				if self.washPerSecond>0 and vehicle.dirtAmount>self.dirtThreshold then
 					--self:print('dirt Amount: '..tostring(vehicle.dirtAmount))

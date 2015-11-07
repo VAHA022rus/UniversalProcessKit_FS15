@@ -20,6 +20,31 @@ function UPK_EmptyTrigger:new(nodeId, parent)
 		self:printAll('self.emptyFillTypes[fillType]: '..tostring(self.emptyFillTypes[fillType]))
 	end
 	
+	-- activateInput
+	
+	self.useActivateInputBinding = false
+	local activateInput = getStringFromUserAttribute(nodeId, "activateInput", "false")
+	if activateInput~="false" or self.useFillFillTypes then
+		self.activateInputBinding = 'ACTIVATE_OBJECT'
+		if activateInput=="false" then
+			activateInput = 'ACTIVATE_OBJECT'
+		end
+		self.useActivateInputBinding = true
+		self.startUnloadingText = returnNilIfEmptyString(self.i18n[getStringFromUserAttribute(nodeId, "startUnloadingText")]) or self.i18n['emptyTriggerStartUnloading']
+		self.stopUnloadingText = returnNilIfEmptyString(self.i18n[getStringFromUserAttribute(nodeId, "stopUnloadingText")]) or self.i18n['emptyTriggerStopUnloading']
+		if activateInput~="true" then
+			if not InputBinding[activateInput] then
+				self:printErr('unknown input "',activateInput,'" - using "ACTIVATE_OBJECT" for now')
+			else
+				self.activateInputBinding=activateInput
+			end
+		end
+		self.autoDeactivate = getBoolFromUserAttribute(nodeId, "autoDeactivate", true)
+	end
+	
+	self.isActivated = not self.useActivateInputBinding
+	
+	
     self.emptyLitersPerSecond = getNumberFromUserAttribute(nodeId, "emptyLitersPerSecond", 1500, 0)
 
 	self:printAll('emptyFillTypes: '..tostring(getStringFromUserAttribute(nodeId, "emptyFillTypes")))
@@ -88,6 +113,52 @@ function UPK_EmptyTrigger:new(nodeId, parent)
     return self
 end
 
+function UPK_EmptyTrigger:delete()
+	self:printFn('UPK_EmptyTrigger:delete()')
+	UniversalProcessKitListener.removeUpdateable(self)
+	if self.useActivateInputBinding then
+		UniversalProcessKitListener.unregisterKeyFunction(self.activateInputBinding,self)
+	end
+	UPK_EmptyTrigger:superClass().delete(self)
+end
+
+function UPK_EmptyTrigger:postLoad()
+	self:printFn('UPK_EmptyTrigger:postLoad()')
+	UPK_EmptyTrigger:superClass().postLoad(self)
+	
+	UniversalProcessKitListener.addUpdateable(self)
+	
+	if self.isServer then
+		--self:sendEvent(UniversalProcessKitEvent.TYPE_INPUT,1,123.123,-65000.02,"test",nil,1234567890.12345678,1900,-1900.12345678)
+	end
+end
+
+function UPK_EmptyTrigger:loadExtraNodes(xmlFile, key)
+	self:printFn('UPK_EmptyTrigger:loadExtraNodes(',xmlFile,', ',key,')')
+	self.isActivated = Utils.getNoNil(getXMLBool(xmlFile, key .. "#isActivated"),not self.useActivateInputBinding)
+	return true
+end
+
+function UPK_EmptyTrigger:getSaveExtraNodes(nodeIdent)
+	self:printFn('UPK_EmptyTrigger:getSaveExtraNodes(',nodeIdent,')')
+	local nodes=""
+	if isActivated==false then
+		nodes=nodes .. ' isActivated="false"'
+	end
+	return nodes
+end
+
+function UPK_EmptyTrigger:eventCallback(eventType,...)
+	self:printFn('UPK_EmptyTrigger:eventCallBack(',eventType,'...)')
+	if eventType==UniversalProcessKitEvent.TYPE_INPUT then
+		self:printAll('UniversalProcessKitEvent.TYPE_INPUT')
+		self:printAll(...)
+	elseif eventType==UniversalProcessKitEvent.TYPE_FILLTYPESELECTED then
+		self:printAll('UniversalProcessKitEvent.TYPE_FILLTYPESELECTED')
+		self:printAll(...)
+	end
+end
+
 function UPK_EmptyTrigger:triggerUpdate(vehicle,isInTrigger)
 	self:printFn('UPK_EmptyTrigger:triggerUpdate(',vehicle,', ',isInTrigger,')')
 	if self.isEnabled and self.isServer then
@@ -125,10 +196,24 @@ end
 
 function UPK_EmptyTrigger:update(dt)
 	self:printAll('UPK_EmptyTrigger:update(',dt,')')
-	if self.isServer and self.isEnabled then
+	
+	if not self.isServer then
+		return
+	end
+	
+	if not self.isActivated and (self.isFilling==nil or self.isFilling) then
+		self:operateAction('IfEmptyingStopped')
+		self.isEmptying=false
+	end
+	
+	if self.useActivateInputBinding and not self.isActivated then
+		UniversalProcessKitListener.removeUpdateable(self)
+	end
+	
+	if self.isEnabled and self.isActivated then
 		local isEmptying=false
 		local removedTotally=0
-		for _,vehicle in pairs(self.entities) do
+		for _,vehicle in pairs(self.vehicles) do
 			local deltaFillLevel = - (self.emptyLitersPerSecond * 0.001 * dt)
 			for vehicleType, isAllowed in pairs(self.allowedVehicles) do
 				if isAllowed and UniversalProcessKit.isVehicleType(vehicle, vehicleType) then
@@ -170,6 +255,10 @@ function UPK_EmptyTrigger:update(dt)
 				self:operateAction('IfEmptyingStopped')
 				self.isEmptying=false
 			end
+			if self.isActivated and self.useActivateInputBinding and self.autoDeactivate then
+				self.isActivated=false
+				UniversalProcessKitListener.updateKeyFunctionDisplayText(self.activateInputBinding,self,self.startUnloadingText)
+			end
 		end
 	end
 end
@@ -178,6 +267,7 @@ UPK_EmptyTrigger.getRevenuePerLiter = UPK_TipTrigger.getRevenuePerLiter
 
 function UPK_EmptyTrigger:emptyFillable(fillable, deltaFillLevel) -- tippers, shovels etc
 	self:printFn('UPK_EmptyTrigger:emptyFillable(',fillable,', ',deltaFillLevel,')')
+	
 	if self.isServer and self.isEnabled then
 		local fillType = nil
 		for k,v in pairs(self.emptyFillTypes) do

@@ -154,46 +154,23 @@ end
 
 UniversalProcessKitEnvironment.flbs = {}
 
--- fill level bubble sun
-
-local upk_fillLevel_sun_mt = {
-	__index = function(t,k)
-		if k=="fillLevel" then
-			return UniversalProcessKitEnvironment.sun or 0
-		end
-		return nil
-	end,
-	__newindex = function(t,k,v)
-	end,
-	__add = function(lhs,rhs)
-		return 0
-	end,
-	__sub = function(lhs,rhs)
-		return 0
-	end
-}
-
-UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_SUN] = {}
-UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_SUN].isflb = true
-UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_SUN].fillType = UniversalProcessKit.FILLTYPE_SUN
-UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_SUN].capacity = math.huge
-UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_SUN].onFillLevelChangeFuncs = {}
-UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_SUN].onFillLevelChange = FillLevelBubble.onFillLevelChange
-UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_SUN].registerOnFillLevelChangeFunc = FillLevelBubble.registerOnFillLevelChangeFunc
-UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_SUN].unregisterOnFillLevelChangeFunc = FillLevelBubble.unregisterOnFillLevelChangeFunc
-
-setmetatable(UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_SUN], upk_fillLevel_sun_mt)
-
 -- fill level bubble rain
 
 local upk_fillLevel_rain_mt = {
 	__index = function(t,k)
 		if k=="fillLevel" then
-			return UniversalProcessKitEnvironment.rain or 0
+			return t.p_fillLevel or 0
 		end
-		return nil
+		return FillLevelBubble[k]
 	end,
 	__newindex = function(t,k,v)
+		if k=="fillLevel" then
+			if v~=t.p_fillLevel then
+				local diff = v-t.p_fillLevel
+				t.p_fillLevel = v
+				t:onFillLevelChange(diff,v,t.fillType)
+			end
+		end
 	end,
 	__add = function(lhs,rhs)
 		return 0
@@ -204,6 +181,7 @@ local upk_fillLevel_rain_mt = {
 }
 
 UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_RAIN] = {}
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_RAIN].p_fillLevel = 0
 UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_RAIN].isflb = true
 UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_RAIN].fillType = UniversalProcessKit.FILLTYPE_RAIN
 UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_RAIN].capacity = math.huge
@@ -213,6 +191,20 @@ UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_RAIN].registerO
 UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_RAIN].unregisterOnFillLevelChangeFunc = FillLevelBubble.unregisterOnFillLevelChangeFunc
 
 setmetatable(UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_RAIN], upk_fillLevel_rain_mt)
+
+-- fill level bubble sun
+
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_SUN] = {}
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_SUN].p_fillLevel = 0
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_SUN].isflb = true
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_SUN].fillType = UniversalProcessKit.FILLTYPE_SUN
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_SUN].capacity = math.huge
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_SUN].onFillLevelChangeFuncs = {}
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_SUN].onFillLevelChange = FillLevelBubble.onFillLevelChange
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_SUN].registerOnFillLevelChangeFunc = FillLevelBubble.registerOnFillLevelChangeFunc
+UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_SUN].unregisterOnFillLevelChangeFunc = FillLevelBubble.unregisterOnFillLevelChangeFunc
+
+setmetatable(UniversalProcessKitEnvironment.flbs[UniversalProcessKit.FILLTYPE_SUN], upk_fillLevel_rain_mt)
 
 -- fill level bubble temperature
 

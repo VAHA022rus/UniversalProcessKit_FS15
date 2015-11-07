@@ -62,6 +62,7 @@ function OnCreateUPK:getSaveAttributesAndNodes(nodeIdent)
 	
 	if self.base~=nil then
 		local baseAttributes, baseNodes=self.base:getSaveAttributesAndNodes(nodeIdent)
+		baseNodes = string.gsub(baseNodes,"\n","\n\t\t")
 		attributes=attributes .. baseAttributes
 		nodes=nodes .. baseNodes
 	end

@@ -77,6 +77,7 @@ function PlaceableUPK:getSaveAttributesAndNodes(nodeIdent)
 
 	if self.base~=nil and type(self.base)=="table" then
 		local baseAttributes, baseNodes=self.base:getSaveAttributesAndNodes(nodeIdent)
+		baseNodes = string.gsub(baseNodes,"\n","\n\t\t")
 		attributes=attributes .. baseAttributes
 		nodes=nodes .. baseNodes
 	end

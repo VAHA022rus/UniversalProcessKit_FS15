@@ -35,9 +35,11 @@ UniversalProcessKit.VEHICLE_MILKTRUCK=getNextBit() -- 65536
 UniversalProcessKit.VEHICLE_MIXERWAGONPICKUP=getNextBit() -- 131072
 UniversalProcessKit.VEHICLE_MIXERWAGONTRAILER=getNextBit() -- 262144
 
+UniversalProcessKit.VEHICLE_DRIVABLE=getNextBit() -- 524288
+
 
 function UniversalProcessKit.getVehicleType(vehicle)
-	printFn('UniversalProcessKit.getVehicleType(',vehicle,')')
+	--printFn('UniversalProcessKit.getVehicleType(',vehicle,')')
 	if type(vehicle)~="table" then
 		return 0
 	end
@@ -77,6 +79,7 @@ function UniversalProcessKit.getVehicleType(vehicle)
 			vehicleType=vehicleType+UniversalProcessKit.VEHICLE_LIQUIDMANURETRAILER
 		end
 		if SpecializationUtil.hasSpecialization(Shovel, vehicle.specializations) then
+			printAll('identified VEHICLE_SHOVEL')
 			vehicleType=vehicleType+UniversalProcessKit.VEHICLE_SHOVEL
 		end
 		if SpecializationUtil.hasSpecialization(Trailer, vehicle.specializations) then
@@ -86,7 +89,8 @@ function UniversalProcessKit.getVehicleType(vehicle)
 			printAll('identified VEHICLE_FORAGEWAGON')
 			vehicleType=vehicleType+UniversalProcessKit.VEHICLE_FORAGEWAGON
 		end
-		if SpecializationUtil.hasSpecialization(Baler, vehicle.specializations) then
+		printInfo('vehicle.setBalerState=',vehicle.setBalerState)
+		if SpecializationUtil.hasSpecialization(Baler, vehicle.specializations) or type(vehicle.setBalerState)=="function" then
 			printAll('identified VEHICLE_BALER')
 			vehicleType=vehicleType+UniversalProcessKit.VEHICLE_BALER
 		end
@@ -108,6 +112,10 @@ function UniversalProcessKit.getVehicleType(vehicle)
 		if SpecializationUtil.hasSpecialization(MixerWagon, vehicle.specializations) then
 			vehicleType=vehicleType+UniversalProcessKit.VEHICLE_MIXERWAGONTRAILER
 		end
+		if SpecializationUtil.hasSpecialization(Drivable, vehicle.specializations) then
+			printAll('identified VEHICLE_DRIVABLE')
+			vehicleType=vehicleType+UniversalProcessKit.VEHICLE_DRIVABLE
+		end
 		
 		if SpecializationUtil.hasSpecialization(Cultivator, vehicle.specializations) or
 			SpecializationUtil.hasSpecialization(Cutter, vehicle.specializations) or
@@ -128,12 +136,12 @@ function UniversalProcessKit.getVehicleType(vehicle)
 end;
 
 function UniversalProcessKit.isVehicleType(vehicle, vehicleTypeTest)
-	printFn('UniversalProcessKit.isVehicleType(',vehicle,', ',vehicleTypeTest,')')
+	--printFn('UniversalProcessKit.isVehicleType(',vehicle,', ',vehicleTypeTest,')')
 	return bitAND(UniversalProcessKit.getVehicleType(vehicle), vehicleTypeTest)~=0
 end;
 
 function UniversalProcessKit.getVehicleTypes(vehicle)
-	printFn('UniversalProcessKit.getVehicleTypes(',vehicle,')')
+	--printFn('UniversalProcessKit.getVehicleTypes(',vehicle,')')
 	local r={}
 	for power=0,maxPower do
 		local bit=2^power

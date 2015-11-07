@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="no" ?>
 <modDesc descVersion="21">
     <author>mor2000</author>
-    <version>0.10.9</version>
+    <version>0.10.10</version>
     <title>
         <en>AAA UniversalProcessKit</en>
         <de>AAA UniversalProcessKit</de>
@@ -36,7 +36,6 @@
 		<sourceFile filename="UniversalProcessKitActions.lua"/>
 		<sourceFile filename="UniversalProcessKitFillTypes.lua"/>
 		<sourceFile filename="UniversalProcessKitVehicleTypes.lua"/>
-		<sourceFile filename="networking/UniversalProcessKitTriggerPlayerEvent.lua"/>
 		<sourceFile filename="modules/UPK_Base.lua"/>
 		<sourceFile filename="modules/UPK_FillTrigger.lua"/>
 		<sourceFile filename="modules/UPK_TipTrigger.lua"/>
@@ -56,8 +55,10 @@
 		<sourceFile filename="modules/UPK_ParkTrigger.lua"/>
 		<sourceFile filename="modules/UPK_PlayerSpawner.lua"/>
 		<sourceFile filename="modules/UPK_Processor.lua"/>
+		<sourceFile filename="modules/UPK_ScaleTrigger.lua"/>
 		<sourceFile filename="modules/UPK_SellTarget.lua"/>
 		<sourceFile filename="modules/UPK_SowingMachineFillTrigger.lua"/>
+		<sourceFile filename="modules/UPK_SpeedTrigger.lua"/>
 		<sourceFile filename="modules/UPK_SprayerFillTrigger.lua"/>
 		<sourceFile filename="modules/UPK_Switcher.lua"/>
 		<sourceFile filename="modules/UPK_WashTrigger.lua"/>
@@ -72,6 +73,9 @@
     <l10n>
 		<text name="versionWarning"><en><![CDATA[You need at least version %s of the UniversalProcessKit (version %s is installed).]]></en><de><![CDATA[Es wird mindestens die Version %s des UniversalProcessKit benötigt (Version %s ist installiert).]]></de></text>
 		<text name="requiredModWarning"><en><![CDATA[The mod "%s" needs additionally the mod "%s".]]></en><de><![CDATA[Der Mod "%s" benötigt zusätzlich den Mod "%s".]]></de></text>
+		
+		<text name="emptyTriggerStartUnloading"><en><![CDATA[start unloading]]></en><de><![CDATA[Entladen starten]]></de></text>
+		<text name="emptyTriggerStopUnloading"><en><![CDATA[stop unloading]]></en><de><![CDATA[Entladen stoppen]]></de></text>
 		
 		<text name="storeCategory_fruit"><en><![CDATA[fruit & vegetables]]></en><de><![CDATA[Obst & Gemüse]]></de><fr><![CDATA[Fruit et légumes]]></fr><ru><![CDATA[Фрукты и овощи]]></ru></text>
 		<text name="storeCategory_animals"><en><![CDATA[animal husbandry]]></en><de><![CDATA[Tierzucht]]></de><fr><![CDATA[Élevage d'animaux]]></fr><ru><![CDATA[животноводство]]></ru></text>

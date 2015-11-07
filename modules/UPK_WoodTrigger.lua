@@ -69,6 +69,7 @@ function UPK_WoodTrigger:new(nodeId, parent)
 	self:getActionUserAttributes('IfDissolved')
 	self:getActionUserAttributes('IfSold')
 	
+	self.dtsum = 0
 	
 	self:printFn('UPK_WoodTrigger:new done')
 	
@@ -79,11 +80,6 @@ function UPK_WoodTrigger:delete()
 	self:printFn('UPK_WoodTrigger:delete()')
 	UniversalProcessKitListener.removeUpdateable(self)
 	UPK_WoodTrigger:superClass().delete(self)
-end
-
-function UPK_WoodTrigger:postLoad()
-	self:printFn('UPK_WoodTrigger:postLoad()')
-	UPK_WoodTrigger:superClass().postLoad(self)
 end
 
 function UPK_WoodTrigger:triggerUpdate(woodId,isInTrigger)

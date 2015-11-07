@@ -22,6 +22,12 @@ function UPK_DumpTrigger:new(nodeId, parent)
 		--self.fillTypesConversionMatrix = self.fillTypesConversionMatrix + FillTypesConversionMatrix:new(fillType)
 	end
 	
+	-- texts
+
+	-- need test which shovel unloads
+	self.showNotAcceptedWarning = getBoolFromUserAttribute(nodeId, "showNotAcceptedWarning", false)
+	self.showCapacityReachedWarning = getBoolFromUserAttribute(nodeId, "showCapacityReachedWarning", false)
+	
 	-- revenues
 	
 	self.revenuePerLiter = getNumberFromUserAttribute(nodeId, "revenuePerLiter", 0)
@@ -54,7 +60,7 @@ function UPK_DumpTrigger:new(nodeId, parent)
 	self.fillRootNode = nodeId
 	self.exactFillRootNode = nodeId
 	self.fillAutoAimTargetNode = nodeId
-	self.exactFillRootNode = nodeId
+	
 	self.allowFillFromAir=true
 	g_currentMission.nodeToVehicle[nodeId]=self -- combines
 	g_currentMission.objectToTrailer[nodeId]=self -- trailers
@@ -71,8 +77,15 @@ function UPK_DumpTrigger:new(nodeId, parent)
 	end
 	
 	if collisionMask_new ~= collisionMask_old then
-		self:printInfo('Warning: set collisionMask to '..tostring(collisionMask_new)..' (you may want to fix that)')
+		self:printInfo('Warning: set collisionMask to ',collisionMask_new,' (you may want to fix that)')
 		setCollisionMask(nodeId,collisionMask_new)
+	end
+	
+	-- rigid body type
+	
+	if getRigidBodyType(nodeId)=="Static" then
+		setRigidBodyType(nodeId,"Kinematic")
+		self:printInfo('Warning: set rigid body type to kinematic (you may want to fix that)')
 	end
 	
 	-- actions
@@ -105,9 +118,53 @@ function UPK_DumpTrigger:getIsAttachedTo(combine)
 	return false
 end
 
+function UPK_DumpTrigger:allowFillType(fillType, allowEmptying) -- also check for capacity
+	self:printFn('UPK_DumpTrigger:allowFillType(',fillType,', ',allowEmptying,')')
+	if not self.acceptedFillTypes[fillType] then
+		if self.showNotAcceptedWarning then
+			local blinkinWarningText = ""
+			local fillTypeName = self.i18n[UniversalProcessKit.fillTypeIntToName[fillType]]
+			if string.find(self.i18n["notAcceptedHere"], "%%s")~=nil then
+				blinkinWarningText = string.format(self.i18n["notAcceptedHere"], fillTypeName)
+			else
+				blinkinWarningText = fillTypeName..' '..self.i18n["notAcceptedHere"] -- standard: use filltype name in front
+			end
+			UniversalProcessKitListener.showBlinkingWarning(blinkinWarningText)
+		end
+		return false
+	end
+	local flbs = self:getFillLevelBubbleShellFromFillType(fillType)
+	local fillLevel = flbs:getFillLevel(fillType)
+	local capacity = flbs:getCapacity(fillType)
+	self:printAll('fillLevel ',fillLevel)
+	self:printAll('capacity ',capacity)
+	if fillLevel >= capacity then
+		if self.showCapacityReachedWarning then
+			local blinkinWarningText = ""
+			if string.find(self.i18n["capacityReached"], "%%s")~=nil then
+				local fillTypeName = self.i18n[UniversalProcessKit.fillTypeIntToName[fillType]]
+				blinkinWarningText = string.format(self.i18n["capacityReached"], fillTypeName)
+			else
+				blinkinWarningText = self.i18n["capacityReached"] -- use no specific filltype name
+			end
+			UniversalProcessKitListener.showBlinkingWarning(blinkinWarningText)
+		end
+		return false
+	end
+	return true
+end
+
 function UPK_DumpTrigger:getAllowShovelFillType(fillType)
 	self:printFn('UPK_DumpTrigger:getAllowShovelFillType(',fillType,')')
-	return self.isEnabled and self:allowFillType(fillType)
+	if not self.isEnabled then
+		return false
+	end
+	local isAllowed = self:allowFillType(fillType)
+	if not isAllowed then
+		return false
+	end
+	
+	return true
 end
 
 function UPK_DumpTrigger:resetFillLevelIfNeeded(fillType)
@@ -144,5 +201,4 @@ function UPK_DumpTrigger:timerCallback()
 	self.isBeingFilledTimerId=nil
 	return false
 end
-
 

@@ -21,7 +21,7 @@ function UPK_ActivatorTrigger:new(nodeId, parent)
 	-- activateInput
 	
 	self.activateInputBinding = 'ACTIVATE_OBJECT'
-	local activeInput = getStringFromUserAttribute(nodeId, "activateInput", self.activateInputBinding)
+	local activateInput = getStringFromUserAttribute(nodeId, "activateInput", self.activateInputBinding)
 	if not InputBinding[activateInput] then
 		self:printErr('unknown input "',isInputSet,'" - using "ACTIVATE_OBJECT" for now')
 	else

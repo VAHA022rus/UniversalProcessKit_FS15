@@ -86,6 +86,9 @@ function UniversalProcessKitSyncingObject:writeStream(streamId, connection)
 		printInfo('serverId = ',self.id)
 		streamWriteAuto(streamId, self.id)
 		
+		-- client
+		streamWriteAuto(streamId, streamId)
+		
 		-- runtime
 		streamWriteAuto(streamId, UniversalProcessKitListener.runTime)
 		
@@ -125,6 +128,9 @@ function UniversalProcessKitSyncingObject:readStream(streamId, connection)
 		local serverId = g_client:getObjectId(self)
 		printInfo('serverId = ',serverId)
 		printInfo('g_client.tempClientCreatingObjects[serverId] = ',g_client.tempClientCreatingObjects[serverId])
+		
+		-- client
+		UniversalProcessKitListener.clientId = streamReadAuto(streamId)
 		
 		-- runTime
 		UniversalProcessKitListener.runTime = streamReadAuto(streamId)
