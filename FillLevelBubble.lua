@@ -37,8 +37,9 @@ _g.fillLevelBubble_mt = {
 			local oldFillLevel = lhs.fillLevel
 			local newFillLevel = mathmax(mathmin(oldFillLevel + rhs, lhs.capacity), 0)
 			local diff = newFillLevel - oldFillLevel
+			local fillType = lhs.fillType
 			lhs.fillLevel = newFillLevel
-			lhs:onFillLevelChange(diff,newFillLevel,lhs.fillType)
+			lhs:onFillLevelChange(diff,newFillLevel,fillType)
 			return diff
 		elseif type(rhs)=="table" then
 			if not rhs.isflb then
@@ -68,8 +69,9 @@ _g.fillLevelBubble_mt = {
 			local oldFillLevel = lhs.fillLevel
 			local newFillLevel = mathmin(mathmax(oldFillLevel - rhs, 0), lhs.capacity)
 			local diff = newFillLevel - oldFillLevel
+			local fillType = lhs.fillType
 			lhs.fillLevel = newFillLevel
-			lhs:onFillLevelChange(diff,newFillLevel,lhs.fillType)
+			lhs:onFillLevelChange(diff,newFillLevel,fillType)
 			return diff
 		elseif type(rhs)=="table" then
 			if not rhs.isflb then

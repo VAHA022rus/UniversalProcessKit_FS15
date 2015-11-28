@@ -8,14 +8,29 @@ local UniversalProcessKit_i18n_mt = {
 		local text=""
 		if type(key)=="string" then
 			local i18nNameSpace=rawget(t,"i18nNameSpace") -- modname
+			
+			if i18nNameSpace=="" then
+				i18nNameSpace=nil
+			elseif type(ModsUtil['modNameToMod'][i18nNameSpace])~="table" then
+				printInfo('a mod named "',i18nNameSpace,'" does not exists')
+				i18nNameSpace=nil
+			end
+			
 			if i18nNameSpace~=nil and
 				(_g or {})[i18nNameSpace]~=nil and
 				_g[i18nNameSpace].g_i18n~=nil and
 				_g[i18nNameSpace].g_i18n:hasText(key) then
 				text=_g[i18nNameSpace].g_i18n:getText(key)
-			elseif g_i18n:hasText(key) then
-				text=g_i18n:getText(key)
+				printInfo('found text in mod for ',key,': ',text)
+			elseif _g.g_i18n:hasText(key) then
+				text=_g.g_i18n:getText(key)
+				printInfo('found text for ',key,': ',text)
 			end
+			
+			if text=="" then
+				printInfo('there is no text for "',key,'"')
+			end
+
 			rawset(t,key,text)
 			--print('asked i18n for \"'..tostring(key)..'\" returning \"'..tostring(text)..'\"')
 		end
@@ -129,7 +144,7 @@ function UPK_Base:new(nodeId, placeable, builtIn, syncObj)
 	end
 	]]--
 	
-	
+	self.shapeNamesToAudioSamples={}
 	self.shapeNamesToNodeIds={}
 	self.playableShapes={}
 	
@@ -182,7 +197,7 @@ function UPK_Base:getSaveAttributesAndNodes(nodeIdent)
 	for shapeName,playableShape in pairs(self.playableShapes) do
 		local shapeAttributes = playableShape:getSaveAttributes()
 		if shapeAttributes~="" then
-			nodes = nodes .. "\n\t\t" .. '<' .. shapeName .. shapeAttributes .. ' />'
+			nodes = nodes .. "\n" .. '<' .. shapeName .. shapeAttributes .. ' />'
 		end
 	end
 

@@ -17,6 +17,12 @@ UniversalProcessKitListener.registeredKeyFunctions={}
 UniversalProcessKitListener.dtsum = 0
 UniversalProcessKitListener.runTime=0 -- adds up milliseconds
 
+-- blinking warning
+
+UniversalProcessKitListener.dtBlinkingWarning=0
+UniversalProcessKitListener.hasBlinkingWarningToShow = false
+UniversalProcessKitListener.blinkingWarningText = ""
+
 local gamepadButtonsPressed = {}
 
 function UniversalProcessKitListener.loadMap(name)
@@ -125,12 +131,6 @@ function UniversalProcessKitListener.loadMap(name)
 	g_currentMission.environment:addHourChangeListener(UniversalProcessKitListener)
 	g_currentMission.environment:addMinuteChangeListener(UniversalProcessKitListener)
 
-	-- blinking warning
-	
-	UniversalProcessKitListener.dtBlinkingWarning=0
-	UniversalProcessKitListener.hasBlinkingWarningToShow = false
-	UniversalProcessKitListener.blinkingWarningText = ""
-	
 	--[[
 	-- gui callback function
 	local currentGuiName=g_gui.currentGuiName

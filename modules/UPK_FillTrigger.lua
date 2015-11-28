@@ -7,6 +7,9 @@ local UPK_FillTrigger_mt = ClassUPK(UPK_FillTrigger,UniversalProcessKit)
 InitObjectClass(UPK_FillTrigger, "UPK_FillTrigger")
 UniversalProcessKit.addModule("filltrigger",UPK_FillTrigger)
 
+UPK_FillTrigger.EVENT_FILLTYPESELECTED = UniversalProcessKitEvent.getNextEventId()
+UPK_FillTrigger.EVENT_FILLINGSTOPPED = UniversalProcessKitEvent.getNextEventId()
+
 function UPK_FillTrigger:new(nodeId, parent)
 	printFn('UPK_FillTrigger:new(',nodeId,', ',parent,')')
 	local self = UniversalProcessKit:new(nodeId, parent, UPK_FillTrigger_mt)
@@ -60,8 +63,10 @@ function UPK_FillTrigger:new(nodeId, parent)
 			activateInput = 'ACTIVATE_OBJECT'
 		end
 		self.useActivateInputBinding = true
-		self.startFillingText = returnNilIfEmptyString(self.i18n[getStringFromUserAttribute(nodeId, "startFillingText")]) or self.i18n['fillTriggerStartFilling']
-		self.stopFillingText = returnNilIfEmptyString(self.i18n[getStringFromUserAttribute(nodeId, "stopFillingText")]) or self.i18n['fillTriggerStopFilling']
+		self:printInfo('self.i18n[getStringFromUserAttribute(nodeId, "startFillingText")] ',self.i18n[getStringFromUserAttribute(nodeId, "startFillingText")])
+		self:printInfo('self.i18n["fillTriggerStartFilling"] ',self.i18n['fillTriggerStartFilling'])
+		self.startFillingText = returnNilIfEmptyString(self.i18n[getStringFromUserAttribute(nodeId, "startFillingText")]) or self.i18n['siloStartFilling']
+		self.stopFillingText = returnNilIfEmptyString(self.i18n[getStringFromUserAttribute(nodeId, "stopFillingText")]) or self.i18n['siloStopFilling']
 		if activateInput~="true" then
 			if not InputBinding[activateInput] then
 				self:printErr('unknown input "',activateInput,'" - using "ACTIVATE_OBJECT" for now')
@@ -187,12 +192,15 @@ end
 
 function UPK_FillTrigger:eventCallback(eventType,...)
 	self:printFn('UPK_FillTrigger:eventCallBack(',eventType,'...)')
-	if eventType==UniversalProcessKitEvent.TYPE_INPUT then
-		self:printAll('UniversalProcessKitEvent.TYPE_INPUT')
-		self:printAll(...)
-	elseif eventType==UniversalProcessKitEvent.TYPE_FILLTYPESELECTED then
-		self:printAll('UniversalProcessKitEvent.TYPE_FILLTYPESELECTED')
-		self:printAll(...)
+	if eventType==UPK_FillTrigger.EVENT_FILLTYPESELECTED then
+		-- like UPK_FillTrigger:onFillTypeSelection
+		local selectedFillType = ...
+		self.fillFillType=selectedFillType
+		self.isActivated=true
+		UniversalProcessKitListener.updateKeyFunctionDisplayText(self.activateInputBinding,self,self.stopFillingText)
+		UniversalProcessKitListener.addUpdateable(self)
+	elseif eventType==UPK_FillTrigger.EVENT_FILLINGSTOPPED then
+		self:onFillingStopped(true)
 	end
 end
 
@@ -203,7 +211,7 @@ function UPK_FillTrigger:writeStream(streamId, connection)
 		self:printInfo('write to stream self.isActivated = ',self.isActivated)
 		streamWriteBool(streamId,self.isActivated)
 		self:printInfo('write to stream self.isActive = ',self.fillFillType)
-		streamWriteIntN(streamId,self.fillFillType,17)
+		streamWriteAuto(streamId,self.fillFillType)
 	end
 end;
 
@@ -213,7 +221,7 @@ function UPK_FillTrigger:readStream(streamId, connection)
 	if connection:getIsServer() then
 		self.isActivated = streamReadBool(streamId)
 		self:printInfo('read from stream self.isActivated = ',self.isActivated)
-		self.fillFillType = streamReadIntN(streamId, 17)
+		self.fillFillType = streamReadAuto(streamId)
 		self:printInfo('read from stream self.fillFillType = ',self.fillFillType)
 	end
 end;
@@ -344,7 +352,7 @@ function UPK_FillTrigger:update(dt)
 				for k,v in pairs(self.allowedVehicles) do
 					--self:print('checking for '..tostring(k)..': '..tostring(v))
 					if v and UniversalProcessKit.isVehicleType(trailer, k) then
-						self:print('vehicle allowed')
+						self:printAll('vehicle allowed')
 						local added = 0
 						if k==UniversalProcessKit.VEHICLE_MIXERWAGONPICKUP then
 							added = self:fillMixerWagonPickup(trailer, deltaFillLevel)
@@ -432,26 +440,36 @@ function UPK_FillTrigger:inputCallback(inputName)
 			upkMultiSiloDialog:setCancelCallback(self.onFillTypeSelectionCancel, self)
 			g_gui:showGui("UpkMultiSiloDialog")
 		else
-			self.isActivated=not self.isActivated
-			local text=nil
-			if self.isActivated then
-				text=self.stopFillingText
-			else
-				text=self.startFillingText
-			end
-			UniversalProcessKitListener.updateKeyFunctionDisplayText(self.activateInputBinding,self,text)
+			self:onFillingStopped()
 		end
 	end
 end
 
 function UPK_FillTrigger:onFillTypeSelection(selectedFillType)
-	self:printFn('UPK_FillTrigger:onSelectCallback(',selectedFillType,')')
+	self:printFn('UPK_FillTrigger:onFillTypeSelection(',selectedFillType,')')
 	self.fillFillType=selectedFillType
 	self.isActivated=true
 	UniversalProcessKitListener.updateKeyFunctionDisplayText(self.activateInputBinding,self,self.stopFillingText)
 	-- event
-	self:sendEvent(UniversalProcessKitEvent.TYPE_FILLTYPESELECTED,self.fillFillType)
+	self:sendEvent(UPK_FillTrigger.EVENT_FILLTYPESELECTED,self.fillFillType)
 	UniversalProcessKitListener.addUpdateable(self)
+end
+
+function UPK_FillTrigger:onFillingStopped(alreadySent)
+	self:printFn('UPK_FillTrigger:onFillingStopped(',isActivated,',',alreadySent,')')
+	if self.isActivated then
+		self.isActivated=false
+		local text=nil
+		if self.isActivated then
+			text=self.stopFillingText
+		else
+			text=self.startFillingText
+		end
+		UniversalProcessKitListener.updateKeyFunctionDisplayText(self.activateInputBinding,self,text)
+		if not alreadySent then
+			self:sendEvent(UPK_FillTrigger.EVENT_FILLINGSTOPPED)
+		end
+	end
 end
 
 function UPK_FillTrigger:onFillTypeSelectionCancel()

@@ -17,7 +17,6 @@ end
 UniversalProcessKitEvent.TYPE_ACTION = UniversalProcessKitEvent.getNextEventId()
 UniversalProcessKitEvent.TYPE_INPUT = UniversalProcessKitEvent.getNextEventId()
 UniversalProcessKitEvent.TYPE_ACTIVATOR = UniversalProcessKitEvent.getNextEventId()
-UniversalProcessKitEvent.TYPE_FILLTYPESELECTED = UniversalProcessKitEvent.getNextEventId()
 UniversalProcessKitEvent.TYPE_PLAY = UniversalProcessKitEvent.getNextEventId()
 UniversalProcessKitEvent.TYPE_STOP = UniversalProcessKitEvent.getNextEventId()
 UniversalProcessKitEvent.TYPE_PLAYERINTRIGGER = UniversalProcessKitEvent.getNextEventId()

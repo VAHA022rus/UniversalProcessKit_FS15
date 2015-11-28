@@ -46,6 +46,11 @@ Bisher enthaltene Module:
 
 ##Changelog
 
+__V0.10.11__
+
+- Fix für TipTrigger
+- MP-Fix für FillTrigger
+
 __V0.10.10__
 
 - Fruchttypen sun und rain überarbeitet

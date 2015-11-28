@@ -397,12 +397,12 @@ function UniversalProcessKit:playerEntered(player,alreadySent)
 end
 
 function UniversalProcessKit:playerLeft(player,alreadySent)
-	self:printFn('UniversalProcessKit:vehicleLeft(',player,', ',alreadySent,')')
+	self:printFn('UniversalProcessKit:playerLeft(',player,', ',alreadySent,')')
 	if player~=nil then
 		if player==UniversalProcessKitListener.clientId then
 			self.playerInRange = false
 		end
-		self.players[player] = false
+		self.players[player] = nil
 		if not alreadySent then
 			self:sendEvent(UniversalProcessKitEvent.TYPE_PLAYERINTRIGGER,player,false)
 		end

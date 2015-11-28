@@ -291,6 +291,7 @@ function UniversalProcessKit:findChildrenLoopFunc(childId,prefixShapeNames)
 	
 	-- load external i3d
 	local loadI3D=getStringFromUserAttribute(childId, "loadI3D")
+	self:printAll('loadI3D = ',loadI3D)
 	if loadI3D~=nil then
 		
 		local a,_=string.find(loadI3D,"^[$%w_%/\\%.0-9]+%.i3d$")
@@ -450,7 +451,17 @@ function UniversalProcessKit:p_onFillLevelChange(deltaFillLevel, newFillLevel, f
 	self:printFn('UniversalProcessKit:p_onFillLevelChange(',deltaFillLevel,', ',newFillLevel,', ',fillType,')')
 	
 	if self.isServer then
-		table.insert(self.fillLevelsToSync,{fillLevel=newFillLevel,fillType=fillType})
+		local hasFillTypeToSync = false
+		for _,v in pairs(self.fillLevelsToSync) do
+			if v.fillType==fillType then
+				v.fillLevel=newFillLevel
+				hasFillTypeToSync = true
+				break
+			end
+		end
+		if not hasFillTypeToSync then
+			table.insert(self.fillLevelsToSync,{fillLevel=newFillLevel,fillType=fillType})
+		end
 		self:raiseDirtyFlags(self.fillLevelDirtyFlag)
 	end
 	
@@ -552,8 +563,8 @@ function UniversalProcessKit:allowFillType(fillType, allowEmptying) -- also chec
 			return true
 		elseif self.storageType==UPK_Storage.SEPARATE then
 			local flbs = self:getFillLevelBubbleShellFromFillType(newFillType)
-			local fillLevel = flbs:geFillLevel(newFillType)
-			local cpacity = flbs:getCapacity(newFillType)
+			local fillLevel = flbs:getFillLevel(newFillType)
+			local capacity = flbs:getCapacity(newFillType)
 			return fillLevel < capacity
 		elseif self.storageType==UPK_Storage.SINGLE then
 			local myFillType=self.fillType

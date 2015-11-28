@@ -15,7 +15,7 @@ function UPK_EntityTrigger:new(nodeId, parent)
 	self:addTrigger()
 	
 	-- adjust for old configuration
-	local enableOnEmpty = getUserAttribute(nodeId, "enableOnEmpty")
+	local enableOnEmpty = getUserAttribute(nodeId, "enableOnEmpty") or false
 	if enableOnEmpty==true or enableOnEmpty==false then
 		self:printInfo('use enableChildrenOnEmpty instead of enableOnEmpty (out-dated)')
 		self.actions['OnEmpty']['enableChildren']=enableOnEmpty

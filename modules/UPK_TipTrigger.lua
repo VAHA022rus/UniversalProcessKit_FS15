@@ -274,15 +274,13 @@ end
 
 function UPK_TipTrigger:getTipInfoForTrailer(trailer, tipReferencePointIndex)
 	self:printFn('UPK_TipTrigger:getTipInfoForTrailer(',trailer,', ',tipReferencePointIndex,')')
+	local trailerFillType = trailer.currentFillType
 	if not self.acceptedFillTypes[trailerFillType] then
 		self:printAll('self.acceptedFillTypes[',trailerFillType,'] = false')
 		return false,math.huge,nil
 	else
 		local minDistance, bestPoint = self:getTipDistanceFromTrailer(trailer, tipReferencePointIndex)
-		local trailerFillType = trailer.currentFillType
-		
 		local isAllowed = self:allowFillType(trailerFillType)
-	
 		self:printAll('isAllowed: ',isAllowed)
 		self:printAll('minDistance: ',minDistance)
 		return isAllowed, minDistance, bestPoint

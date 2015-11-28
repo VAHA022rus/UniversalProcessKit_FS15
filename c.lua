@@ -335,6 +335,22 @@ function returnNilIfEmptyString(str)
 	return str
 end;
 
+function concatenate(...)
+	local arr={...}
+	if #arr==0 then
+		return ""
+	end
+	local str = ""
+	for _,v in ipairs(arr) do
+		if type(v)=="number" then
+			str = str .. tostring(round(v,8))
+		else
+			str = str .. tostring(v)
+		end
+	end
+	return str
+end
+
 function loopThruChildren(id,loopFunction,obj,...)
 	--print('loopThruChildren nodeId '..tostring(id))
 	if id==nil or id==0 or type(obj)~="table" or type(loopFunction)~="string" then

@@ -321,7 +321,7 @@ function UPK_Animator:loadExtraNodes(xmlFile, key)
 	if self.doRotatePerSecond then
 		local rotateToWhenLoaded = gmatch(getXMLString(xmlFile, key .. "#rotation"), "(%d+%.%d+)")
 		if type(rotateToWhenLoaded)=="table" and rotateToWhenLoaded[1]~=nil then
-			self:printAll('read saved rotation '..tostring(rotateToWhenLoaded[1])..', '..tostring(rotateToWhenLoaded[2])..', '..tostring(rotateToWhenLoaded[3]))
+			self:printAll('read saved rotation ',rotateToWhenLoaded[1],', ',rotateToWhenLoaded[2],', ',rotateToWhenLoaded[3])
 			self.rotateToWhenLoaded = { tonumber(rotateToWhenLoaded[1]), tonumber(rotateToWhenLoaded[2]), tonumber(rotateToWhenLoaded[3]) }
 		end
 	end
@@ -333,13 +333,13 @@ function UPK_Animator:getSaveExtraNodes(nodeIdent)
 	local nodes=""
 	if self.doAnimation then -- didnt worked yet to save animation time
 		local animTime=max(0,min(self:getAnimTime(),self.animDuration))
-		nodes=nodes..' animTrackEnabled="'..tostring(self.animTrackEnabled)..'" animTime="'..tostring(animTime)..'"'
+		nodes = concatenate(nodes,' animTrackEnabled="',self.animTrackEnabled,'" animTime="',animTime,'"')
 	end
 	if self.doMovement and self.movementTime~=0 then
-		nodes=nodes.." movementTime=\""..tostring(round(self.movementTime,4)).."\""
+		nodes = concatenate(nodes,' movementTime="',self.movementTime,'"')
 	end
 	if self.doRotation and self.rotationTime~=0 then
-		nodes=nodes.." rotationTime=\""..tostring(round(self.rotationTime,4)).."\""
+		node = concatenate(nodes,' rotationTime="',self.rotationTime,'"')
 	end
 	if self.doRotatePerSecond then
 		local rx, ry, rz = getRotation(self.nodeId)
