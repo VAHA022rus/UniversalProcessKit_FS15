@@ -12,19 +12,19 @@ function AudioSample.new(shapeId,syncObj)
 	self.shapeId=shapeId
 	self.shapeName=getName(shapeId)
 	
-	if syncObj==nil then
-		printErr('no sync object provided')
-		return false
-	end
-	
 	self.sampleId=getAudioSourceSample(shapeId)
-	
 	if self.sampleId==nil or self.sampleId==0 then
 		printAll('no audio sample found for shape "',self.shapeName,'"')
 		return false
 	end
 	
-	self.sampleDuration=getSampleDuration(self.sampleId)
+	if syncObj==nil then
+		printErr('no sync object provided')
+		return false
+	end
+	
+	self.sampleTime = 0
+	self.sampleDuration = getSampleDuration(self.sampleId)
 	
 	local loop = getUserAttribute(shapeId, "audioLoop")
 	self.loop = 1
@@ -81,20 +81,15 @@ function AudioSample:delete()
 	if self.stopTimerId~=nil then
 		removeTimer(self.stopTimerId)
 	end
-	self.syncObj.base.playableShapeNames[self.shapeName]=nil
 end
 
 function AudioSample:writeStream(streamId, connection)
 	printFn('AudioSample:writeStream(',streamId,', ',connection,')')
 	if not connection:getIsServer() then
-		--streamWriteAuto(streamId,self:getAudioSampleTime()%self.sampleDuration)
+		streamWriteAuto(streamId,self:getAudioSampleTime())
 		streamWriteAuto(streamId,self.audioEnabled)
 		
-		local hasOnEndTimer = self.onEndTimerId~=nil
-		streamWriteAuto(streamId,hasOnEndTimer)
-		if hasOnEndTimer then
-			streamWriteAuto(streamId,self.loopCount)
-		end
+		streamWriteAuto(streamId,self.loopCount)
 		
 		local hasPlayTimer = self.playTimerId~=nil
 		streamWriteAuto(streamId,hasPlayTimer)
@@ -107,31 +102,45 @@ function AudioSample:writeStream(streamId, connection)
 		if hasStopTimer then
 			streamWriteAuto(streamId,self.stopRunTime)
 		end
+		
+		local hasOnEndTimer = self.onEndTimerId~=nil
+		streamWriteAuto(streamId,hasOnEndTimer)
+		if hasOnEndTimer then
+			streamWriteAuto(streamId,self.onEndRunTime)
+		end
 	end
 end
 
 function AudioSample:readStream(streamId, connection)
 	printFn('AudioSample:readStream(',streamId,', ',connection,')')
 	if connection:getIsServer() then
-		--local audioSourceTime=streamReadAuto(streamId)
-		local audioEnabled=streamReadAuto(streamId)
-		self:enableAudioSource(audioEnabled)
-		
-		if streamReadAuto(streamId) then
-			self:addOnEndTimer()
-			self.loopCount=streamReadAuto(streamId)
+		self.sampleTime = streamReadAuto(streamId)
+		local audioEnabled = streamReadAuto(streamId)
+
+		if audioEnabled and self.sampleTime<self.sampleDuration then
+			self:play(self.sampleDuration-self.sampleTime,true)
+		else
+			self:stop(0,true)
 		end
+		
+		self.loopCount = streamReadAuto(streamId) or 0
 		
 		if streamReadAuto(streamId) then
 			local playRunTime = streamReadAuto(streamId)
 			local offset = playRunTime - UniversalProcessKitListener.runTime
-			self:play(offset)
+			self:play(offset,true)
 		end
 		
 		if streamReadAuto(streamId) then
 			local stopRunTime = streamReadAuto(streamId)
 			local offsetStop = stopRunTime - UniversalProcessKitListener.runTime
-			self:stop(offset)
+			self:stop(offset,true)
+		end
+		
+		if streamReadAuto(streamId) then
+			local onEndRunTime = streamReadAuto(streamId)
+			local offset = onEndRunTime - UniversalProcessKitListener.runTime
+			self:addOnEndTimer(offset)
 		end
 	end
 end
@@ -189,11 +198,17 @@ end
 function AudioSample:loadFromAttributes(xmlFile, key)
 	printFn('AudioSample:loadFromAttributes(',xmlFile,', ',key,')')
 	
-	local audioEnabled = getXMLBool(xmlFile, key .. "#audioEnabled") or self.audioEnabled
-	if audioEnabled then
-		self:play(0)
+	self.sampleTime = getXMLFloat(xmlFile, key .. "#sampleTime", self.sampleTime)
+	local audioEnabled = getXMLBool(xmlFile, key .. "#audioEnabled", self.audioEnabled)
+	
+	if audioEnabled and self.sampleTime<self.sampleDuration then
+		printInfo('enable audio sample')
+		self.audioEnabled = true
+		self:play(self.sampleDuration-self.sampleTime)
 	else
-		self:stop(0)
+		printInfo('disable audio sample')
+		self.audioEnabled = false
+		self:enableAudioSource(false)
 	end
 	
 	self.loopCount = getXMLInt(xmlFile, key .. "#loopCount") or 0
@@ -208,6 +223,11 @@ function AudioSample:loadFromAttributes(xmlFile, key)
 		self:stop(stopRunTime,true)
 	end
 	
+	local onEndRunTime = getXMLInt(xmlFile, key .. "#onEndRunTime")
+	if onEndRunTime~=nil then
+		self:addOnEndTimer(onEndRunTime)
+	end
+	
 	return true
 end
 
@@ -215,18 +235,19 @@ function AudioSample:getSaveAttributes()
 	printFn('AudioSample:getSaveAttributes()')
 	local attributes=""
 	
-	attributes=attributes..' audioEnabled="'..tostring(self.audioEnabled)..'"'
+	attributes = attributes..' sampleTime="'..tostring(self:getAudioSampleTime())..'"'
+	attributes = attributes..' audioEnabled="'..tostring(self.audioEnabled)..'"'
 	
 	if self.onEndTimerId~=nil then
-		attributes=attributes..' loopCount="'..tostring(self.loopCount)..'"'
+		attributes = attributes..' loopCount="'..tostring(self.loopCount)..'"'
 	end
 	
 	if self.playTimerId~=nil then
-		attributes=attributes..' playRunTime="'..tostring(round(self.playRunTime - UniversalProcessKitListener.runTime,0))..'"'
+		attributes = attributes..' playRunTime="'..tostring(round(self.playRunTime - UniversalProcessKitListener.runTime,0))..'"'
 	end
 	
 	if self.stopTimerId~=nil then
-		attributes=attributes..' stopRunTime="'..tostring(round(self.stopRunTime - UniversalProcessKitListener.runTime,0))..'"'
+		attributes = attributes..' stopRunTime="'..tostring(round(self.stopRunTime - UniversalProcessKitListener.runTime,0))..'"'
 	end
 	
 	return attributes
@@ -234,29 +255,25 @@ end
 
 function AudioSample:getAudioSampleTime()
 	printFn('AudioSample:getAudioSampleTime()')
-	local audioSampleTime = 0
+	local sampleTime = 0
 	if self.audioEnabled then
-		audioSampleTime=UniversalProcessKitListener.runTime - self.playRunTime
+		sampleTime = mathmax(0,mathmin(self.sampleDuration,UniversalProcessKitListener.runTime - self.playRunTime))
 	end
-	return audioSampleTime
+	return sampleTime
 end
 
 function AudioSample:enableAudioSource(enable)
 	printFn('AudioSample:enableAudioSource(',enable,')')
-	enable=enable or false
-	if enable~=self.audioEnabled then
-		setVisibility(self.shapeId,enable)
-		self.audioEnabled=enable
-	end
+	enable = enable or false
+	setVisibility(self.shapeId,enable)
+	self.audioEnabled = enable
 end
 
 function AudioSample:play(offset,alreadySent)
 	printFn('AudioSample:play(',offset,')')
-	if self.audioEnabled then
-		return
-	end
+
 	if offset==nil then
-		offset=self.offsetPlay
+		offset = self.offsetPlay
 	elseif offset<0 then
 		-- should have already started
 		offset=0
@@ -278,11 +295,11 @@ end
 function AudioSample:playNow()
 	printFn('AudioSample:playNow()')
 	self.playTimerId = nil
-	if not self.audioEnabled then
+	--if not self.audioEnabled then
 		printInfo('play audio sample')
 		self:enableAudioSource(true)
 		self:addOnEndTimer()
-	end
+	--end
 	return false -- for timer
 end
 
@@ -318,13 +335,14 @@ function AudioSample:stopNow()
 		end
 		self.loopCount = 0
 	end
+	self.stopTimerId = nil
 	return false -- for timer
 end
 
 function AudioSample:addOnEndTimer()
 	printFn('AudioSample:addOnEndTimer()')
-	local audioSourceTime=self:getAudioSampleTime()%self.sampleDuration
-	local offset = self.sampleDuration-audioSourceTime
+	local sampleTime = self:getAudioSampleTime()
+	local offset = self.sampleDuration-sampleTime
 	self.onEndTimerId = reviveTimer(self.onEndTimerId, offset, "onEndTimerCallback", self)
 	self.onEndRunTime = UniversalProcessKitListener.runTime + offset
 end
@@ -342,12 +360,13 @@ function AudioSample:onEndTimerCallback()
 	if offset<0 then
 		offset=0
 	end
-	self.loopCount = self.loopCount+1
 	if self.loop==0 or (self.loop~=0 and self.loopCount<self.loop) then
+		self.loopCount = self.loopCount+1
 		setTimerTime(self.onEndTimerId,self.sampleDuration-offset)
 		return true
 	end
 	self.onEndTimerId=nil
-	self:stop()
+	self:enableAudioSource(false)
 	return false
 end
+

@@ -470,13 +470,42 @@ function getLongFilename(filename,modname)
 end
 
 function _m.reviveTimer(timerId, offset, callback, obj)
-	--printFn('reviveTimer(',timerId,', ',offset,', ',callback,', ',obj,')')
+	printFn('reviveTimer(',timerId,', ',offset,', ',callback,', ',obj,')')
 	if timerId~=nil then
+		printAll('remove timer ',timerId)
 		removeTimer(timerId)
 		timerId=nil
 	end
-	timerId = addTimer(offset,callback,obj)
+	if offset<=0 then
+		printAll('no need for timer, offset is ',offset)
+		obj[callback](obj)
+	else
+		timerId = addTimer(offset,callback,obj)
+		printAll('added timer ',timerId,', offset ',offset,', callback ',callback,', obj ',obj)
+	end
 	return timerId
+end
+
+function _m.getXMLFloat(xmlFile, key, default)
+	printFn('getXMLFloat(',xmlFile,', ',key,')')
+	local val = _g.getXMLFloat(xmlFile, key)
+	if val==nil then
+		return default
+	end
+	-- checks for nan
+	if val~=val then
+		val = 0
+	end
+	return val
+end
+
+function _m.getXMLBool(xmlFile, key, default)
+	printFn('getXMLBool(',xmlFile,', ',key,')')
+	local val = getXMLString(xmlFile, key)
+	if val==nil then
+		return default
+	end
+	return tobool(val)
 end
 
 ----------------------------------

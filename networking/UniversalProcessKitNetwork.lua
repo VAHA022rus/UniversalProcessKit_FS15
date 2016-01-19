@@ -70,6 +70,15 @@ function UniversalProcessKit:writeUpdateStream(streamId, connection, dirtyMask, 
 		if bitAND(dirtyMask,self.mapHotspotDirtyFlag)~=0 or syncall then
 			streamWriteBool(streamId, self.appearsOnMap)
 		end
+		if bitAND(dirtyMask,self.actionsDirtyFlag)~=0 or syncall then
+			self:printInfo('writing actions')
+			local nrActionsToSync = length(self.actionsToSync)
+			streamWriteAuto(streamId,nrActionsToSync)
+			self:printInfo('want to sync ',nrActionsToSync,' actions')
+			for _,val in pairs(self.actionsToSync) do
+				streamWriteAuto(streamId, unpack(val))
+			end
+		end
 	end
 end;
 
@@ -77,6 +86,7 @@ function UniversalProcessKit:doAfterAllClientsAreSynced()
 	self:printFn('UniversalProcessKit:doAfterAllClientsAreSynced()')
 	self.dirtyMask = 0
 	self.fillLevelsToSync = {}
+	self.actionsToSync = {}
 end;
 
 function UniversalProcessKit:readUpdateStream(streamId, connection, dirtyMask, syncall)
@@ -102,6 +112,16 @@ function UniversalProcessKit:readUpdateStream(streamId, connection, dirtyMask, s
 		if bitAND(dirtyMask,self.mapHotspotDirtyFlag)~=0 or syncall then
 			local appearsOnMap = streamReadBool(streamId)
 			self:showMapHotspot(appearsOnMap, true)
+		end
+		if bitAND(dirtyMask,self.actionsDirtyFlag)~=0 or syncall then
+			self:printInfo('reading actions')
+			local nrActionsToSync = streamReadAuto(streamId)
+			self:printInfo('want to sync ',nrActionsToSync,' actions')
+			for i=1,nrActionsToSync do
+				local actionId, multiplier = streamReadAuto(streamId)
+				local actionName = UniversalProcessKit.actionIdToName[actionId]
+				self:operateAction(actionName, multiplier, true)
+			end
 		end
 	end
 end;

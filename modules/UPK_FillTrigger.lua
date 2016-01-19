@@ -163,6 +163,7 @@ function UPK_FillTrigger:new(nodeId, parent)
 	
 	-- actions
 	self:getActionUserAttributes('IfFilling')
+	UniversalProcessKit.syncActionThruStream('IfFilling')
 	self.isFilling=nil
 	
 	self:getActionUserAttributes('IfFillingStarted')

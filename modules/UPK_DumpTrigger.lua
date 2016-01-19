@@ -90,6 +90,7 @@ function UPK_DumpTrigger:new(nodeId, parent)
 	
 	-- actions
 	self:getActionUserAttributes('IfDumping')
+	UniversalProcessKit.syncActionThruStream('IfDumping')
 	self:getActionUserAttributes('IfDumpingStarted')
 	self:getActionUserAttributes('IfDumpingStopped')
 	

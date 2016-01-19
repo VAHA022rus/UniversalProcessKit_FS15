@@ -31,6 +31,8 @@ function OnCreateUPK:load(id)
 	self.base=UPK_Base:new(self.nodeId,false,true,self)
 	if self.base~=false then
 		self.base:findChildren(self.nodeId)
+	else
+		printErr('Couldn\'t initiate this oncreate upk mod. See above for first error occured as reason.')
 	end
 	
 	g_currentMission:addNodeObject(self.nodeId, self)
@@ -48,7 +50,7 @@ end
 
 function OnCreateUPK:loadFromAttributesAndNodes(xmlFile, key, resetVehicles)
 	printFn('OnCreateUPK:loadFromAttributesAndNodes()')
-	if self.base~=nil then
+	if self.base~=nil and type(self.base)=="table" then
 		self.base:loadFromAttributesAndNodes(xmlFile, key)
 	end
 	
@@ -57,10 +59,9 @@ end
 
 function OnCreateUPK:getSaveAttributesAndNodes(nodeIdent)
 	printFn('OnCreateUPK:getSaveAttributesAndNodes('..tostring(nodeIdent)..')')
-	local attributes=""
-	local nodes=""
+	local attributes, nodes = OnCreateUPK:superClass().getSaveAttributesAndNodes(self, nodeIdent)
 	
-	if self.base~=nil then
+	if self.base~=nil and type(self.base)=="table" then
 		local baseAttributes, baseNodes=self.base:getSaveAttributesAndNodes(nodeIdent)
 		baseNodes = string.gsub(baseNodes,"\n","\n\t\t")
 		attributes=attributes .. baseAttributes
@@ -159,7 +160,7 @@ function OnCreateUPK:readUpdateStream(streamId, timestamp, connection)
 				local objectSyncId = streamReadAuto(streamId)
 				printAll('reading sync object with syncId ',objectSyncId)
 				local objectDirtyFlag = streamReadAuto(streamId)
-				printAll('reading sync object with dirtyFalg ',objectDirtyFlag)
+				printAll('reading sync object with dirtyFlag ',objectDirtyFlag)
 				local object = self.upkObjects[objectSyncId]
 				local syncall=bitAND(object.dirtyMask, object.syncAllDirtyFlag)~=0
 				object:readUpdateStream(streamId, connection, objectDirtyFlag, syncall)

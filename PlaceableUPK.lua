@@ -45,7 +45,7 @@ function PlaceableUPK:finalizePlacement(...)
 			end
 			self.base:findChildren(self.nodeId)
 		else
-			printErr('Error: Failed to init base - this upk mod will not work')
+			printErr('Couldn\'t initiate this placeable upk mod. See above for first error occured as reason.')
 		end
 	end
 end

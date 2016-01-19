@@ -46,6 +46,13 @@ Bisher enthaltene Module:
 
 ##Changelog
 
+__V0.10.12__
+
+- verbesserte Synchronisation von Animationen (mit "play..")
+- verbesserte Synchronisation von Sounds (mit "play..")
+- MP-Fix für starkes Laggen
+- Tschechisch hinzugefügt (vielen Dank an Erich Jelinek!)
+
 __V0.10.11__
 
 - Fix für TipTrigger

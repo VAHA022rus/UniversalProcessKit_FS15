@@ -53,14 +53,14 @@ function UPK_TipTriggerObject:writeStream(streamId, connection)
 	if not connection:getIsServer() then -- in connection with client
 		if self.tipTrigger~=nil then
 			streamWriteBool(streamId, true)
-			streamWriteInt32(streamId, self.id)
+			streamWriteAuto(streamId, self.id)
 			local syncObj = self.tipTrigger.syncObj
 			local syncObjId = networkGetObjectId(syncObj)
 			printAll('syncObjId: ',syncObjId)
-			streamWriteInt32(streamId, syncObjId)
+			streamWriteAuto(streamId, syncObjId)
 			local syncId = self.tipTrigger.syncId
 			printAll('syncId: ',syncId)
-			streamWriteInt32(streamId, syncId)
+			streamWriteAuto(streamId, syncId)
 		else
 			streamWriteBool(streamId, false)
 			printAll('no self.tipTrigger')
@@ -72,11 +72,11 @@ function UPK_TipTriggerObject:readStream(streamId, connection)
 	if connection:getIsServer() then -- in connection with server
 		local hasTipTrigger = streamReadBool(streamId)
 		if hasTipTrigger then
-			local networkNode = streamReadInt32(streamId)
-			local syncObjId = streamReadInt32(streamId)
+			local networkNode = streamReadAuto(streamId)
+			local syncObjId = streamReadAuto(streamId)
 			printAll('syncObjId: ',syncObjId)
 			local syncObj = networkGetObject(syncObjId)
-			local syncId = streamReadInt32(streamId)
+			local syncId = streamReadAuto(streamId)
 			printAll('syncId: ',syncId)
 			if syncObj~=nil then
 				g_client:addObject(self, networkNode or self.id)
@@ -143,6 +143,7 @@ function UPK_TipTrigger:new(nodeId, parent)
 	-- actions
 	
 	self:getActionUserAttributes('IfTipping')
+	UniversalProcessKit.syncActionThruStream('IfTipping')
 	self.isTipping = {}
 	
 	self:getActionUserAttributes('IfTippingStarted')

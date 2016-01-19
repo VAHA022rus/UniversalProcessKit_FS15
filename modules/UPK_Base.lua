@@ -161,6 +161,13 @@ function UPK_Base:delete()
 	        g_currentMission:removeNodeObject(self.nodeId)
 	    end
 	end
+	self.shapeNamesToAudioSamples = nil
+	self.shapeNamesToNodeIds = nil
+	for _,playableShape in pairs(self.playableShapes) do
+		playableShape:delete()
+		playableShape = nil
+	end
+	self.playableShapes = nil
 	UPK_Base:superClass().delete(self)
 end
 

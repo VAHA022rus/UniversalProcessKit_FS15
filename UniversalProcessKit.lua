@@ -121,12 +121,14 @@ function UniversalProcessKit:new(nodeId, parent, customMt)
 	-- network
 	
 	self.fillLevelsToSync = {}
+	self.actionsToSync = {}
 	self.nextDirtyFlag = 1
 	self.dirtyMask = 0
 	self.syncAllDirtyFlag = self:getNextDirtyFlag()
 	self.fillLevelDirtyFlag = self:getNextDirtyFlag()
 	self.isEnabledDirtyFlag = self:getNextDirtyFlag()
 	self.mapHotspotDirtyFlag = self:getNextDirtyFlag()
+	self.actionsDirtyFlag = self:getNextDirtyFlag()
 	
 	-- fill level bubbles
 
@@ -556,26 +558,27 @@ end
 
 function UniversalProcessKit:allowFillType(fillType, allowEmptying) -- also check for capacity
 	self:printFn('UniversalProcessKit:allowFillType(',fillType,', ',allowEmptying,')')
-	-- return isAllowed, allowFilltype, capacityNotReached
 	if fillType~=nil then
 		local newFillType=self.fillTypesConversionMatrix[UniversalProcessKit.FILLTYPE_UNKNOWN][fillType] or fillType
-		if UniversalProcessKit.isSpecialFillType(newFillType) then
-			return true
-		elseif self.storageType==UPK_Storage.SEPARATE then
-			local flbs = self:getFillLevelBubbleShellFromFillType(newFillType)
-			local fillLevel = flbs:getFillLevel(newFillType)
-			local capacity = flbs:getCapacity(newFillType)
-			return fillLevel < capacity
-		elseif self.storageType==UPK_Storage.SINGLE then
-			local myFillType=self.fillType
-			newFillType=self.fillTypesConversionMatrix[myFillType][fillType]
-			if myFillType==newFillType then
-				return self.fillLevel < self.capacity
-			elseif myFillType==UniversalProcessKit.FILLTYPE_UNKNOWN then
+		if newFillType~=nil then
+			if UniversalProcessKit.isSpecialFillType(newFillType) then
 				return true
+			elseif self.storageType==UPK_Storage.SEPARATE then
+				local flbs = self:getFillLevelBubbleShellFromFillType(newFillType)
+				local fillLevel = flbs:getFillLevel(newFillType)
+				local capacity = flbs:getCapacity(newFillType)
+				return fillLevel < capacity
+			elseif self.storageType==UPK_Storage.SINGLE then
+				local myFillType=self.fillType
+				newFillType=self.fillTypesConversionMatrix[myFillType][fillType]
+				if myFillType==newFillType then
+					return self.fillLevel < self.capacity
+				elseif myFillType==UniversalProcessKit.FILLTYPE_UNKNOWN then
+					return true
+				end
+			elseif self.storageType==UPK_Storage.FIFO or self.storageType==UPK_Storage.FILO then
+				return self.fillLevel < self.capacity
 			end
-		elseif self.storageType==UPK_Storage.FIFO or self.storageType==UPK_Storage.FILO then
-			return self.fillLevel < self.capacity
 		end
 	end
 	return false

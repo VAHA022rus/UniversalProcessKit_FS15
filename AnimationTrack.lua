@@ -43,6 +43,7 @@ function AnimationTrack.new(shapeId,syncObj)
 	end
 	
 	self.animDuration = getAnimClipDuration(self.animCharacterSet,self.animClipIndex)
+	printInfo('self.animDuration ', self.animDuration)
 	
 	local animTrackBlendWeight = getAnimTrackBlendWeight(self.animCharacterSet,self.animTrack)
 	self.animTrackBlendWeight = getNumberFromUserAttribute(shapeId, "animationBlendWeight", animTrackBlendWeight, 0, 1)
@@ -56,8 +57,13 @@ function AnimationTrack.new(shapeId,syncObj)
 	end
 	self.loopCount = 0
 	
-	self.animationSpeed = getNumberFromUserAttribute(shapeId, "animationSpeed", 1)
-	local rewindAnimationOnDisable = getBoolFromUserAttribute(shapeId, "rewindAnimationOnDisable", false) -- animator
+	self.animationSpeed = getNumberFromUserAttribute(shapeId, "animationSpeed", 1, 0) -- current
+	if self.animationSpeed==0 then
+		printErr('animation speed must be greater than 0')
+		return false
+	end
+	self.animationSpeedPlay = self.animationSpeed -- when played
+	local rewindAnimationOnDisable = getBoolFromUserAttribute(shapeId, "rewindAnimationOnDisable", false) -- old animator
 	self.rewindOnStop = getBoolFromUserAttribute(shapeId, "animationRewindOnStop", rewindAnimationOnDisable)
 	
 	self.rewindOnEnd = getBoolFromUserAttribute(shapeId, "animationRewindOnEnd", false)
@@ -99,30 +105,25 @@ end
 
 function AnimationTrack:delete()
 	printFn('AnimationTrack:delete()')
-	if self.onEndTimerId~=nil then
-		removeTimer(self.onEndTimerId)
-	end
 	if self.playTimerId~=nil then
 		removeTimer(self.playTimerId)
 	end
 	if self.stopTimerId~=nil then
 		removeTimer(self.stopTimerId)
 	end
-	self.syncObj.base.playableShapeNames[self.shapeName]=nil
+	if self.onEndTimerId~=nil then
+		removeTimer(self.onEndTimerId)
+	end
 end
 
 function AnimationTrack:writeStream(streamId, connection)
 	printFn('AnimationTrack:writeStream(',streamId,', ',connection,')')
 	if not connection:getIsServer() then
-		streamWriteAuto(streamId,self:getAnimTrackTime()%self.animDuration)
+		streamWriteAuto(streamId,self:getAnimTrackTime())
 		streamWriteAuto(streamId,self.animationSpeed)
 		streamWriteAuto(streamId,self.animationEnabled)
 
-		local hasOnEndTimer = self.onEndTimerId~=nil
-		streamWriteAuto(streamId,hasOnEndTimer)
-		if hasOnEndTimer then
-			streamWriteAuto(streamId,self.loopCount)
-		end
+		streamWriteAuto(streamId,self.loopCount)
 		
 		local hasPlayTimer = self.playTimerId~=nil
 		streamWriteAuto(streamId,hasPlayTimer)
@@ -135,24 +136,32 @@ function AnimationTrack:writeStream(streamId, connection)
 		if hasStopTimer then
 			streamWriteAuto(streamId,self.stopRunTime)
 		end
+		
+		local hasOnEndTimer = self.onEndTimerId~=nil
+		streamWriteAuto(streamId,hasOnEndTimer)
+		if hasOnEndTimer then
+			streamWriteAuto(streamId,self.onEndRunTime)
+		end
 	end
 end
 
 function AnimationTrack:readStream(streamId, connection)
 	printFn('AnimationTrack:readStream(',streamId,', ',connection,')')
 	if connection:getIsServer() then
-		local animTrackTime=streamReadAuto(streamId)
-		local animationSpeed=streamReadAuto(streamId)
-		local animationEnabled=streamReadAuto(streamId)
+		local animTrackTime = streamReadAuto(streamId)
+		local animationSpeed = streamReadAuto(streamId)
+		local animationEnabled = streamReadAuto(streamId)
 		
+		self:setAnimTrackSpeedScale(1)
+		self.initialAnimationSpeed = animationSpeed
 		self:setAnimTrackTime(animTrackTime)
-		self:setAnimTrackSpeedScale(animationSpeed)
-		self:enableAnimTrack(animationEnabled)
+		self.initialAnimTrackTime = animTrackTime
+		self:enableAnimTrack()
+		self.initialAnimationEnabled = animationEnabled
+		-- needs 1 frame to refresh position
+		self.refreshPositionTimerId = reviveTimer(self.refreshPositionTimerId, 100, "refreshPositionTimer", self)
 		
-		if streamReadAuto(streamId) then
-			self:addOnEndTimer()
-			self.loopCount=streamReadAuto(streamId)
-		end
+		self.loopCount = streamReadAuto(streamId) or 0
 		
 		if streamReadAuto(streamId) then
 			local playRunTime = streamReadAuto(streamId)
@@ -162,8 +171,14 @@ function AnimationTrack:readStream(streamId, connection)
 		
 		if streamReadAuto(streamId) then
 			local stopRunTime = streamReadAuto(streamId)
-			local offsetStop = stopRunTime - UniversalProcessKitListener.runTime
+			local offset = stopRunTime - UniversalProcessKitListener.runTime
 			self:stop(offset)
+		end
+		
+		if streamReadAuto(streamId) then
+			local onEndRunTime = streamReadAuto(streamId)
+			local offset = onEndRunTime - UniversalProcessKitListener.runTime
+			self:addOnEndTimer(offset)
 		end
 	end
 end
@@ -219,19 +234,28 @@ function AnimationTrack:raiseDirtyFlags(flag)
 end
 
 function AnimationTrack:loadFromAttributes(xmlFile, key)
-	printFn('AudioSample:loadFromAttributes(',xmlFile,', ',key,')')
+	printFn('AnimationTrack:loadFromAttributes(',xmlFile,', ',key,')')
 	
-	local animTrackTime=getXMLFloat(xmlFile, key .. "#animTrackTime") or self.animTrackTime
-	local animationSpeed=getXMLFloat(xmlFile, key .. "#animationSpeed") or self.animationSpeed
-	local animationEnabled=getXMLBool(xmlFile, key .. "#animationEnabled") or self.animationEnabled
-	
-	self:setAnimTrackTime(animTrackTime)
-	self:setAnimTrackSpeedScale(animationSpeed)
-	if animationEnabled then
-		self:play(0)
-	else
-		self:stop(0)
+	local animTrackTime = getXMLFloat(xmlFile, key .. "#animTrackTime") or self.animTrackTime
+	local animationSpeed = getXMLFloat(xmlFile, key .. "#animationSpeed") or 1
+	-- allows new speed settings in i3d
+	if animationSpeed~=0 and mathabs(animationSpeed)~=mathabs(self.animationSpeed) then
+		animationSpeed = animationSpeed/mathabs(animationSpeed)*self.animationSpeed
 	end
+	local animationEnabled = getXMLBool(xmlFile, key .. "#animationEnabled") or self.animationEnabled
+	
+	printInfo('animTrackTime ',animTrackTime)
+	printInfo('animationSpeed ',animationSpeed)
+	printInfo('animationEnabled ',animationEnabled)
+	
+	self:setAnimTrackSpeedScale(1)
+	self.initialAnimationSpeed = animationSpeed
+	self:setAnimTrackTime(animTrackTime)
+	self.initialAnimTrackTime = animTrackTime
+	self:enableAnimTrack()
+	self.initialAnimationEnabled = animationEnabled
+	-- needs 1 frame to refresh position
+	self.refreshPositionTimerId = reviveTimer(self.refreshPositionTimerId, 100, "refreshPositionTimer", self)
 	
 	self.loopCount = getXMLInt(xmlFile, key .. "#loopCount") or 0
 	
@@ -245,27 +269,47 @@ function AnimationTrack:loadFromAttributes(xmlFile, key)
 		self:stop(stopRunTime,true)
 	end
 	
+	local onEndRunTime = getXMLInt(xmlFile, key .. "#onEndRunTime")
+	if onEndRunTime~=nil then
+		self:addOnEndTimer(onEndRunTime)
+	end
+	
 	return true
+end
+
+function AnimationTrack:refreshPositionTimer()
+	printFn('AnimationTrack:refreshPositionTimer()')
+	self:setAnimTrackSpeedScale(self.initialAnimationSpeed)
+	self.initialAnimationSpeed = nil
+	self:setAnimTrackTime(self.initialAnimTrackTime)
+	self.initialAnimTrackTime = nil
+	self:enableAnimTrack(self.initialAnimationEnabled)
+	self.initialAnimationEnabled = nil
+	self.refreshPositionTimerId = nil
+	return false
 end
 
 function AnimationTrack:getSaveAttributes()
 	printFn('AudioSample:getSaveAttributes()')
 	local attributes=""
 	
-	attributes=attributes..' animTrackTime="'..tostring(self:getAnimTrackTime()%self.animDuration)..'"'
-	attributes=attributes..' animationSpeed="'..tostring(self.animationSpeed)..'"'
-	attributes=attributes..' animationEnabled="'..tostring(self.animationEnabled)..'"'
+	attributes = attributes..' animTrackTime="'..tostring(self:getAnimTrackTime())..'"'
+	attributes = attributes..' animationSpeed="'..tostring(self.animationSpeed)..'"'
+	attributes = attributes..' animationEnabled="'..tostring(self.animationEnabled)..'"'
 	
-	if self.onEndTimerId~=nil then
-		attributes=attributes..' loopCount="'..tostring(self.loopCount)..'"'
-	end
+	attributes=attributes..' loopCount="'..tostring(self.loopCount)..'"'
 	
 	if self.playTimerId~=nil then
-		attributes=attributes..' playRunTime="'..tostring(round(self.playRunTime - UniversalProcessKitListener.runTime,0))..'"'
+		attributes = attributes..' playRunTime="'..tostring(round(self.playRunTime - UniversalProcessKitListener.runTime,0))..'"'
 	end
 	
 	if self.stopTimerId~=nil then
-		attributes=attributes..' stopRunTime="'..tostring(round(self.stopRunTime - UniversalProcessKitListener.runTime,0))..'"'
+		attributes = attributes..' stopRunTime="'..tostring(round(self.stopRunTime - UniversalProcessKitListener.runTime,0))..'"'
+	end
+	
+	if self.onEndTimerId~=nil then
+		attributes = attributes..' onEndRunTime="'..tostring(round(self.onEndRunTime - UniversalProcessKitListener.runTime,0))..'"'
+		
 	end
 	
 	return attributes
@@ -274,29 +318,43 @@ end
 function AnimationTrack:getAnimTrackTime()
 	printFn('AnimationTrack:getAnimTrackTime()')
 	local animTrackTime = getAnimTrackTime(self.animCharacterSet, self.animClipIndex)
+	animTrackTime = animTrackTime / self.animationSpeedPlay
+	printInfo('animTrackTime ',animTrackTime)
+	animTrackTime = mathmin(self.animDuration,mathmax(0,animTrackTime))
 	return animTrackTime
 end
 
 function AnimationTrack:setAnimTrackTime(animTrackTime)
 	printFn('AnimationTrack:setAnimTrackTime(',animTrackTime,')')
-	animTrackTime = max(0,min(animTrackTime%self.animDuration,self.animDuration))
+	animTrackTime = mathmin(self.animDuration,mathmax(0,animTrackTime * self.animationSpeedPlay))
 	setAnimTrackTime(self.animCharacterSet, self.animClipIndex, animTrackTime)
+end
+
+function AnimationTrack:refreshAnimTrackTime()
+	printFn('AnimationTrack:refreshAnimTrackTime()')
+	local animTrackTime = self:getAnimTrackTime()
+	self:setAnimTrackTime(animTrackTime)
 end
 
 function AnimationTrack:setAnimTrackSpeedScale(animationSpeed)
 	printFn('AnimationTrack:setAnimTrackSpeedScale(',animationSpeed,')')
 	self.animationSpeed = animationSpeed
 	setAnimTrackSpeedScale(self.animCharacterSet, self.animClipIndex, self.animationSpeed)
+	self.animDuration = getAnimClipDuration(self.animCharacterSet,self.animClipIndex) / self.animationSpeedPlay
+	printInfo('self.animDuration ', self.animDuration)
 end
 
 function AnimationTrack:enableAnimTrack(enable)
 	printFn('AnimationTrack:enableAnimTrack(',enable,')')
 	if enable==nil or enable==true then
-		self.animationEnabled = true
+		self:refreshAnimTrackTime()
 		enableAnimTrack(self.animCharacterSet, self.animTrack)
+		self.animationEnabled = true
 	else
-		self.animationEnabled = false
+		self:refreshAnimTrackTime()
 		disableAnimTrack(self.animCharacterSet, self.animTrack)
+		self:setAnimTrackSpeedScale(0)
+		self.animationEnabled = false
 	end
 end
 
@@ -307,6 +365,13 @@ end
 
 function AnimationTrack:play(offset,alreadySent)
 	printFn('AnimationTrack:play(',offset,')')
+	printInfo('self.animationEnabled ',self.animationEnabled)
+	printInfo('self.stopTimerId ',self.stopTimerId)
+	printInfo('self.onEndTimerId ',self.onEndTimerId)
+	printInfo('self:getAnimTrackTime() ',self:getAnimTrackTime())
+	printInfo('self.animationSpeed ',self.animationSpeed)
+	
+	
 	if offset==nil then
 		offset = self.offsetPlay
 	elseif offset<0 then
@@ -335,12 +400,14 @@ end
 
 function AnimationTrack:playNow()
 	printFn('AnimationTrack:playNow()')
+	
 	self.playTimerId = nil
-	if not self.animationEnabled then
+	--if not self.animationEnabled then
 		printInfo('play animation')
+		self:setAnimTrackSpeedScale(self.animationSpeedPlay)
 		self:enableAnimTrack()
 		self:addOnEndTimer()
-	end
+	--end
 	return false -- for timer
 end
 
@@ -374,8 +441,16 @@ end
 
 function AnimationTrack:stopNow()
 	printFn('AnimationTrack:stopNow()')
-	self.stopTimerId = nil
+	-- rewind on stop
+	if self.rewindOnStop and self.animationSpeed>=0 then
+		printInfo('rewind on stop')
+		self:setAnimTrackSpeedScale(-self.animationSpeedPlay)
+		self:enableAnimTrack()
+		self:addOnEndTimer()
+		return false
+	end
 	if self.animationEnabled then
+		
 		printInfo('stop animation')
 		self:disableAnimTrack()
 		if self.onEndTimerId~=nil then
@@ -384,18 +459,21 @@ function AnimationTrack:stopNow()
 		end
 		self.loopCount = 0
 	end
+	self.stopTimerId = nil
 	return false -- for timer
 end
 	
-function AnimationTrack:addOnEndTimer()
+function AnimationTrack:addOnEndTimer(offset)
 	printFn('AnimationTrack:addOnEndTimer()')
-	local offset = 0
-	local animTrackTime=self:getAnimTrackTime()%self.animDuration
+	offset = offset or 0
+	local animTrackTime=self:getAnimTrackTime()
+	printAll('animTrackTime ',animTrackTime)
 	if self.animationSpeed<0 then
 		offset = max(0,min(self.animDuration,animTrackTime))
 	else
 		offset = max(0,min(self.animDuration,self.animDuration-animTrackTime))
 	end
+	printAll('offset ',offset)
 	self.onEndTimerId = reviveTimer(self.onEndTimerId, offset, "onEndTimerCallback", self)
 	self.onEndRunTime = UniversalProcessKitListener.runTime + offset
 end
@@ -414,8 +492,8 @@ function AnimationTrack:onEndTimerCallback()
 	if offset<0 then
 		offset=0
 	end
-	self.loopCount = self.loopCount+1
 	if self.loop==0 or (self.loop~=0 and self.loopCount<self.loop) then
+		self.loopCount = self.loopCount+1
 		if self.rewindOnEnd then
 			self:setAnimTrackSpeedScale(-self.animationSpeed)
 			if self.animationSpeed<0 then
@@ -430,6 +508,7 @@ function AnimationTrack:onEndTimerCallback()
 		return true
 	end
 	self.onEndTimerId=nil
+	self:disableAnimTrack()
 	return false
 end
 

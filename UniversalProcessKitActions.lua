@@ -1,7 +1,8 @@
 -- by mor2000
 
-UniversalProcessKit.actionIdToName={}
-UniversalProcessKit.actionNameToId={}
+UniversalProcessKit.actionIdToName = {}
+UniversalProcessKit.actionNameToId = {}
+UniversalProcessKit.actionIdsSyncThruStream = {}
 
 function UniversalProcessKit.registerActionName(actionName,actionId)
 	if type(actionName)=="string" and UniversalProcessKit.actionNameToId[actionName]==nil then
@@ -11,6 +12,20 @@ function UniversalProcessKit.registerActionName(actionName,actionId)
 		if g_server~=nil and UniversalProcessKitListener.syncingObject~=nil then -- loadmap done
 			UniversalProcessKitListener.syncingObject:addActionNameToSync(actionName)
 		end
+	end
+end
+
+function UniversalProcessKit.syncActionThruStream(actionName,syncThruStream)
+	printFn('UniversalProcessKit.syncActionThruStream(',actionName,', ',syncThruStream,')')
+	local actionId = UniversalProcessKit.actionNameToId[actionName]
+	if type(actionName)~="string" or actionId==nil then
+		printErr('cannot set sync attribute for unknown action')
+		return
+	end
+	if syncThruStream or syncThruStream==nil then
+		UniversalProcessKit.actionIdsSyncThruStream[actionId] = true
+	else
+		UniversalProcessKit.actionIdsSyncThruStream[actionId] = nil
 	end
 end
 
@@ -140,7 +155,14 @@ function UniversalProcessKit:operateAction(actionName, multiplier, alreadySent)
 	
 	if self.isServer then
 		local actionId = UniversalProcessKit.actionNameToId[actionName]
-		self:sendEvent(UniversalProcessKitEvent.TYPE_ACTION, actionId, multiplier)
+		if UniversalProcessKit.actionIdsSyncThruStream[actionId] then
+			-- wait for stream
+			table.insert(self.actionsToSync,{actionId, multiplier})
+			self:raiseDirtyFlags(self.actionsDirtyFlag)
+		else
+			-- instant sync
+			self:sendEvent(UniversalProcessKitEvent.TYPE_ACTION, actionId, multiplier)
+		end
 	end
 
 	local action = self.actions[actionName]

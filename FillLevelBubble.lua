@@ -116,7 +116,7 @@ function FillLevelBubble:new(...)
 end
 
 function FillLevelBubble:onFillLevelChange(deltaFillLevel, newFillLevel, fillType)
-	--print(tostring(deltaFillLevel)..', '..tostring(newFillLevel)..', '..tostring(fillType))
+	--print('FillLevelBubble:onFillLevelChange ('..tostring(deltaFillLevel)..', '..tostring(newFillLevel)..', '..tostring(fillType)..')')
 	if deltaFillLevel~=0 then
 		for obj,func in pairs(self.onFillLevelChangeFuncs) do
 			obj[func](obj, deltaFillLevel, newFillLevel, fillType)
