@@ -71,15 +71,15 @@
 	<storeItems/>
 		
     <l10n>
-		<text name="versionWarning"><en><![CDATA[You need at least version %s of the UniversalProcessKit (version %s is installed).]]></en><de><![CDATA[Es wird mindestens die Version %s des UniversalProcessKit benötigt (Version %s ist installiert).]]></de></text>
-		<text name="requiredModWarning"><en><![CDATA[The mod "%s" needs additionally the mod "%s".]]></en><de><![CDATA[Der Mod "%s" benötigt zusätzlich den Mod "%s".]]></de></text>
+		<text name="versionWarning"><en><![CDATA[You need at least version %s of the UniversalProcessKit (version %s is installed).]]></en><de><![CDATA[Es wird mindestens die Version %s des UniversalProcessKit benötigt (Version %s ist installiert).]]></de><ru><![CDATA[Вам необходим UniversalProcessKit версии %s (установлена версия %s).]]></ru></text>
+		<text name="requiredModWarning"><en><![CDATA[The mod "%s" needs additionally the mod "%s".]]></en><de><![CDATA[Der Mod "%s" benötigt zusätzlich den Mod "%s".]]></de><ru><![CDATA[Мод "%s" нуждается в дополнительном моде "%s" .]]></ru></text>
 		
 		<text name="emptyTriggerStartUnloading"><en><![CDATA[start unloading]]></en><de><![CDATA[Entladen starten]]></de></text>
 		<text name="emptyTriggerStopUnloading"><en><![CDATA[stop unloading]]></en><de><![CDATA[Entladen stoppen]]></de></text>
 		
 		<text name="storeCategory_fruit"><en><![CDATA[fruit & vegetables]]></en><de><![CDATA[Obst & Gemüse]]></de><fr><![CDATA[Fruit et légumes]]></fr><ru><![CDATA[Фрукты и овощи]]></ru><cz><![CDATA[Ovoce a zelenina]]></cz></text>
-		<text name="storeCategory_animals"><en><![CDATA[animal husbandry]]></en><de><![CDATA[Tierzucht]]></de><fr><![CDATA[Élevage d'animaux]]></fr><ru><![CDATA[животноводство]]></ru><cz><![CDATA[Chov zvířat]]></cz></text>
-		<text name="storeCategory_storage"><en><![CDATA[storage]]></en><de><![CDATA[Lager]]></de><fr><![CDATA[Stockage]]></fr><ru><![CDATA[склады]]></ru><cz><![CDATA[Skladování]]></cz></text>
+		<text name="storeCategory_animals"><en><![CDATA[animal husbandry]]></en><de><![CDATA[Tierzucht]]></de><fr><![CDATA[Élevage d'animaux]]></fr><ru><![CDATA[Животноводство]]></ru><cz><![CDATA[Chov zvířat]]></cz></text>
+		<text name="storeCategory_storage"><en><![CDATA[storage]]></en><de><![CDATA[Lager]]></de><fr><![CDATA[Stockage]]></fr><ru><![CDATA[Склады]]></ru><cz><![CDATA[Skladování]]></cz></text>
 		<text name="storeCategory_buildings"><en><![CDATA[buildings & halls]]></en><de><![CDATA[Gebäude & Hallen]]></de><fr><![CDATA[Bâtiments et halls]]></fr><ru><![CDATA[Здания и Залы]]></ru><cz><![CDATA[Budovy a haly]]></cz></text>
 		<text name="storeCategory_sellingPoints"><en><![CDATA[selling points]]></en><de><![CDATA[Verkaufsstellen]]></de><fr><![CDATA[Points de vente]]></fr><ru><![CDATA[Пункты продажи]]></ru><cz><![CDATA[Prodejní místa]]></cz></text>
 		<text name="storeCategory_factories"><en><![CDATA[factories]]></en><de><![CDATA[Fabriken]]></de><fr><![CDATA[Usines]]></fr><ru><![CDATA[Фабрики]]></ru><cz><![CDATA[Továrny]]></cz></text>
@@ -153,7 +153,7 @@
 		<text name="woodChip"><en><![CDATA[woodchips]]></en><de><![CDATA[Hackschnitzel]]></de><fr><![CDATA[Copeau de bois]]></fr><ru><![CDATA[Щепа]]></ru><cz><![CDATA[Drevní štěpka]]></cz></text>
 		<text name="woodChips"><en><![CDATA[woodchips]]></en><de><![CDATA[Hackschnitzel]]></de><fr><![CDATA[Copeau de bois]]></fr><ru><![CDATA[Щепа]]></ru><cz><![CDATA[Drevní štěpka]]></cz></text>
 		
-		<text name="schrot"><en><![CDATA[grist]]></en><de><![CDATA[Schrot]]></de><fr><![CDATA[Grenaille]]></fr><cz><![CDATA[Krávy]]></cz></text>
+		<text name="schrot"><en><![CDATA[grist]]></en><de><![CDATA[Schrot]]></de><fr><![CDATA[Grenaille]]></fr><ru><![CDATA[Гранулы]]></ru><cz><![CDATA[Krávy]]></cz></text>
 		
 		<text name="pig"><en><![CDATA[pigs]]></en><de><![CDATA[Schweine]]></de><fr><![CDATA[Cochon]]></fr><ru><![CDATA[Свиньи]]></ru><cz><![CDATA[Krávy]]></cz></text>
 		<text name="pigs"><en><![CDATA[pigs]]></en><de><![CDATA[Schweine]]></de><fr><![CDATA[Cochons]]></fr><ru><![CDATA[Свиньи]]></ru><cz><![CDATA[Krávy]]></cz></text>
@@ -162,42 +162,42 @@
 		<text name="chicken"><en><![CDATA[chicken]]></en><de><![CDATA[Hühner]]></de><fr><![CDATA[Poulet]]></fr><ru><![CDATA[Куры]]></ru><cz><![CDATA[Vlna]]></cz></text>
 		<text name="sheep"><en><![CDATA[sheep]]></en><de><![CDATA[Schafe]]></de><fr><![CDATA[Mouton]]></fr><ru><![CDATA[Овцы]]></ru><cz><![CDATA[Vlna]]></cz></text>
 		<text name="beef"><en><![CDATA[cattle]]></en><de><![CDATA[Rinder]]></de><fr><![CDATA[Bétail]]></fr><ru><![CDATA[Телята]]></ru><cz><![CDATA[Vlna]]></cz></text>
-		<text name="calf"><en><![CDATA[calfs]]></en><de><![CDATA[Kälber]]></de><cz><![CDATA[Vlna]]></cz></text>
+		<text name="calf"><en><![CDATA[calfs]]></en><de><![CDATA[Kälber]]></de><cz><![CDATA[Vlna]]></cz><ru><![CDATA[Телята]]></ru></text>
 		
 		<text name="wool"><en><![CDATA[wool]]></en><de><![CDATA[Wolle]]></de><fr><![CDATA[Laine]]></fr><ru><![CDATA[Шерсть]]></ru><cz><![CDATA[Vlna]]></cz></text>
 		<text name="egg"><en><![CDATA[eggs]]></en><de><![CDATA[Eier]]></de><fr><![CDATA[Oeufs]]></fr><ru><![CDATA[Яйцо]]></ru><cz><![CDATA[Tato lopata nemůže naložit %s]]></cz></text>
 		
-		<text name="pig_unit_short"> <en>pcs</en> <de>Stk.</de> </text>
-		<text name="pig_unit_long"> <en>pieces</en> <de><![CDATA[Stück]]></de> </text>
-		<text name="pigs_unit_short"> <en>pcs</en> <de>Stk.</de> </text>
-		<text name="pigs_unit_long"> <en>pieces</en> <de><![CDATA[Stück]]></de> </text>
-		<text name="cow_unit_short"> <en>pcs</en> <de>Stk.</de> </text>
-		<text name="cow_unit_long"> <en>pieces</en> <de><![CDATA[Stück]]></de> </text>
-		<text name="cows_unit_short"> <en>pcs</en> <de>Stk.</de> </text>
-		<text name="cows_unit_long"> <en>pieces</en> <de><![CDATA[Stück]]></de> </text>
-		<text name="chicken_unit_short"> <en>pcs</en> <de>Stk.</de> </text>
-		<text name="chicken_unit_long"> <en>pieces</en> <de><![CDATA[Stück]]></de> </text>
-		<text name="sheep_unit_short"> <en>pcs</en> <de>Stk.</de> </text>
-		<text name="sheep_unit_long"> <en>pieces</en> <de><![CDATA[Stück]]></de> </text>
-		<text name="beef_unit_short"> <en>pcs</en> <de>Stk.</de> </text>
-		<text name="beef_unit_long"> <en>pieces</en> <de><![CDATA[Stück]]></de> </text>
-		<text name="calf_unit_short"> <en>pcs</en> <de>Stk.</de> </text>
-		<text name="calf_unit_long"> <en>pieces</en> <de><![CDATA[Stück]]></de> </text>
+		<text name="pig_unit_short"> <en>pcs</en> <de>Stk.</de><ru>шт.</ru> </text>
+		<text name="pig_unit_long"> <en>pieces</en> <de><![CDATA[Stück]]></de> <ru>штук</ru></text>
+		<text name="pigs_unit_short"> <en>pcs</en> <de>Stk.</de><ru>шт.</ru> </text>
+		<text name="pigs_unit_long"> <en>pieces</en> <de><![CDATA[Stück]]></de><ru>штук</ru> </text>
+		<text name="cow_unit_short"> <en>pcs</en> <de>Stk.</de><ru>шт.</ru> </text>
+		<text name="cow_unit_long"> <en>pieces</en> <de><![CDATA[Stück]]></de> <ru>штук</ru></text>
+		<text name="cows_unit_short"> <en>pcs</en> <de>Stk.</de><ru>шт.</ru> </text>
+		<text name="cows_unit_long"> <en>pieces</en> <de><![CDATA[Stück]]></de><ru>штук</ru> </text>
+		<text name="chicken_unit_short"> <en>pcs</en> <de>Stk.</de><ru>шт.</ru> </text>
+		<text name="chicken_unit_long"> <en>pieces</en> <de><![CDATA[Stück]]></de><ru>штук</ru> </text>
+		<text name="sheep_unit_short"> <en>pcs</en> <de>Stk.</de> <ru>шт.</ru></text>
+		<text name="sheep_unit_long"> <en>pieces</en> <de><![CDATA[Stück]]></de><ru>штук</ru> </text>
+		<text name="beef_unit_short"> <en>pcs</en> <de>Stk.</de><ru>шт.</ru> </text>
+		<text name="beef_unit_long"> <en>pieces</en> <de><![CDATA[Stück]]></de> <ru>штук</ru></text>
+		<text name="calf_unit_short"> <en>pcs</en> <de>Stk.</de> <ru>шт.</ru></text>
+		<text name="calf_unit_long"> <en>pieces</en> <de><![CDATA[Stück]]></de><ru>штук</ru> </text>
 		
-		<text name="egg_unit_short"> <en>pcs</en> <de>Stk.</de> </text>
-		<text name="egg_unit_long"> <en>pieces</en> <de><![CDATA[Stück]]></de> </text>
+		<text name="egg_unit_short"> <en>pcs</en> <de>Stk.</de><ru>шт.</ru> </text>
+		<text name="egg_unit_long"> <en>pieces</en> <de><![CDATA[Stück]]></de><ru>штук</ru> </text>
 		
-		<text name="capacityReached"><en><![CDATA[the maximum filllevel of %s is reached]]></en><de><![CDATA[Die maximale Füllmenge von %s ist erreicht]]></de><cz><![CDATA[Tato lopata nemůže naložit %s]]></cz></text>
-		<text name="forage_wagon_cant_collect"><en><![CDATA[this forage wagon cannot collect %s]]></en><de><![CDATA[Dieser Ladewagen kann kein %s aufsammeln]]></de><cz><![CDATA[Tato lopata nemůže naložit %s]]></cz></text>
-		<text name="baler_cant_collect"><en><![CDATA[this baler cannot collect %s]]></en><de><![CDATA[Diese Ballenpresse kann kein %s aufsammeln]]></de><cz><![CDATA[Tato lopata nemůže naložit %s]]></cz></text>
-		<text name="shovel_cant_load"><en><![CDATA[this shovel cannot load %s]]></en><de><![CDATA[Diese Schaufel kann kein %s laden]]></de><cz><![CDATA[Tato lopata nemůže naložit %s]]></cz></text>
-		<text name="trailer_cant_load"><en><![CDATA[this trailer cannot load %s]]></en><de><![CDATA[Dieser Anhänger kann kein %s laden]]></de><cz><![CDATA[Otruby]]></cz></text>
+		<text name="capacityReached"><en><![CDATA[the maximum filllevel of %s is reached]]></en><de><![CDATA[Die maximale Füllmenge von %s ist erreicht]]></de><ru><![CDATA[максимальный уровень заполнения достиг %s]]></ru><cz><![CDATA[Tato lopata nemůže naložit %s]]></cz></text>
+		<text name="forage_wagon_cant_collect"><en><![CDATA[this forage wagon cannot collect %s]]></en><de><![CDATA[Dieser Ladewagen kann kein %s aufsammeln]]></de><ru><![CDATA[этот кормораздатчик не может собирать %s]]></ru><cz><![CDATA[Tato lopata nemůže naložit %s]]></cz></text>
+		<text name="baler_cant_collect"><en><![CDATA[this baler cannot collect %s]]></en><de><![CDATA[Diese Ballenpresse kann kein %s aufsammeln]]></de><ru><![CDATA[Этот пресс-подборщик не может собирать %s]]></ru><cz><![CDATA[Tato lopata nemůže naložit %s]]></cz></text>
+		<text name="shovel_cant_load"><en><![CDATA[this shovel cannot load %s]]></en><de><![CDATA[Diese Schaufel kann kein %s laden]]></de><ru><![CDATA[эта лопата не может загрузить %s]]></ru><cz><![CDATA[Tato lopata nemůže naložit %s]]></cz></text>
+		<text name="trailer_cant_load"><en><![CDATA[this trailer cannot load %s]]></en><de><![CDATA[Dieser Anhänger kann kein %s laden]]></de><ru><![CDATA[этот трейлер не может загрузить %s]]></ru><cz><![CDATA[Otruby]]></cz></text>
 		
-		<text name="buytrigger_buy_OBJECT"> <en>buy %s</en> <de>%s kaufen</de> </text>
-		<text name="buytrigger_sell_OBJECT"> <en>sell %s</en> <de>%s verkaufen</de> </text>
-		<text name="buytrigger_start_rent_OBJECT"> <en>rent %</en> <de>%s mieten</de> </text>
-		<text name="buytrigger_stop_rent_OBJECT"> <en>stop to rent %s</en> <de>Mieten von %s stoppen</de> </text>
-		<text name="buytrigger_remaining_time"> <en>%s hours of rent left</en> <de>%s Stunden Miete verbleibend</de> </text>
+		<text name="buytrigger_buy_OBJECT"> <en>buy %s</en> <de>%s kaufen</de> <ru>купить %s</ru> </text>
+		<text name="buytrigger_sell_OBJECT"> <en>sell %s</en> <de>%s verkaufen</de><ru>продать %s</ru> </text>
+		<text name="buytrigger_start_rent_OBJECT"> <en>rent %</en> <de>%s mieten</de> <ru>арендовать %s</ru></text>
+		<text name="buytrigger_stop_rent_OBJECT"> <en>stop to rent %s</en> <de>Mieten von %s stoppen</de><ru>прекратить аренду %s</ru> </text>
+		<text name="buytrigger_remaining_time"> <en>%s hours of rent left</en> <de>%s Stunden Miete verbleibend</de> <ru>%s часов аренды осталось</ru></text>
 		
 		<text name="activateTriggerText1"><en><![CDATA[switch on]]></en><de><![CDATA[Anschalten]]></de><fr><![CDATA[Allumer]]></fr><ru><![CDATA[Включить автомойку]]></ru><cz><![CDATA[Otruby]]></cz></text>
 		<text name="activateTriggerText2"><en><![CDATA[switch off]]></en><de><![CDATA[Ausschalten]]></de><fr><![CDATA[Eteindre]]></fr><ru><![CDATA[Выключить автомойку]]></ru><cz><![CDATA[Otruby]]></cz></text>
@@ -209,17 +209,17 @@
 		<text name="backwaren"><en><![CDATA[backwaren]]></en><de><![CDATA[Backwaren]]></de><fr><![CDATA[Pâtisseries]]></fr><ru><![CDATA[Хлебобулочные изделия]]></ru><cz><![CDATA[Jablečný jogurt]]></cz></text>
 		<text name="bread"><en><![CDATA[bread]]></en><de><![CDATA[Brot]]></de><fr><![CDATA[Pain]]></fr><ru><![CDATA[Хлеб]]></ru><cz><![CDATA[Jablečný jogurt]]></cz></text>
 
-		<text name="yogurtapple"><en><![CDATA[apple yogurt]]></en><de><![CDATA[Apfeljoghurt]]></de><fr><![CDATA[Yaourt à la pomme]]></fr><cz><![CDATA[Jablečný jogurt]]></cz></text>
-		<text name="cherryyogurt"><en><![CDATA[cherry yogurt]]></en><de><![CDATA[Kirschjoghurt]]></de><fr><![CDATA[Yaourt à la fraise]]></fr><cz><![CDATA[Měkký tvaroh]]></cz></text>
-		<text name="yogurtpear"><en><![CDATA[pear yogurt]]></en><de><![CDATA[Pfirsichjoghurt]]></de><fr><![CDATA[Yaourt à la poire]]></fr><cz><![CDATA[Měkký tvaroh]]></cz></text>
-		<text name="sugar"><en><![CDATA[sugar]]></en><de><![CDATA[Zucker]]></de><fr><![CDATA[Sucre]]></fr><cz><![CDATA[Měkký tvaroh]]></cz></text>
-		<text name="h_milch"><en><![CDATA[UHT milk]]></en><de><![CDATA[H-Milch]]></de><fr><![CDATA[Lait UHT]]></fr><cz><![CDATA[Měkký tvaroh]]></cz></text>
-		<text name="quark"><en><![CDATA[curd cheese]]></en><de><![CDATA[Quark]]></de><fr><![CDATA[Fromage blanc]]></fr><cz><![CDATA[Měkký tvaroh]]></cz></text>
-		<text name="yogurt"><en><![CDATA[yogurt]]></en><de><![CDATA[Joghurt]]></de><fr><![CDATA[Yaourt]]></fr><cz><![CDATA[Ryba]]></cz></text>
-		<text name="kaese"><en><![CDATA[cheese]]></en><de><![CDATA[Käse]]></de><fr><![CDATA[Fromage]]></fr><cz><![CDATA[Ryba]]></cz></text>
+		<text name="yogurtapple"><en><![CDATA[apple yogurt]]></en><de><![CDATA[Apfeljoghurt]]></de><fr><![CDATA[Yaourt à la pomme]]></fr><ru><![CDATA[яблочный йогурт]]></ru><cz><![CDATA[Jablečný jogurt]]></cz></text>
+		<text name="cherryyogurt"><en><![CDATA[cherry yogurt]]></en><de><![CDATA[Kirschjoghurt]]></de><fr><![CDATA[Yaourt à la fraise]]></fr><ru><![CDATA[вишневый йогурт]]></ru><cz><![CDATA[Měkký tvaroh]]></cz></text>
+		<text name="yogurtpear"><en><![CDATA[pear yogurt]]></en><de><![CDATA[Pfirsichjoghurt]]></de><fr><![CDATA[Yaourt à la poire]]></fr><ru><![CDATA[грушевый йогурт]]></ru><cz><![CDATA[Měkký tvaroh]]></cz></text>
+		<text name="sugar"><en><![CDATA[sugar]]></en><de><![CDATA[Zucker]]></de><fr><![CDATA[Sucre]]></fr><ru><![CDATA[Сахар]]></ru><cz><![CDATA[Měkký tvaroh]]></cz></text>
+		<text name="h_milch"><en><![CDATA[UHT milk]]></en><de><![CDATA[H-Milch]]></de><fr><![CDATA[Lait UHT]]></fr><ru><![CDATA[Стерил.Молоко]]></ru><cz><![CDATA[Měkký tvaroh]]></cz></text>
+		<text name="quark"><en><![CDATA[curd cheese]]></en><de><![CDATA[Quark]]></de><fr><![CDATA[Fromage blanc]]></fr><ru><![CDATA[сырок]]></ru><cz><![CDATA[Měkký tvaroh]]></cz></text>
+		<text name="yogurt"><en><![CDATA[yogurt]]></en><de><![CDATA[Joghurt]]></de><fr><![CDATA[Yaourt]]></fr><ru><![CDATA[йогурт]]></ru><cz><![CDATA[Ryba]]></cz></text>
+		<text name="kaese"><en><![CDATA[cheese]]></en><de><![CDATA[Käse]]></de><fr><![CDATA[Fromage]]></fr><ru><![CDATA[сыр]]></ru><cz><![CDATA[Ryba]]></cz></text>
 
-		<text name="chips"><en><![CDATA[chips]]></en><de><![CDATA[Chips]]></de><fr><![CDATA[Chips]]></fr><cz><![CDATA[Ryba]]></cz></text>
-		<text name="fish"><en><![CDATA[fish]]></en><de><![CDATA[Fisch]]></de><fr><![CDATA[Poisson]]></fr><cz><![CDATA[Ryba]]></cz></text>
+		<text name="chips"><en><![CDATA[chips]]></en><de><![CDATA[Chips]]></de><fr><![CDATA[Chips]]></fr><ru><![CDATA[чипсы]]></ru><cz><![CDATA[Ryba]]></cz></text>
+		<text name="fish"><en><![CDATA[fish]]></en><de><![CDATA[Fisch]]></de><fr><![CDATA[Poisson]]></fr><ru><![CDATA[рыба]]></ru><cz><![CDATA[Ryba]]></cz></text>
 	</l10n>
 	
 	<inputBindings>
